@@ -1,17 +1,21 @@
 <div align="right">中文 | <a title="English" href="README.md">English</a></div>
 
-<div align="center">
+<p align="center">
   <img src="./source/img/panda-icon.svg" width="120" alt="Panda Logo"/>
-  <h1>hexo-theme-panda</h1>
-  <p>卡片式 Hexo 主题：碎碎念时间线、渐变视觉、内置 Atom feed 与 OG 图生成</p>
-  <p>基于 <a href="https://github.com/jerryc127/hexo-theme-butterfly">hexo-theme-butterfly</a> 5.7.0 二次开发（Apache-2.0）</p>
-</div>
+</p>
 
-**演示站点**: [SpeechlessPanda's Blog](https://speechlesspanda.github.io)
+<h1 align="center">hexo-theme-panda</h1>
 
-[![License](https://img.shields.io/github/license/SpeechlessPanda/hexo-theme-panda?style=flat-square)](LICENSE)
-[![Hexo](https://img.shields.io/badge/hexo-%3E%3D%205.3.0-blue?style=flat-square)](https://hexo.io)
-[![Demo](https://img.shields.io/badge/demo-live-success?style=flat-square)](https://speechlesspanda.github.io)
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/SpeechlessPanda/hexo-theme-panda?style=for-the-badge" alt="License" /></a>
+  <a href="https://hexo.io"><img src="https://img.shields.io/badge/Hexo-%3E%3D%205.3.0-0E83CD?style=for-the-badge&amp;logo=hexo&amp;logoColor=white" alt="Hexo" /></a>
+  <a href="https://nodejs.org"><img src="https://img.shields.io/badge/Node.js-%3E%3D%2018-339933?style=for-the-badge&amp;logo=nodedotjs&amp;logoColor=white" alt="Node.js" /></a>
+  <a href="https://speechlesspanda.github.io"><img src="https://img.shields.io/badge/Demo-live-success?style=for-the-badge" alt="Demo" /></a>
+</p>
+
+<p align="center">卡片式 Hexo 主题：碎碎念时间线、渐变视觉、内置 Atom feed 与 OG 图生成</p>
+<p align="center">基于 <a href="https://github.com/jerryc127/hexo-theme-butterfly">hexo-theme-butterfly</a> 5.7.0 二次开发（Apache-2.0）</p>
+<p align="center"><strong>演示站点</strong>: <a href="https://speechlesspanda.github.io">SpeechlessPanda's Blog</a></p>
 
 ---
 
@@ -68,6 +72,17 @@ menu:
 ```
 
 主题完整默认配置见 [themes/panda/_config.yml](_config.yml)，每个键都有注释。
+
+```mermaid
+flowchart LR
+  overlay["_config.panda.yml"] --> hexo[Hexo]
+  theme["_config.yml"] --> init["scripts/events/init.js"]
+  init --> hexo
+  hexo --> layouts["layout/*.pug"]
+  hexo --> memos["scripts/panda/memos.js"]
+  hexo --> feed["scripts/panda/feed.js"]
+  hexo --> og["scripts/panda/og-image.js"]
+```
 
 ## ✅ 环境要求
 
@@ -210,4 +225,4 @@ fish / typst 代码高亮开箱即用，无需配置。
 
 ## 📄 协议
 
-Apache-2.0。Panda 基于 [hexo-theme-butterfly](https://github.com/jerryc127/hexo-theme-butterfly)（作者 Jerry，Apache-2.0）二次开发，署名与修改说明见 [NOTICE](NOTICE)；被修改的文件头部均有修改声明。字体内嵌下载使用 [LXGW WenKai](https://github.com/lxgw/LxgwWenKai)（SIL OFL 1.1）。
+[Apache-2.0](LICENSE)。Panda 基于 [hexo-theme-butterfly](https://github.com/jerryc127/hexo-theme-butterfly)（作者 Jerry，Apache-2.0）二次开发，署名与修改说明见 [NOTICE](NOTICE)；被修改的文件头部均有修改声明。字体内嵌下载使用 [LXGW WenKai](https://github.com/lxgw/LxgwWenKai)（SIL OFL 1.1）。

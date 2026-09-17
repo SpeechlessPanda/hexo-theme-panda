@@ -1,17 +1,21 @@
 <div align="right"><a title="中文" href="README_CN.md">中文</a> | English</div>
 
-<div align="center">
+<p align="center">
   <img src="./source/img/panda-icon.svg" width="120" alt="Panda Logo"/>
-  <h1>hexo-theme-panda</h1>
-  <p>A card-style Hexo theme: memos timeline, gradient visuals, built-in Atom feed & OG image generation</p>
-  <p>Forked and extended from <a href="https://github.com/jerryc127/hexo-theme-butterfly">hexo-theme-butterfly</a> 5.7.0 (Apache-2.0)</p>
-</div>
+</p>
 
-**Demo**: [SpeechlessPanda's Blog](https://speechlesspanda.github.io)
+<h1 align="center">hexo-theme-panda</h1>
 
-[![License](https://img.shields.io/github/license/SpeechlessPanda/hexo-theme-panda?style=flat-square)](LICENSE)
-[![Hexo](https://img.shields.io/badge/hexo-%3E%3D%205.3.0-blue?style=flat-square)](https://hexo.io)
-[![Demo](https://img.shields.io/badge/demo-live-success?style=flat-square)](https://speechlesspanda.github.io)
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/SpeechlessPanda/hexo-theme-panda?style=for-the-badge" alt="License" /></a>
+  <a href="https://hexo.io"><img src="https://img.shields.io/badge/Hexo-%3E%3D%205.3.0-0E83CD?style=for-the-badge&amp;logo=hexo&amp;logoColor=white" alt="Hexo" /></a>
+  <a href="https://nodejs.org"><img src="https://img.shields.io/badge/Node.js-%3E%3D%2018-339933?style=for-the-badge&amp;logo=nodedotjs&amp;logoColor=white" alt="Node.js" /></a>
+  <a href="https://speechlesspanda.github.io"><img src="https://img.shields.io/badge/Demo-live-success?style=for-the-badge" alt="Demo" /></a>
+</p>
+
+<p align="center">A card-style Hexo theme: memos timeline, gradient visuals, built-in Atom feed & OG image generation</p>
+<p align="center">Forked and extended from <a href="https://github.com/jerryc127/hexo-theme-butterfly">hexo-theme-butterfly</a> 5.7.0 (Apache-2.0)</p>
+<p align="center"><strong>Demo</strong>: <a href="https://speechlesspanda.github.io">SpeechlessPanda's Blog</a></p>
 
 ---
 
@@ -60,6 +64,17 @@ theme: panda
 Same convention as Butterfly: **don't edit `themes/panda/_config.yml`**. Create `_config.panda.yml` in your site root and put your overrides there (Hexo deep-merges, overlay wins).
 
 The fully-commented default config lives in [_config.yml](_config.yml).
+
+```mermaid
+flowchart LR
+  overlay["_config.panda.yml"] --> hexo[Hexo]
+  theme["_config.yml"] --> init["scripts/events/init.js"]
+  init --> hexo
+  hexo --> layouts["layout/*.pug"]
+  hexo --> memos["scripts/panda/memos.js"]
+  hexo --> feed["scripts/panda/feed.js"]
+  hexo --> og["scripts/panda/og-image.js"]
+```
 
 ## ✅ Requirements
 
@@ -204,4 +219,4 @@ fish / typst code highlighting works out of the box.
 
 ## 📄 License
 
-Apache-2.0. Panda is derived from [hexo-theme-butterfly](https://github.com/jerryc127/hexo-theme-butterfly) by Jerry (Apache-2.0); see [NOTICE](NOTICE) for attribution and the list of changes. Modified files carry a notice in their header comments. The OG font [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) is SIL OFL 1.1.
+[Apache-2.0](LICENSE). Panda is derived from [hexo-theme-butterfly](https://github.com/jerryc127/hexo-theme-butterfly) by Jerry (Apache-2.0); see [NOTICE](NOTICE) for attribution and the list of changes. Modified files carry a notice in their header comments. The OG font [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) is SIL OFL 1.1.
