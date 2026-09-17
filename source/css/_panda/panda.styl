@@ -1,0 +1,18 @@
+// New file in hexo-theme-panda (Apache-2.0), forked from hexo-theme-butterfly 5.7.0: Panda-specific fixes
+
+// Fix X/Twitter share icon visibility (icon-x is dark-on-dark without this)
+.social-share .icon-x
+  color: #ffffff !important
+  border-color: rgba(255, 255, 255, 0.85) !important
+
+  &:hover
+    background: #000000 !important
+    color: #ffffff !important
+
+[data-theme='dark'] .social-share .icon-x
+  color: #ffffff !important
+  border-color: rgba(255, 255, 255, 0.7) !important
+
+  &:hover
+    background: rgba(255, 255, 255, 0.9) !important
+    color: #000000 !important

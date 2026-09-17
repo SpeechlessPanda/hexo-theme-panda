@@ -1,0 +1,81 @@
+//- Mathjax 4/5
+- const { tags, enableMenu } = theme.math.mathjax
+script.
+  (() => {
+    const changeScriptToMath = article => {
+      article.querySelectorAll('script[type^="math/tex"]').forEach(el => {
+        const display = /mode=display/.test(el.type)
+        const node = document.createElement(display ? 'div' : 'span')
+        node.textContent = display
+          ? `$$${el.textContent}$$`
+          : `$${el.textContent}$`
+        el.parentNode.replaceChild(node, el)
+      })
+    }
+
+    const loadMathjax = () => {
+      const article = document.getElementById('article-container')
+      if (!article || article.querySelector('.hbe-container')) return
+      changeScriptToMath(article)
+
+      if (!window.MathJax) {
+        window.MathJax = {
+          loader: {
+            load: [
+              // Four font extension packages (optional)
+              //- '[tex]/bbm',
+              //- '[tex]/bboldx',
+              //- '[tex]/dsfont',
+              '[tex]/mhchem',
+              'ui/lazy'
+            ],
+            paths: {
+              'mathjax-newcm': '[mathjax]/../@mathjax/mathjax-newcm-font',
+
+              //- // Four font extension packages (optional)
+              //- 'mathjax-bbm-extension': '[mathjax]/../@mathjax/mathjax-bbm-font-extension',
+              //- 'mathjax-bboldx-extension': '[mathjax]/../@mathjax/mathjax-bboldx-font-extension',
+              //- 'mathjax-dsfont-extension': '[mathjax]/../@mathjax/mathjax-dsfont-font-extension',
+              'mathjax-mhchem-extension': '[mathjax]/../@mathjax/mathjax-mhchem-font-extension'
+            }
+          },
+          output: {
+            font: 'mathjax-newcm',
+          },
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            tags: '!{tags}',
+            packages: {
+              '[+]': [
+                'mhchem'
+              ]
+            }
+          },
+          chtml: {
+            scale: 1.1
+          },
+          options: {
+            lazyMargin: '200px',
+            enableMenu: !{enableMenu},
+            menuOptions: {
+              settings: {
+                enrich: false  // Turn off Braille and voice narration text automatic generation
+              }
+            },
+          }
+        }
+
+        const script = document.createElement('script')
+        script.src = '!{url_for(theme.asset.mathjax)}'
+        script.id = 'MathJax-script'
+        script.async = true
+        document.head.appendChild(script)
+      } else {
+        MathJax.typesetClear()
+        MathJax.typesetPromise([ article ])
+      }
+    }
+
+    btf.addGlobalFn('encrypt', loadMathjax, 'mathjax')
+    window.pjax ? loadMathjax() : window.addEventListener('load', loadMathjax)
+  })()

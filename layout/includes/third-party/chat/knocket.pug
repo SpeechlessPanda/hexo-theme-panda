@@ -1,0 +1,42 @@
+//- Knocket live chat — https://trtc.io/solutions/knocket
+script.
+  (() => {
+    const identifier = !{JSON.stringify(theme.knocket.identifier || '').replace(/</g, '\\u003c')}
+    if (!identifier) return
+
+    btf.getScript(`https://trtc.io/knocket-sdk/sdk.js?identifier=${encodeURIComponent(identifier)}`).then(() => {
+      const isChatBtn = !{theme.chat.rightside_button}
+      const isChatHideShow = !{theme.chat.button_hide_show}
+
+      let widget = null
+      const getWidget = () => widget || (widget = document.getElementById('contact-widget-auto'))
+
+      if (isChatBtn) {
+        const hide = () => { const w = getWidget(); if (w) w.style.display = 'none' }
+        const show = () => { const w = getWidget(); if (w) w.style.display = '' }
+
+        // Hide the native Knocket floating button
+        const observer = new MutationObserver(() => {
+          if (getWidget()) { hide(); observer.disconnect() }
+        })
+        observer.observe(document.body, { childList: true, subtree: true })
+        hide()
+
+        window.chatBtnFn = () => {
+          const w = getWidget()
+          if (!w) return
+          w.style.display = w.style.display === 'none' ? '' : 'none'
+        }
+
+        const chatBtn = document.getElementById('chat-btn')
+        if (chatBtn) chatBtn.style.display = 'block'
+      } else if (isChatHideShow) {
+        window.chatBtn = {
+          hide: () => { const w = getWidget(); if (w) w.style.display = 'none' },
+          show: () => { const w = getWidget(); if (w) w.style.display = '' }
+        }
+      }
+    }).catch(error => {
+      console.warn('[Knocket] Failed to load the chat SDK.', error)
+    })
+  })()

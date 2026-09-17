@@ -1,0 +1,22 @@
+# NOTICE
+
+Panda (hexo-theme-panda)
+Copyright 2026 SpeechlessPanda
+
+This product includes software developed by Jerry (jerryc127):
+**hexo-theme-butterfly** (https://github.com/jerryc127/hexo-theme-butterfly),
+licensed under the Apache License, Version 2.0.
+
+Panda is a fork of hexo-theme-butterfly 5.7.0 with modifications.
+Files modified from the original carry a notice in their header comments;
+files added by Panda are marked as new. Major changes include:
+
+- Memos (碎碎念) enhancements: per-memo Giscus comment iframes, comment-count
+  auto-expansion, local-search injection, standalone memo pages, latest-memo card
+- Atom feed generator mixing posts and memos, with update-notification entries
+- OG share image generator (SVG → PNG via @resvg/resvg-js)
+- Config-driven gradient visual signature
+- Home page can render an arbitrary source page (e.g. the about page)
+- Rebranding: package name, terminal banner, footer credit, default avatar icon
+
+The original project does not distribute a NOTICE file.

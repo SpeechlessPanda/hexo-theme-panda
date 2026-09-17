@@ -1,0 +1,537 @@
+//- Modified from hexo-theme-butterfly 5.7.0 (Apache-2.0) by SpeechlessPanda, 2026: memos data_key plus per-item giscus iframe comments
+//- - author:
+//-   avatar:
+//-   date:
+//-   content:
+//-   tags:
+//-     - tag1
+//-     - tag2
+
+- page.toc = false
+
+#article-container
+  if page.shuoshuo_url || (site.data[(theme.memos && theme.memos.data_key) || 'shuoshuo'] && site.data[(theme.memos && theme.memos.data_key) || 'shuoshuo'].length)
+    if page.comments !== false && theme.comments.use
+      - commentsJsLoad = true
+
+      script.
+        (() => {
+          const runDestroy = () => {
+            // 销毁手动展开的评论区,保留自动展开(有评论)的项
+            document.querySelectorAll('#article-container .shuoshuo-comment:not(.no-comment):not([data-auto])').forEach(el => {
+              el.innerHTML = ''
+              el.classList.add('no-comment')
+            })
+          }
+
+          // 用独立 iframe 直嵌 giscus /widget(绕过 client.js 单例),支持同页多条独立评论区
+          // 登录态存 localStorage('giscus-session'),与标准 giscus client.js 格式保持一致(JSON.stringify(token)),
+          // 刷新后仍能记住登录态;若 iframe 回传 session 失效错误,则清除存储并按未登录状态重新加载,
+          // 避免过期/非法 session 导致整条评论区空白。
+          const getStoredGiscusSession = () => {
+            try {
+              const raw = localStorage.getItem('giscus-session')
+              if (!raw) return ''
+              const session = JSON.parse(raw)
+              if (typeof session === 'string' && session) return session
+            } catch (e) {}
+            try { localStorage.removeItem('giscus-session') } catch (e) {}
+            return ''
+          }
+
+          window.createShuoshuoGiscusWidget = (el, key, session) => {
+            if (session === undefined) session = window.__giscusPendingSession || getStoredGiscusSession()
+            const build = cfg => {
+              const currentTheme = document.documentElement.getAttribute('data-theme') || 'light'
+              const isDark = currentTheme === 'dark'
+              const __u = new URL(location.href)
+              __u.searchParams.delete('giscus')
+              const params = new URLSearchParams({
+                repo: cfg.repo,
+                repoId: cfg.repoId,
+                category: '',
+                categoryId: cfg.categoryId,
+                mapping: 'specific',
+                term: key,
+                theme: isDark ? cfg.darkTheme : cfg.lightTheme,
+                reactionsEnabled: '1',
+                emitMetadata: '0',
+                inputPosition: 'top',
+                origin: __u.toString(),
+                backLink: __u.toString(),
+                session: session,
+                strict: '0'
+              })
+              el.innerHTML = ''
+              const widgetUrl = 'https://giscus.app/' + (cfg.lang || 'en') + '/widget?' + params.toString()
+              const iframe = document.createElement('iframe')
+              iframe.className = 'giscus-frame'
+              iframe.title = 'Comments'
+              iframe.setAttribute('data-theme', currentTheme)
+              iframe.setAttribute('data-term', key)
+              iframe.src = widgetUrl
+              iframe.allow = 'clipboard-write'
+              iframe.style.cssText = 'border:0;width:100%;min-height:180px;height:600px;background:transparent;color-scheme:' + (currentTheme === 'dark' ? 'dark' : 'light')
+              el.appendChild(iframe)
+
+              // 常驻、中性的"在新标签打开评论"入口:正常加载时是个不起眼的小链接;
+              // 当 giscus 被广告拦截/浏览器跟踪防护/网络阻断而显示空白时,它是用户能看到评论的一键出口。
+              const opener = document.createElement('a')
+              opener.className = 'giscus-opener'
+              opener.href = widgetUrl
+              opener.target = '_blank'
+              opener.rel = 'noopener'
+              opener.textContent = !{JSON.stringify(_p('memos.open_comment_new_tab'))}
+              opener.title = !{JSON.stringify(_p('memos.open_comment_new_tab_title'))}
+              opener.style.cssText = 'display:inline-block;margin-top:6px;font-size:12px;color:#858585;text-decoration:none;border-bottom:1px dashed #bbb'
+              el.appendChild(opener)
+            }
+            const cfg = window.shuoshuoGiscusConfig
+            if (cfg) { build(cfg); return }
+            // pjax 时序:config 可能尚未暴露(后执行的 comments partial),轮询等待(最多 3s)
+            let n = 0
+            const wait = () => {
+              const c = window.shuoshuoGiscusConfig
+              if (c) build(c)
+              else if (++n < 30) setTimeout(wait, 100)
+            }
+            wait()
+          }
+
+          // 监听 Giscus iframe 高度消息,按 event.source 精确匹配到对应 iframe 再各自适应高度
+          // (同页有多条独立评论区,不能用同一条消息的高度套到所有 iframe,否则较高的会被压扁、配合 scrolling 截断后只剩一个空框)
+          window.addEventListener('message', e => {
+            if (e.origin !== 'https://giscus.app') return
+            const d = e.data
+            if (!d || typeof d !== 'object' || !d.giscus) return
+            const h = d.giscus.resizeHeight || d.giscus.height || d.setHeight
+            if (!h) return
+            // 按 event.source 精确匹配到发送此消息的那一个 iframe(giscus 同页只会从首条 iframe 回传消息)
+            const target = Array.from(document.querySelectorAll('iframe[src*="giscus.app/"]')).find(f => f.contentWindow === e.source)
+            if (target) target.style.height = h + 'px'
+          })
+
+          window.addCommentToShuoshuo = e => {
+            const btn = e.target.closest('.shuoshuo-comment-btn')
+            if (!btn) return
+
+            const ele = btn.closest('.container').nextElementSibling
+            const isInclude = ele.classList.contains('no-comment')
+            runDestroy()
+            if (isInclude) {
+              ele.classList.remove('no-comment')
+              const key = `${location.pathname.replace(/\/$/, '')}?key=${ele.getAttribute('data-key')}`
+              window.createShuoshuoGiscusWidget(ele, key)
+            }
+          }
+
+          // 暗色模式切换时,更新所有 giscus iframe 主题(跟随博客 light/dark)
+          btf.addGlobalFn('themeChange', () => {
+            const tc = window.shuoshuoGiscusConfig
+            if (!tc) return
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light'
+            const isDark = currentTheme === 'dark'
+            const theme = isDark ? tc.darkTheme : tc.lightTheme
+            document.querySelectorAll('iframe.giscus-frame').forEach(f => {
+              f.setAttribute('data-theme', currentTheme)
+              f.style.colorScheme = isDark ? 'dark' : 'light'
+              try { f.contentWindow.postMessage({ giscus: { setConfig: { theme: theme } } }, 'https://giscus.app') } catch (e) {}
+            })
+          }, 'shuoshuo-giscus-theme')
+
+          // 处理 Giscus 登录回调(?giscus=session):存到 localStorage 与标准 giscus 行为一致,
+          // 同时保留 window.__giscusPendingSession 供本页尚未创建的 iframe 立即使用。
+          const __giscusCallback = new URL(location.href).searchParams.get('giscus')
+          if (__giscusCallback) {
+            try { localStorage.setItem('giscus-session', JSON.stringify(__giscusCallback)) } catch (e) {}
+            window.__giscusPendingSession = __giscusCallback
+            const __u = new URL(location.href)
+            __u.searchParams.delete('giscus')
+            history.replaceState(null, document.title, __u.toString())
+          }
+
+          // 监听 Giscus 回传的 session 错误,自动清除失效的 localStorage session。
+          window.addEventListener('message', e => {
+            if (e.origin !== 'https://giscus.app') return
+            const d = e.data
+            if (!d || typeof d !== 'object' || !d.giscus || !d.giscus.error) return
+            const err = d.giscus.error
+            if (err.includes('Bad credentials') || err.includes('Invalid state value') || err.includes('State has expired') || err.includes('Bad request')) {
+              try { localStorage.removeItem('giscus-session') } catch (e) {}
+            }
+          })
+
+        })()
+
+
+    - const localDate = page.shuoshuo_url ? [] : shuoshuoFN(site.data[(theme.memos && theme.memos.data_key) || 'shuoshuo'], page)
+
+    if !page.shuoshuo_url
+      script(type='application/json' id='shuoshuo-data')!= safeJSON(localDate)
+
+    - const { enable, native, placeholder, field } = theme.lazyload
+    script.
+      (() => {
+        const limitConfig = !{ JSON.stringify(page.limit || {}) }
+
+        const escapeHtml = str => String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+
+        const sortDataByDate = data => data.sort((a, b) => new Date(b.date) - new Date(a.date))
+
+        const filterDataByLimit = (data, limit) => {
+          if (!limit || !limit.type) return data
+          if (limit.type === 'num') return data.slice(0, limit.value)
+          if (limit.type === 'date') {
+            const limitDate = new Date(limit.value)
+            return data.filter(item => new Date(item.date) >= limitDate)
+          }
+          return data
+        }
+
+        const dateFormatter = new Intl.DateTimeFormat('en-GB', {
+          timeZone: !{JSON.stringify(config.timezone || '')} || Intl.DateTimeFormat().resolvedOptions().timeZone,
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        })
+
+        const formatToTimeZone = (date) => {
+          const fullDate = date.length === 10 ? `${date} 00:00:00` : date
+          const [day, month, year, hour, minute, second] = dateFormatter.format(new Date(fullDate)).match(/\d+/g)
+          return `${year}-${month}-${day} ${hour}:${minute}:${second}`
+        }
+
+        const addLazyload = str => {
+          const lazyConfig = {
+            enable: !{Boolean(enable)},
+            native: !{Boolean(native)},
+            field: !{JSON.stringify(field || '')},
+            placeholder: !{JSON.stringify(url_for(placeholder))},
+          }
+
+          if (!lazyConfig.enable || lazyConfig.field !== 'site' || str.indexOf('<img') === -1) return str
+          const parser = new DOMParser()
+          const doc = parser.parseFromString(str, 'text/html')
+          const images = doc.querySelectorAll('img')
+
+          images.forEach(img => {
+            if (lazyConfig.native) {
+              img.setAttribute('loading', 'lazy')
+            } else {
+              const src = img.getAttribute('src')
+              img.setAttribute('data-lazy-src', src)
+
+              if (lazyConfig.placeholder) {
+                img.setAttribute('src', lazyConfig.placeholder)
+              } else {
+                img.removeAttribute('src')
+              }
+            }
+          })
+          return doc.body.innerHTML
+        }
+
+        let currentPage = 1
+        const itemsPerPage = 8
+        let totalPages = 0
+        let data = []
+        let inputEventsAttached = false // Flag to mark if input event listeners have been added
+
+        const renderData = (dataSlice) => {
+          const content = dataSlice.map((item, index) => {
+            const formattedDate = formatToTimeZone(item.date)
+            const tags = item.tags && item.tags.map(tag => `<span class="shuoshuo-tag">${escapeHtml(tag)}</span>`).join('') || ''
+            const itemKey = item.key || ('memo-' + String(item.date || index).replace(/[^0-9a-zA-Z]/g, '-'))
+            const commentButton = !{commentsJsLoad || false}
+              ? `<div class="shuoshuo-comment-btn" onclick="addCommentToShuoshuo(event)">
+                  <i class="fa-solid fa-comments"></i>
+                </div>`
+              : ''
+            const commentContainer = `<div class="shuoshuo-comment no-comment" data-key="${escapeHtml(itemKey)}"></div>`
+
+            return `
+              <div class="shuoshuo-item">
+                <div class="container">
+                  <div class="shuoshuo-item-header">
+                    <div class="shuoshuo-avatar">
+                      <img class="no-lightbox" src="${item.avatar ? escapeHtml(item.avatar) : !{JSON.stringify(url_for(theme.avatar.img))}}">
+                    </div>
+                    <div class="shuoshuo-info">
+                      <div class="shuoshuo-author">${item.author ? escapeHtml(item.author) : !{JSON.stringify(config.author || '')}}</div>
+                      <time class="shuoshuo-date" title="${formattedDate}">
+                        ${btf.diffDate(formattedDate, true)}
+                      </time>
+                    </div>
+                  </div>
+                  <div class="shuoshuo-content">${addLazyload(item.content)}</div>
+                  <div class="shuoshuo-footer ${tags ? 'flex-between' : 'flex-end'}">
+                    ${tags ? `<div class="shuoshuo-tags">${tags}</div>` : ''}
+                    ${commentButton}
+                  </div>
+                </div>
+                ${commentContainer}
+              </div>`
+          }).join('')
+
+          const container = document.getElementById('article-container')
+          container.innerHTML = content
+
+          window.lazyLoadInstance && window.lazyLoadInstance.update()
+          btf.loadLightbox(document.querySelectorAll('#article-container img:not(.no-lightbox)'))
+          document.dispatchEvent(new Event('shuoshuo:rendered'))
+        }
+
+        const renderNavigation = () => {
+          const container = document.getElementById('article-container')
+          const existingNav = container.nextElementSibling
+          if (existingNav && existingNav.classList.contains('shuoshuo-navigation')) {
+            existingNav.remove()
+          }
+
+          const pageInfoTemplate = '#{__('pagination.page_info')}'
+          const pageInfoText = pageInfoTemplate
+            .replace(/\$\{current}/g, currentPage)
+            .replace(/\$\{total}/g, totalPages)
+
+          const navHtml = `
+            <div class="shuoshuo-navigation">
+              <button onclick="window.shuoshuoPrevPage()" ${currentPage === 1 ? 'disabled' : ''}><i class="fa-solid fa-chevron-left"></i></button>
+              <span class="shuoshuo-page-info">${pageInfoText}</span>
+              <input type="number" class="shuoshuo-page-input" min="1" max="${totalPages}" placeholder="${currentPage}" onkeydown="window.shuoshuoHandleKeyDown(event)">
+              <button onclick="window.shuoshuoNextPage()" ${currentPage === totalPages ? 'disabled' : ''}><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+          `
+          container.insertAdjacentHTML('afterend', navHtml)
+
+          // Add input validation event listeners (only once)
+          if (!inputEventsAttached) {
+            setTimeout(() => {
+              const input = document.querySelector('.shuoshuo-page-input')
+              if (input) {
+                // Clear placeholder when clicking the input box
+                input.addEventListener('focus', (event) => {
+                  event.target.placeholder = ''
+                })
+
+                // Restore placeholder if no content when losing focus
+                input.addEventListener('blur', (event) => {
+                  if (!event.target.value.trim()) {
+                    event.target.placeholder = currentPage
+                  }
+                })
+
+                input.addEventListener('input', (event) => {
+                  const value = parseInt(event.target.value) || 0
+                  let wasInvalid = false
+
+                  if (value > totalPages) {
+                    event.target.value = totalPages
+                    wasInvalid = true
+                  } else if (value < 1 && event.target.value !== '') {
+                    event.target.value = 1
+                    wasInvalid = true
+                  }
+
+                  // If value is corrected, show red and shake effect
+                  if (wasInvalid) {
+                    event.target.classList.add('invalid')
+                    setTimeout(() => {
+                      event.target.classList.remove('invalid')
+                    }, 500)
+                  }
+                })
+
+                inputEventsAttached = true // Mark that event listeners have been added
+              }
+            }, 0)
+          }
+        }
+
+        const scrollToFirstMemo = () => {
+          const first = document.querySelector('#article-container .shuoshuo-item')
+          if (!first) return
+          // 固定导航栏约 70px，与 btf.scrollToDest 偏移一致；翻页等同换页，瞬时回到第一条
+          const dest = Math.max(0, btf.getEleTop(first) - 70)
+          window.scrollTo(0, dest)
+        }
+
+        const renderPage = (page, scrollToTop = false) => {
+          const start = (page - 1) * itemsPerPage
+          const end = start + itemsPerPage
+          const pageData = data.slice(start, end)
+          renderData(pageData)
+          renderNavigation()
+          autoExpandComments()
+          if (scrollToTop) scrollToFirstMemo()
+        }
+
+        // 有评论的碎碎念自动展开评论区(build 时已查 commentCount 注入 shuoshuo-data)
+        const autoExpandComments = () => {
+          if (!window.createShuoshuoGiscusWidget) return
+          const containers = document.querySelectorAll('#article-container .shuoshuo-comment.no-comment[data-key]')
+          containers.forEach(el => {
+            const key = el.getAttribute('data-key')
+            const item = data.find(d => (d.key || ('memo-' + String(d.date || '').replace(/[^0-9a-zA-Z]/g, '-'))) === key)
+            if (item && item.commentCount > 0) {
+              el.classList.remove('no-comment')
+              el.setAttribute('data-auto', '1')
+              const term = `${location.pathname.replace(/\/$/, '')}?key=${key}`
+              window.createShuoshuoGiscusWidget(el, term)
+            }
+          })
+        }
+
+        // 碎碎念页内容动态加载，初始高度可能不足导致主题 main.js 的滚动监听提前退出，
+        // 因此单独监听滚动并为 header 添加/移除 nav-fixed / nav-visible，保证下滑后导航栏有背景。
+        const initShuoshuoHeaderScroll = () => {
+          if (window._shuoshuoScrollAttached) return
+          window._shuoshuoScrollAttached = true
+
+          let lastTop = 0
+          const handler = btf.throttle(() => {
+            const $header = document.getElementById('page-header')
+            if (!$header) return
+
+            const currentTop = window.scrollY || document.documentElement.scrollTop
+            const isDown = currentTop > lastTop
+            lastTop = currentTop
+
+            if (currentTop > 56) {
+              $header.classList.add('nav-fixed')
+              if (isDown) {
+                $header.classList.remove('nav-visible')
+              } else {
+                $header.classList.add('nav-visible')
+              }
+            } else {
+              $header.classList.remove('nav-fixed', 'nav-visible')
+            }
+          }, 300)
+
+          window.addEventListener('scroll', handler, { passive: true })
+          window.addEventListener('pjax:send', () => {
+            window.removeEventListener('scroll', handler)
+            window._shuoshuoScrollAttached = false
+          }, { once: true })
+
+          handler()
+        }
+
+        window.shuoshuoPrevPage = () => {
+          if (currentPage > 1) {
+            currentPage--
+            renderPage(currentPage, true)
+          }
+        }
+
+        window.shuoshuoNextPage = () => {
+          if (currentPage < totalPages) {
+            currentPage++
+            renderPage(currentPage, true)
+          }
+        }
+
+        window.shuoshuoGoToPage = (page) => {
+          if (typeof page === 'number') {
+            // Directly jump to the specified page
+            if (page >= 1 && page <= totalPages && page !== currentPage) {
+              currentPage = page
+              renderPage(currentPage, true)
+            }
+          } else {
+            // Get page from input box
+            const input = document.querySelector('.shuoshuo-page-input')
+            const inputValue = input.value.trim()
+            const inputPage = inputValue === '' ? currentPage : parseInt(inputValue)
+            if (inputPage >= 1 && inputPage <= totalPages && inputPage !== currentPage) {
+              currentPage = inputPage
+              renderPage(currentPage, true)
+            } else if (inputValue === '') {
+              // If input box is empty, re-render current page (update placeholder)
+              renderPage(currentPage)
+            }
+          }
+        }
+
+        window.shuoshuoHandleKeyDown = (event) => {
+          const input = event.target
+          const value = input.value + event.key
+
+          // Allow delete, arrow keys, backspace, etc.
+          if (event.key === 'Enter' || event.key === 'Backspace' || event.key === 'Delete' ||
+              event.key === 'ArrowLeft' || event.key === 'ArrowRight' ||
+              event.key === 'Tab' || event.ctrlKey || event.metaKey) {
+            if (event.key === 'Enter') {
+              window.shuoshuoGoToPage()
+            }
+            return
+          }
+
+          // Only allow numbers
+          if (!/^\d$/.test(event.key)) {
+            event.preventDefault()
+            return
+          }
+
+          // Check if the value after input exceeds the range
+          const newValue = parseInt(value) || 0
+          if (newValue > totalPages || (value.length > 1 && newValue === 0)) {
+            event.preventDefault()
+            // Add red and shake effect
+            input.classList.add('invalid')
+            setTimeout(() => {
+              input.classList.remove('invalid')
+            }, 500)
+          }
+        }
+
+        const loadShuoshuo = async () => {
+          const container = document.getElementById('article-container')
+          try {
+            let originData = []
+            if (!{Boolean(page.shuoshuo_url)}) {
+              container.innerHTML = '<div class="shuoshuo-loading"><i class="fa-solid fa-circle-notch fa-spin"></i></div>'
+              const response = await fetch('!{url_for(page.shuoshuo_url)}')
+              if (!response.ok) throw new Error(`HTTP ${response.status}`)
+              originData = await response.json()
+            } else {
+              const dataElement = document.getElementById('shuoshuo-data')
+              originData = dataElement ? JSON.parse(dataElement.textContent) : []
+            }
+
+            data = filterDataByLimit(sortDataByDate(originData), limitConfig)
+            totalPages = Math.ceil(data.length / itemsPerPage)
+
+            if (data.length === 0) {
+              container.innerHTML = '<div class="shuoshuo-empty"></div>'
+              return
+            }
+
+            renderPage(currentPage)
+            initShuoshuoHeaderScroll()
+          } catch (error) {
+            console.error(error)
+            container.innerHTML = '<div class="shuoshuo-error"><i class="fa-solid fa-circle-exclamation"></i></div>'
+          }
+        }
+
+        const pjaxCleanup = () => {
+          const container = document.getElementById('article-container')
+          if (container) {
+            const nav = container.nextElementSibling
+            if (nav && nav.classList.contains('shuoshuo-navigation')) nav.remove()
+          }
+          document.removeEventListener('pjax:send', pjaxCleanup)
+        }
+
+        if (window.pjax) {
+          document.addEventListener('pjax:send', pjaxCleanup)
+          loadShuoshuo()
+        } else {
+          window.addEventListener('load', loadShuoshuo)
+        }
+      })()

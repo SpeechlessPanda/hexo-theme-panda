@@ -1,0 +1,132 @@
+//- New file in hexo-theme-panda (Apache-2.0), forked from hexo-theme-butterfly 5.7.0: config-driven header/background/footer gradients
+//- Panda gradient signature (config-driven).
+//- Yields to user images: `default_top_img` disables header gradient,
+//- `background` disables the web_bg gradient, `footer_img` disables footer gradient.
+if theme.gradient && theme.gradient.enable
+  -
+    const g = theme.gradient
+    const hasTopImg = !!theme.default_top_img
+    const hasWebBg = !!theme.background
+    const hasFooterImg = !!theme.footer_img
+    const css = []
+    if (!hasTopImg) {
+      css.push(`
+        #page-header.full_page,
+        #page-header.post-bg,
+        #page-header.not-home-page {
+          background-image: ${g.header_light} !important;
+          background-size: cover;
+          background-position: center;
+        }
+        #page-header.not-top-img { background: ${g.header_light} !important; }
+        #page-header.full_page:before,
+        #page-header.post-bg:before,
+        #page-header.not-home-page:before,
+        #page-header.not-top-img:before { background: ${g.header_mask_light} !important; }
+        #page-header.full_page #site-title,
+        #page-header.full_page #site-subtitle,
+        #page-header.full_page #subtitle,
+        #page-header.post-bg #post-info .post-title,
+        #page-header.post-bg #post-meta,
+        #page-header.post-bg #post-meta a,
+        #page-header.nav-fixed #nav a,
+        #page-header #nav .site-page,
+        #page-header #nav .menus_item_child li a {
+          color: #ffffff !important;
+          text-shadow: 0 2px 12px rgba(28, 58, 92, 0.38);
+        }
+        #page-header.not-top-img #nav .site-page,
+        #page-header.not-top-img #nav #toggle-menu,
+        #page-header.not-top-img #nav #search-button,
+        #page-header.not-top-img #nav #nav-right div,
+        #page-header.not-top-img #nav .menus_item_child li a { color: #ffffff !important; }
+        [data-theme='dark'] #page-header.full_page,
+        [data-theme='dark'] #page-header.post-bg,
+        [data-theme='dark'] #page-header.not-home-page { background-image: ${g.header_dark} !important; }
+        [data-theme='dark'] #page-header.not-top-img { background: ${g.header_dark} !important; }
+        [data-theme='dark'] #page-header.full_page:before,
+        [data-theme='dark'] #page-header.post-bg:before,
+        [data-theme='dark'] #page-header.not-home-page:before,
+        [data-theme='dark'] #page-header.not-top-img:before { background: ${g.header_mask_dark} !important; }
+        [data-theme='dark'] #page-header.full_page #site-title,
+        [data-theme='dark'] #page-header.full_page #site-subtitle,
+        [data-theme='dark'] #page-header.full_page #subtitle,
+        [data-theme='dark'] #page-header.post-bg #post-info .post-title,
+        [data-theme='dark'] #page-header.post-bg #post-meta,
+        [data-theme='dark'] #page-header.post-bg #post-meta a,
+        [data-theme='dark'] #page-header.nav-fixed #nav a,
+        [data-theme='dark'] #page-header #nav .site-page,
+        [data-theme='dark'] #page-header #nav .menus_item_child li a {
+          color: #eaf4ff !important;
+          text-shadow: 0 2px 12px rgba(0, 0, 0, 0.42);
+        }
+        [data-theme='dark'] #page-header.not-top-img #nav .site-page,
+        [data-theme='dark'] #page-header.not-top-img #nav #toggle-menu,
+        [data-theme='dark'] #page-header.not-top-img #nav #search-button,
+        [data-theme='dark'] #page-header.not-top-img #nav #nav-right div,
+        [data-theme='dark'] #page-header.not-top-img #nav .menus_item_child li a { color: #eaf4ff !important; }
+        .read-mode #page-header.post-bg {
+          background-image: ${g.header_light} !important;
+          background-size: cover !important;
+          background-position: center !important;
+        }
+        .read-mode #page-header.post-bg:before { opacity: 1 !important; background: ${g.header_mask_light} !important; }
+        [data-theme='dark'] .read-mode #page-header.post-bg { background-image: ${g.header_dark} !important; }
+        [data-theme='dark'] .read-mode #page-header.post-bg:before { opacity: 1 !important; background: ${g.header_mask_dark} !important; }
+      `)
+    }
+    if (!hasWebBg) {
+      css.push(`
+        #web_bg { background: ${g.web_bg_light}; }
+        [data-theme='dark'] #web_bg { background: ${g.web_bg_dark}; }
+      `)
+    }
+    // nav-fixed always gradients (it floats over scrolled content, not the top image)
+    css.push(`
+      #page-header.nav-fixed #nav,
+      #page-header.not-top-img.nav-fixed #nav {
+        background: ${g.nav_light} !important;
+        box-shadow: 0 8px 20px rgba(38, 79, 126, 0.2) !important;
+        backdrop-filter: saturate(130%) blur(6px);
+        -webkit-backdrop-filter: saturate(130%) blur(6px);
+      }
+      #page-header.nav-fixed #nav a,
+      #page-header.nav-fixed #nav .site-page,
+      #page-header.nav-fixed #nav .site-name,
+      #page-header.nav-fixed #nav #toggle-menu,
+      #page-header.nav-fixed #nav #search-button,
+      #page-header.nav-fixed #nav #nav-right div,
+      #page-header.nav-fixed #nav .menus_item_child li a {
+        color: #ffffff !important;
+        text-shadow: 0 2px 12px rgba(28, 58, 92, 0.38);
+      }
+      [data-theme='dark'] #page-header.nav-fixed #nav,
+      [data-theme='dark'] #page-header.not-top-img.nav-fixed #nav {
+        background: ${g.nav_dark} !important;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35) !important;
+        backdrop-filter: saturate(120%) blur(6px);
+        -webkit-backdrop-filter: saturate(120%) blur(6px);
+      }
+      [data-theme='dark'] #page-header.nav-fixed #nav a,
+      [data-theme='dark'] #page-header.nav-fixed #nav .site-page,
+      [data-theme='dark'] #page-header.nav-fixed #nav .site-name,
+      [data-theme='dark'] #page-header.nav-fixed #nav #toggle-menu,
+      [data-theme='dark'] #page-header.nav-fixed #nav #search-button,
+      [data-theme='dark'] #page-header.nav-fixed #nav #nav-right div,
+      [data-theme='dark'] #page-header.nav-fixed #nav .menus_item_child li a {
+        color: #eaf4ff !important;
+        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.42);
+      }
+    `)
+    if (!hasFooterImg) {
+      css.push(`
+        #footer { background: ${g.header_light} !important; }
+        #footer::before { background: rgba(255, 255, 255, 0.1) !important; }
+        #footer-wrap, #footer-wrap a { color: #eaf6ff !important; }
+        [data-theme='dark'] #footer { background: ${g.header_dark} !important; }
+        [data-theme='dark'] #footer::before { background: rgba(0, 0, 0, 0.24) !important; }
+        [data-theme='dark'] #footer-wrap,
+        [data-theme='dark'] #footer-wrap a { color: #d8e9f7 !important; }
+      `)
+    }
+  style!= css.join('\n')

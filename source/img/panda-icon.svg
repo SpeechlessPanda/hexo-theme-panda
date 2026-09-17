@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Panda theme icon: geometric panda face -->
+  <circle cx="100" cy="100" r="98" fill="#f3ead8"/>
+  <circle cx="54" cy="50" r="27" fill="#2b2b2b"/>
+  <circle cx="146" cy="50" r="27" fill="#2b2b2b"/>
+  <ellipse cx="100" cy="114" rx="72" ry="69" fill="#fdfaf2"/>
+  <ellipse cx="69" cy="103" rx="16" ry="22" fill="#2b2b2b" transform="rotate(-18 69 103)"/>
+  <ellipse cx="131" cy="103" rx="16" ry="22" fill="#2b2b2b" transform="rotate(18 131 103)"/>
+  <circle cx="71" cy="101" r="4.6" fill="#fdfaf2"/>
+  <circle cx="129" cy="101" r="4.6" fill="#fdfaf2"/>
+  <path d="M94 133 Q100 127 106 133 Q100 142 94 133 Z" fill="#2b2b2b"/>
+  <path d="M100 141 Q99 149 91 151 M100 141 Q101 149 109 151" stroke="#2b2b2b" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+</svg>

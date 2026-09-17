@@ -1,0 +1,18 @@
+//- New file in hexo-theme-panda (Apache-2.0), forked from hexo-theme-butterfly 5.7.0: latest-memo card for the post stream
+//- Panda: latest-memo card pinned on top of the post stream.
+//- Requires the theme script scripts/panda/memos.js (provides latest_memo()).
+- const memo = latest_memo()
+if memo
+  - const memosPath = (theme.memos && theme.memos.path) || '/memos/'
+  .recent-post-item.recent-post-memo
+    .recent-post-info.no-cover
+      a.article-title(href=url_for(memosPath))= _p('memos.latest')
+      .article-meta-wrap
+        span.post-meta-date
+          i.far.fa-calendar-alt
+          time.post-meta-date-created(datetime=date_xml(memo.date) title=_p('post.created') + ' ' + full_date(memo.date))= date(memo.date, config.date_format)
+        span.article-meta
+          span.article-meta-separator |
+          i.fas.fa-comment-dots
+          a.article-meta__tags(href=url_for(memosPath))= ' ' + _p('memos.view_all')
+      .content= memo.excerpt

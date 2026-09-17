@@ -1,0 +1,34 @@
+{
+  "name": "hexo-theme-panda",
+  "version": "1.0.0",
+  "description": "A card-style Hexo theme with memos timeline, gradient visuals and built-in feed/OG-image generators. Forked and extended from hexo-theme-butterfly (Apache-2.0).",
+  "main": "package.json",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "hexo",
+    "theme",
+    "panda",
+    "memos",
+    "shuoshuo",
+    "Card UI Design",
+    "hexo-theme-panda"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SpeechlessPanda/hexo-theme-panda.git"
+  },
+  "bugs": {
+    "url": "https://github.com/SpeechlessPanda/hexo-theme-panda/issues"
+  },
+  "dependencies": {
+    "hexo-renderer-pug": "^3.0.0",
+    "hexo-renderer-stylus": "^3.0.1",
+    "hexo-util": "^4.0.0",
+    "moment-timezone": "^0.6.3"
+  },
+  "homepage": "https://github.com/SpeechlessPanda/hexo-theme-panda",
+  "author": "SpeechlessPanda",
+  "license": "Apache-2.0"
+}

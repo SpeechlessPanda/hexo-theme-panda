@@ -1,0 +1,18 @@
+//- New file in hexo-theme-panda (Apache-2.0), forked from hexo-theme-butterfly 5.7.0: home layout that renders a configured about page
+extends includes/layout.pug
+
+//- Panda: home renders a source page (default: about/index.md) — single source of
+//- truth for the about content. Falls back to the normal post list when disabled
+//- or when the source page does not exist. Config: home_about.enable / .source
+block content
+  - const ha = theme.home_about || {}
+  - const aboutPage = ha.enable !== false ? site.pages.findOne({ source: ha.source || 'about/index.md' }) : null
+  if aboutPage
+    #page
+      if top_img === false && page.title
+        .page-title= page.title
+      #article-container.container
+        != aboutPage.content
+  else
+    include ./includes/mixins/indexPostUI.pug
+    +indexPostUI
