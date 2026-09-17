@@ -1,0 +1,22 @@
+name: Feature request
+description: A Panda-specific enhancement (not a Butterfly upstream feature)
+title: "[feat] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / 要解决什么
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal / 建议做法
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        Features that belong in Butterfly itself should go to https://github.com/jerryc127/hexo-theme-butterfly.
+        属于 Butterfly 本体的功能请提到上游。

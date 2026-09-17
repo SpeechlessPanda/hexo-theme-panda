@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Demo / 演示站点
+    url: https://speechlesspanda.github.io
+    about: See Panda running on the author's blog
+  - name: Butterfly upstream
+    url: https://github.com/jerryc127/hexo-theme-butterfly
+    about: Issues that also exist in stock Butterfly belong upstream

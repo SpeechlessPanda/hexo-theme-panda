@@ -9,6 +9,10 @@
 
 **演示站点**: [SpeechlessPanda's Blog](https://speechlesspanda.github.io)
 
+[![License](https://img.shields.io/github/license/SpeechlessPanda/hexo-theme-panda?style=flat-square)](LICENSE)
+[![Hexo](https://img.shields.io/badge/hexo-%3E%3D%205.3.0-blue?style=flat-square)](https://hexo.io)
+[![Demo](https://img.shields.io/badge/demo-live-success?style=flat-square)](https://speechlesspanda.github.io)
+
 ---
 
 ## ✨ Panda 在 Butterfly 之上新增了什么
@@ -38,7 +42,10 @@ npm install hexo-renderer-pug hexo-renderer-stylus hexo-util moment-timezone
 
 ### 方式二：npm
 
+**尚未发布到 npm**。在正式上架前请用上面的 git clone 安装：
+
 ```bash
+# 上架后:
 npm install hexo-theme-panda
 ```
 
@@ -61,6 +68,20 @@ menu:
 ```
 
 主题完整默认配置见 [themes/panda/_config.yml](_config.yml)，每个键都有注释。
+
+## ✅ 环境要求
+
+- [Hexo](https://hexo.io/) **≥ 5.3.0**（演示站跑的是 8.x）
+- Node.js **≥ 18**
+- 渲染器：`hexo-renderer-pug`、`hexo-renderer-stylus`（站点里没有的话需要装）
+
+按需额外安装：
+
+| 功能 | 额外依赖 |
+|------|----------|
+| OG 分享图（`og_image.enable`） | `npm install @resvg/resvg-js` |
+| 碎碎念注入本地搜索 | Butterfly 同款 `search.use: local_search` + 搜索数据文件 |
+| 碎碎念评论计数 | 构建环境提供 `GH_DISCUSSION_TOKEN` |
 
 ## 🐼 Panda 功能配置
 

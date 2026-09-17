@@ -1,0 +1,47 @@
+name: Bug report
+description: Something in Panda does not work as documented
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please search existing issues first. If this also happens on stock Butterfly 5.7.0, file it upstream instead.
+        请先搜索已有 issue。若 Butterfly 5.7.0 原版同样复现，请提到上游。
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened / 现象
+      description: What you expected vs what you got.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce / 复现步骤
+      placeholder: |
+        1. hexo init …
+        2. git clone themes/panda
+        3. hexo s
+    validations:
+      required: true
+  - type: input
+    id: hexo
+    attributes:
+      label: Hexo version
+      placeholder: "8.1.2"
+    validations:
+      required: true
+  - type: input
+    id: panda
+    attributes:
+      label: Panda version / commit
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Relevant config / 相关配置
+      description: Redact tokens. `_config.yml` + `_config.panda.yml` snippets help.
+      render: yaml

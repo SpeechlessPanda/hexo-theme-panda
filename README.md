@@ -9,6 +9,10 @@
 
 **Demo**: [SpeechlessPanda's Blog](https://speechlesspanda.github.io)
 
+[![License](https://img.shields.io/github/license/SpeechlessPanda/hexo-theme-panda?style=flat-square)](LICENSE)
+[![Hexo](https://img.shields.io/badge/hexo-%3E%3D%205.3.0-blue?style=flat-square)](https://hexo.io)
+[![Demo](https://img.shields.io/badge/demo-live-success?style=flat-square)](https://speechlesspanda.github.io)
+
 ---
 
 ## ✨ What Panda adds on top of Butterfly
@@ -38,7 +42,10 @@ npm install hexo-renderer-pug hexo-renderer-stylus hexo-util moment-timezone
 
 ### npm
 
+The package is **not on the npm registry yet**. Use git clone until a release is published:
+
 ```bash
+# after publication:
 npm install hexo-theme-panda
 ```
 
@@ -53,6 +60,20 @@ theme: panda
 Same convention as Butterfly: **don't edit `themes/panda/_config.yml`**. Create `_config.panda.yml` in your site root and put your overrides there (Hexo deep-merges, overlay wins).
 
 The fully-commented default config lives in [_config.yml](_config.yml).
+
+## ✅ Requirements
+
+- [Hexo](https://hexo.io/) **≥ 5.3.0** (8.x works; this is what the demo runs)
+- Node.js **≥ 18**
+- Renderers: `hexo-renderer-pug` and `hexo-renderer-stylus` (install them if your site does not already have them)
+
+Optional extras, only if you turn the matching feature on:
+
+| Feature | Extra install |
+|---------|----------------|
+| OG share images (`og_image.enable`) | `npm install @resvg/resvg-js` |
+| Local search injection | Butterfly-style `search.use: local_search` plus a search data file |
+| Memo comment counts | `GH_DISCUSSION_TOKEN` in the build environment |
 
 ## 🐼 Panda features
 
