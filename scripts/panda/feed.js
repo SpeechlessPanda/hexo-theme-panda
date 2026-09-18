@@ -1,8 +1,8 @@
 // Panda theme — Atom feed generator (posts + memos mixed)
 // Forked from SpeechlessPanda/blog-s-code scripts/atom-feed.js (Apache-2.0).
 // Replaces hexo-generator-feed (which only sees posts, not _data memos).
-// Enable in _config.panda.yml: feed.enable: true
-// (do not run hexo-generator-feed at the same time — both would claim the path)
+// On by default (feed.enable: true). Do not run hexo-generator-feed at the same
+// time — both would claim the path. Disable with feed.enable: false.
 //
 // Entry identity design (the key to working with every RSS reader):
 // all distinguishing info goes into the URL **path** — never query or fragment,

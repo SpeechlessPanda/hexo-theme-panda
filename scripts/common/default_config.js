@@ -614,7 +614,7 @@ module.exports = {
     comment_count: true
   },
   feed: {
-    enable: false,
+    enable: true,
     path: 'atom.xml',
     post_limit: 20,
     excerpt_limit: 140,

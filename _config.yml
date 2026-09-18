@@ -1162,7 +1162,7 @@ memos:
 
 # Atom feed with memos mixed in (replaces hexo-generator-feed; do not enable both)
 feed:
-  enable: false
+  enable: true
   path: atom.xml
   post_limit: 20
   excerpt_limit: 140

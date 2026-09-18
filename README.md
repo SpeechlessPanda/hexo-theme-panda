@@ -26,7 +26,7 @@
 | Memos enhancements | Per-memo Giscus comment iframes, auto-expand commented memos, standalone deep-link pages, local-search injection | on |
 | Home-as-about | Home renders `about/index.md`; the post stream moves to `/blog/` | on (optional) |
 | Latest memo card | The newest memo pinned on top of the post stream | on |
-| Atom feed | Custom generator mixing posts + memos, with update-notification entries | off |
+| Atom feed | Custom generator mixing posts + memos, with update-notification entries | on |
 | OG share images | Per-post 1200×630 gradient images (requires `@resvg/resvg-js`) | off |
 | Gradient look | Blue→purple→orange gradient header/footer/background (configurable, yields to your images) | on |
 | Link target blank | Article/memo links open in a new tab | on |
@@ -159,7 +159,7 @@ Comments use Giscus (`comments.use: Giscus` + `giscus.*`, same as Butterfly). Ea
 ```yaml
 # _config.panda.yml
 feed:
-  enable: true           # off by default; do not run hexo-generator-feed together
+  enable: true           # on by default; do not run hexo-generator-feed together
   path: atom.xml
   post_limit: 20
   excerpt_limit: 140

@@ -26,7 +26,7 @@
 | 碎碎念增强 | 每条碎碎念独立 Giscus 评论区（多 iframe 方案）、有评论自动展开、独立页面深链、本地搜索命中 | 开 |
 | 首页即关于页 | 首页直接渲染 `about/index.md`，文章流移到 `/blog/` | 开（可关） |
 | 最新碎碎念卡片 | 文章流顶部展示最新一条碎碎念 | 开 |
-| Atom feed | 自写生成器：文章+碎碎念混排，旧文更新可重新推送 | 关 |
+| Atom feed | 自写生成器：文章+碎碎念混排，旧文更新可重新推送 | 开 |
 | OG 分享图 | 每篇文章自动生成 1200×630 渐变分享图（需 `@resvg/resvg-js`） | 关 |
 | 渐变外观 | 蓝→紫→橙渐变页头/页脚/背景（可配置颜色，设背景图自动让位） | 开 |
 | 链接新标签 | 正文/碎碎念链接统一新标签页打开 | 开 |
@@ -165,7 +165,7 @@ memos:
 ```yaml
 # _config.panda.yml
 feed:
-  enable: true           # 默认关；不要同时装 hexo-generator-feed
+  enable: true           # 默认开；不要同时装 hexo-generator-feed
   path: atom.xml
   post_limit: 20
   excerpt_limit: 140
