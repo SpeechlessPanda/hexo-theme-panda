@@ -33,7 +33,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/SpeechlessPanda/hexo-theme-panda.git"
+    "url": "git+https://github.com/SpeechlessPanda/hexo-theme-panda.git"
   },
   "bugs": {
     "url": "https://github.com/SpeechlessPanda/hexo-theme-panda/issues"
