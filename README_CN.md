@@ -237,9 +237,18 @@ memos:
 ---
 title: 大学道路入门
 description: 从零到能跑起来
-cover:
+cover: /img/series-intro.jpg
 ---
 ```
+
+`cover` 是系列封面（和文章的 `cover` 同一套）。会出现在 `/blog/` 的系列卡片上，也用作系列页页头背景。**不会**从章节继承。
+
+| `cover` 填什么 | 效果 |
+|---|---|
+| `/img/foo.jpg`、`https://…/foo.png` | 图片。本地文件放 `source/`，URL 与路径对应（`source/img/foo.jpg` → `/img/foo.jpg`）。也支持 `gif` / `svg` / `webp` / `avif` |
+| `linear-gradient(135deg, #6ec6ff, #ffd2a8)` 或 `#6ec6ff` | CSS 背景，不是 `<img>` |
+| 留空 / 不写 / `false` | 卡片无图；系列页页头回退到 `default_top_img` |
+
 
 文章流按独立文章和系列卡片混排，新的在上。系列卡片的时间取**最新一章**。只有 `index.md`、还没有章节的空系列不出现。把已发表的文章拖进文件夹即可（不用改 front-matter），下次 `hexo g` / `hexo s` 就会从文章流消失。命令行：`hexo new series "大学道路入门"`、`hexo new --series "大学道路入门" "第一章"`（见[日常命令](#-日常命令)）。
 

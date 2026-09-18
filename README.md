@@ -231,9 +231,18 @@ A series is a **one-level folder** under `source/_posts`, not Butterfly's `{% se
 ---
 title: Intro to X
 description: From zero to a working setup
-cover:
+cover: /img/series-intro.jpg
 ---
 ```
+
+`cover` is the series thumbnail (same idea as a post `cover`). It appears on the `/blog/` series card and as the series page header. It does **not** inherit from chapters.
+
+| `cover` value | Effect |
+|---|---|
+| `/img/foo.jpg`, `https://…/foo.png` | Image. Local files go in `source/` so the URL matches (`source/img/foo.jpg` → `/img/foo.jpg`). Also `gif` / `svg` / `webp` / `avif` |
+| `linear-gradient(135deg, #6ec6ff, #ffd2a8)` or `#6ec6ff` | CSS background, not an `<img>` |
+| empty / omit / `false` | No card image; series page header falls back to `default_top_img` |
+
 
 The post stream mixes independent posts and series cards, newest first. A series card's date is its **latest chapter**. Empty series (index only) are omitted. Drag existing posts into the folder — no extra front-matter — and they leave the stream on the next `hexo g` / `hexo s`. CLI: `hexo new series "Intro to X"` and `hexo new --series "Intro to X" "Chapter 1"` (see [Daily commands](#-daily-commands)).
 
