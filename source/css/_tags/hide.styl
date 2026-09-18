@@ -60,5 +60,26 @@
       transform: rotate(-90deg)
       transform-origin: center center
 
+  & > .toggle-collapse
+    display: block
+    width: 100%
+    padding: 8px 15px
+    border: 0
+    border-top: 1px solid var(--light-grey)
+    background: transparent
+    color: $tab-to-top-color
+    font: inherit
+    text-align: center
+    cursor: pointer
+    appearance: none
+
+    &::before
+      @extend .fontawesomeIcon
+      margin-right: 6px
+      content: '\f0d8'
+
+    &:hover
+      color: $tab-to-top-hover-color
+
   &[open] summary::before
     transform: rotate(0)

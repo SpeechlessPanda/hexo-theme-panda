@@ -140,3 +140,6 @@ blog_series:
   badge: 系列
   count: '%d 篇'
   latest: 最新更新
+
+tag:
+  hide_toggle_collapse: 收合

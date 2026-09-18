@@ -1,4 +1,4 @@
-// Modified from hexo-theme-butterfly 5.7.0 (Apache-2.0) by SpeechlessPanda, 2026: rebranded to Panda
+// Modified from hexo-theme-butterfly 5.7.0 (Apache-2.0) by SpeechlessPanda, 2026: rebranded to Panda; hideToggle expanded blocks get a bottom collapse bar
 'use strict'
 
 const parseArgs = args => args.join(' ').split(',').map(s => s.trim())
@@ -29,7 +29,14 @@ const hideToggle = (args, content) => {
   const style = generateStyle(bg, color)
   const border = bg ? `style="border: 1px solid ${bg}"` : ''
   const renderedContent = hexo.render.renderSync({ text: content, engine: 'markdown' })
-  return `<details class="toggle" ${border}><summary class="toggle-button" ${style}>${display}</summary><div class="toggle-content">${renderedContent}</div></details>`
+  const lang = hexo.config && hexo.config.language
+  const code = Array.isArray(lang) ? lang[0] : (lang || 'en')
+  let collapse = 'Collapse'
+  try {
+    const text = hexo.theme.i18n.__(code)('tag.hide_toggle_collapse')
+    if (text && text !== 'tag.hide_toggle_collapse') collapse = text
+  } catch (_) {}
+  return `<details class="toggle" ${border}><summary class="toggle-button" ${style}>${display}</summary><div class="toggle-content">${renderedContent}</div><button type="button" class="toggle-collapse">${collapse}</button></details>`
 }
 
 hexo.extend.tag.register('hideInline', hideInline)

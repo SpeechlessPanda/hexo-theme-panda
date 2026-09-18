@@ -826,10 +826,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const clickFnOfTagHide = $article => {
-    const hideButtons = $article.querySelectorAll('.hide-button')
-    if (!hideButtons.length) return
-
     const handleClickOfTagHide = e => {
+      const collapse = e.target.closest('.toggle-collapse')
+      if (collapse) {
+        const details = collapse.closest('details.toggle')
+        if (!details) return
+        details.open = false
+        btf.scrollToDest(btf.getEleTop(details), 300)
+        return
+      }
+
       const button = e.target.closest('.hide-button')
       if (!button) return
       button.classList.add('open')

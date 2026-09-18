@@ -19,6 +19,8 @@ files added by Panda are marked as new. Major changes include:
 - Home page can render an arbitrary source page (e.g. the about page)
 - Blog series: `_posts/<folder>/index.md` metadata + sibling chapters as one
   card on the post stream (distinct from Butterfly's `{% series %}` tag)
+- `{% hideToggle %}` expanded blocks get a bottom collapse bar that scrolls
+  back to the header
 - Rebranding: package name, terminal banner, footer credit, default avatar icon
 
 The original project does not distribute a NOTICE file.

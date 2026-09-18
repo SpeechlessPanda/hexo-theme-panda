@@ -140,3 +140,6 @@ blog_series:
   badge: Series
   count: '%d articles'
   latest: Latest
+
+tag:
+  hide_toggle_collapse: Collapse

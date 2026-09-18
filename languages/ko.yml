@@ -140,3 +140,6 @@ blog_series:
   badge: 시리즈
   count: '%d편'
   latest: 최신
+
+tag:
+  hide_toggle_collapse: 접기

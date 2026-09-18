@@ -34,6 +34,7 @@
 | Gradient look | Blue→purple→orange gradient header/footer/background (configurable, yields to your images) | on |
 | Link target blank | Article/memo links open in a new tab | on |
 | Extra highlighting | fish & typst grammars registered out of the box | built-in |
+| `{% hideToggle %}` collapse | Expanded blocks get a bottom collapse bar that scrolls back to the header | on |
 
 Everything Butterfly offers (PJAX, dark mode, comment systems, search, word count, etc.) is kept intact and configured exactly the Butterfly way.
 
@@ -315,6 +316,8 @@ link_target_blank: true   # article/memo links open in a new tab (default on)
 ```
 
 fish / typst code highlighting works out of the box.
+
+`{% hideToggle Title %}…{% endhideToggle %}` is Butterfly's tag. Panda adds a bottom collapse bar (i18n: en Collapse / zh-CN 收起 / zh-TW 收合 / ja 閉じる / ko 접기). Clicking it closes the block and scrolls back to the header under the fixed nav. Asset URLs carry `?v=<theme version>` so a patch like 1.1.1 busts cached `main.js` / `index.css`.
 
 ## 🔄 Migrating from Butterfly
 
