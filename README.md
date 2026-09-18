@@ -9,6 +9,7 @@
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/github/license/SpeechlessPanda/hexo-theme-panda?style=for-the-badge" alt="License" /></a>
   <a href="https://www.npmjs.com/package/hexo-theme-panda"><img src="https://img.shields.io/npm/v/hexo-theme-panda?style=for-the-badge" alt="npm" /></a>
+  <a href="https://www.npmjs.com/package/hexo-theme-panda"><img src="https://img.shields.io/npm/dm/hexo-theme-panda?style=for-the-badge" alt="npm downloads" /></a>
   <a href="https://hexo.io"><img src="https://img.shields.io/badge/Hexo-%3E%3D%205.3.0-0E83CD?style=for-the-badge&amp;logo=hexo&amp;logoColor=white" alt="Hexo" /></a>
   <a href="https://nodejs.org"><img src="https://img.shields.io/badge/Node.js-%3E%3D%2018-339933?style=for-the-badge&amp;logo=nodedotjs&amp;logoColor=white" alt="Node.js" /></a>
   <a href="https://speechlesspanda.github.io"><img src="https://img.shields.io/badge/Demo-live-success?style=for-the-badge" alt="Demo" /></a>
@@ -16,7 +17,7 @@
 
 <p align="center">A card-style Hexo theme: memos timeline, gradient visuals, built-in Atom feed & OG image generation</p>
 <p align="center">Forked and extended from <a href="https://github.com/jerryc127/hexo-theme-butterfly">hexo-theme-butterfly</a> 5.7.0 (Apache-2.0)</p>
-<p align="center"><strong>Demo</strong>: <a href="https://speechlesspanda.github.io">SpeechlessPanda's Blog</a></p>
+<p align="center"><strong>Demo</strong>: <a href="https://speechlesspanda.github.io">SpeechlessPanda's Blog</a> · <strong>npm</strong>: <a href="https://www.npmjs.com/package/hexo-theme-panda">hexo-theme-panda</a></p>
 
 ---
 
@@ -39,10 +40,16 @@ Everything Butterfly offers (PJAX, dark mode, comment systems, search, word coun
 
 ### npm (recommended)
 
-Hexo **≥ 5.3.0**. Run this in the Hexo **site** root (not inside the theme):
+Hexo **≥ 5.3.0**. Run this in the Hexo **site** root (not inside the theme). Package: [hexo-theme-panda](https://www.npmjs.com/package/hexo-theme-panda).
 
 ```bash
 npm install hexo-theme-panda hexo-renderer-pug hexo-renderer-stylus
+```
+
+Hexo 5+ loads `hexo-theme-panda` from `node_modules`. Do **not** copy it into `themes/`. Upgrade later:
+
+```bash
+npm update hexo-theme-panda
 ```
 
 ### Git clone
@@ -113,7 +120,7 @@ Panda writes `public/atom.xml` itself. Do **not** also enable `hexo-generator-fe
 
 ## ⚙️ Configuration
 
-Same convention as Butterfly: **don't edit `themes/panda/_config.yml`**. Create `_config.panda.yml` in your site root and put your overrides there (Hexo deep-merges, overlay wins).
+Same convention as Butterfly: **don't edit** the packaged `_config.yml` (`node_modules/hexo-theme-panda/_config.yml` or `themes/panda/_config.yml`). Create `_config.panda.yml` in your site root and put your overrides there (Hexo deep-merges, overlay wins).
 
 The fully-commented default config lives in [_config.yml](_config.yml).
 

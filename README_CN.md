@@ -9,6 +9,7 @@
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/github/license/SpeechlessPanda/hexo-theme-panda?style=for-the-badge" alt="License" /></a>
   <a href="https://www.npmjs.com/package/hexo-theme-panda"><img src="https://img.shields.io/npm/v/hexo-theme-panda?style=for-the-badge" alt="npm" /></a>
+  <a href="https://www.npmjs.com/package/hexo-theme-panda"><img src="https://img.shields.io/npm/dm/hexo-theme-panda?style=for-the-badge" alt="npm downloads" /></a>
   <a href="https://hexo.io"><img src="https://img.shields.io/badge/Hexo-%3E%3D%205.3.0-0E83CD?style=for-the-badge&amp;logo=hexo&amp;logoColor=white" alt="Hexo" /></a>
   <a href="https://nodejs.org"><img src="https://img.shields.io/badge/Node.js-%3E%3D%2018-339933?style=for-the-badge&amp;logo=nodedotjs&amp;logoColor=white" alt="Node.js" /></a>
   <a href="https://speechlesspanda.github.io"><img src="https://img.shields.io/badge/Demo-live-success?style=for-the-badge" alt="Demo" /></a>
@@ -16,7 +17,7 @@
 
 <p align="center">卡片式 Hexo 主题：碎碎念时间线、渐变视觉、内置 Atom feed 与 OG 图生成</p>
 <p align="center">基于 <a href="https://github.com/jerryc127/hexo-theme-butterfly">hexo-theme-butterfly</a> 5.7.0 二次开发（Apache-2.0）</p>
-<p align="center"><strong>演示站点</strong>: <a href="https://speechlesspanda.github.io">SpeechlessPanda's Blog</a></p>
+<p align="center"><strong>演示站点</strong>: <a href="https://speechlesspanda.github.io">SpeechlessPanda's Blog</a> · <strong>npm</strong>: <a href="https://www.npmjs.com/package/hexo-theme-panda">hexo-theme-panda</a></p>
 
 ---
 
@@ -39,10 +40,16 @@ Butterfly 原有的全部能力（PJAX、深色模式、多种评论、搜索、
 
 ### 方式一：npm（推荐）
 
-需要 Hexo **≥ 5.3.0**。在 Hexo **站点根目录**执行（不要进主题文件夹）：
+需要 Hexo **≥ 5.3.0**。在 Hexo **站点根目录**执行（不要进主题文件夹）。包地址：[hexo-theme-panda](https://www.npmjs.com/package/hexo-theme-panda)。
 
 ```bash
 npm install hexo-theme-panda hexo-renderer-pug hexo-renderer-stylus
+```
+
+Hexo 5+ 从 `node_modules` 加载 `hexo-theme-panda`，**不要**再拷进 `themes/`。以后升级：
+
+```bash
+npm update hexo-theme-panda
 ```
 
 ### 方式二：Git clone
@@ -113,7 +120,7 @@ Panda 自己写 `public/atom.xml`。**不要**同时启用 `hexo-generator-feed`
 
 ## ⚙️ 配置方式
 
-与 Butterfly 完全一致：**不要改主题里的 `themes/panda/_config.yml`**，在站点根目录新建 `_config.panda.yml`，把要改的键写进去即可（Hexo 深合并，覆盖文件优先）。
+与 Butterfly 完全一致：**不要改**包装里的 `_config.yml`（`node_modules/hexo-theme-panda/_config.yml` 或 `themes/panda/_config.yml`），在站点根目录新建 `_config.panda.yml`，把要改的键写进去即可（Hexo 深合并，覆盖文件优先）。
 
 ```yaml
 # _config.panda.yml
