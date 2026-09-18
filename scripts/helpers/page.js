@@ -1,6 +1,7 @@
 'use strict'
 
 const { truncateContent, postDesc } = require('../common/postDesc')
+const { getPageType } = require('../common/pageType')
 const { prettyUrls } = require('hexo-util')
 const crypto = require('crypto')
 const moment = require('moment-timezone')
@@ -197,18 +198,8 @@ hexo.extend.helper.register('shuoshuoFN', (data, page) => {
 })
 
 hexo.extend.helper.register('getPageType', (page, isHome) => {
-  const { layout, tag, category, type, archive } = page
-  if (layout) return layout
-  if (tag) return 'tag'
-  if (category) return 'category'
-  if (archive) return 'archive'
-  if (type) {
-    if (type === 'blog_series') return 'series'
-    if (type === 'tags' || type === 'categories' || type === '404') return type
-    else return 'page'
-  }
-  if (isHome) return 'home'
-  return 'post'
+  const indexPath = hexo.config.index_generator && hexo.config.index_generator.path
+  return getPageType(page, isHome, indexPath)
 })
 
 hexo.extend.helper.register('getVersion', () => {

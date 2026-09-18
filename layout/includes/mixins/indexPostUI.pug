@@ -56,7 +56,7 @@ mixin indexPostUI(opts)
                     div.post-bg(style=`background: ${postCover}`)
             .recent-post-info(class=noCover)
               a.article-title(href=url_for(link) title=title)
-                if globalPageType === 'home' && (article.top || article.sticky > 0)
+                if is_home() && (article.top || article.sticky > 0)
                   i.fas.fa-thumbtack.sticky
                 = title
               .article-meta-wrap

@@ -1,8 +1,9 @@
-//- Modified from hexo-theme-butterfly 5.7.0 (Apache-2.0) by SpeechlessPanda, 2026: honors aside.display.home on the home page
+//- Modified from hexo-theme-butterfly 5.7.0 (Apache-2.0) by SpeechlessPanda, 2026: honors aside.display.home on the home page; relocated index uses inner-page header
 - var globalPageType = getPageType(page, is_home)
 - var htmlClassHideAside = theme.aside.enable && theme.aside.hide ? 'hide-aside' : ''
 - page.aside = globalPageType === 'archive' ? theme.aside.display.archive: globalPageType === 'category' ? theme.aside.display.category : globalPageType === 'tag' ? theme.aside.display.tag : page.aside
 - if (is_home()) page.aside = theme.aside.display.home !== false
+- if (globalPageType !== 'home' && page.__index && !page.title) page.title = _p('page.articles')
 - var hideAside = !theme.aside.enable || page.aside === false ? 'hide-aside' : ''
 - var pageType = (globalPageType === 'post' || globalPageType === 'series') ? 'post' : 'page'
 - pageType = page.type ? pageType + ' type-' + page.type : pageType

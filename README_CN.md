@@ -185,6 +185,9 @@ layout: home
 ---
 ```
 
+`/` 仍是全屏封面（站名 + 打字机）。`/blog/` 和关于、友链一样走矮页头（`#page-site-info`，文案用 i18n `page.articles`），不再套首页那套全屏渐变。
+
+
 ### 碎碎念（memos）
 
 1. 创建页面 `source/memos/index.md`：

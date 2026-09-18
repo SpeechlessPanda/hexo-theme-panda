@@ -13,15 +13,20 @@ All notable changes to [hexo-theme-panda](https://github.com/SpeechlessPanda/hex
 - Folder-only regroup: drag existing posts into the series folder — no extra front-matter — and they leave the stream on the next generate.
 - Distinct from Butterfly's `{% series %}` tag (`series.enable` stays off). Config key: `blog_series` (default on).
 
+### Fixed
+
+- Relocated post stream (`index_generator.path` other than `/`) uses the inner-page header (short banner + `page.articles` title) instead of the homepage full-screen typewriter.
+- Terminal welcome banner rules and version sit at PANDA letter width.
+
 ### Release audit
 
 | Check | Result |
 |-------|--------|
 | Dependency / security | Theme deps: `hexo-renderer-pug`, `hexo-renderer-stylus`, `hexo-util`, `moment-timezone`. No new network-facing surface; series is local filesystem + Hexo generators. `hexo-util` added so git-clone installs resolve `url_for` without relying on a site transitive. |
-| Tests | `node --test test/*.test.js` (classify / mix / paginate / CLI path / rewrite). Generate smoke `test/_smoke_series.js` against a temp site using the live blog's Hexo. |
+| Tests | `node --test test/*.test.js` (classify / mix / paginate / CLI path / rewrite / page-type). Generate smokes: `test/_smoke_series.js`, `test/_smoke_blog_header.js` (`/` full_page + typewriter; `/blog/` `not-home-page` + `page.articles`). |
 | Packaging | npm `files` includes layouts, scripts, languages, source, `_config.yml`, LICENSE, NOTICE, READMEs, CHANGELOG. Tests and `docs/superpowers/` stay out of the tarball. |
-| Runtime smoke | Temp site generate: index mixes series card + independents by latest-chapter date; series landing lists chapters newest-first; Atom feed includes chapters not the unpublished index; chapter pages show series badge and in-series pagination only. `hexo new series` / `hexo new --series` paths verified in the same smoke. |
-| Performance | Series classification is one pass over `Post` at generate; listing pagination reuses the index generator contract. No extra runtime JS. |
+| Runtime smoke | Temp site generate: index mixes series card + independents by latest-chapter date; series landing lists chapters newest-first; Atom feed includes chapters not the unpublished index; chapter pages show series badge and in-series pagination only. `hexo new series` / `hexo new --series` paths verified. Relocated listing (`index_generator.path: /blog`) uses inner-page header; `/` with `layout: home` keeps the full-screen hero. |
+| Performance | Series classification is one pass over `Post` at generate; listing pagination reuses the index generator contract. Page-type check is O(1) per render. No extra runtime JS. |
 | Docs | README EN/CN, `_config.yml` comments, i18n (`blog_series.*`), NOTICE, this changelog. |
 | Content / assets | No new third-party fonts or CDN. Apache-2.0 NOTICE updated. |
 | Deferred | Not converting the demo blog's existing standalone posts into a series. Butterfly `{% series %}` tag remains unused. Nested folders deeper than one level under `_posts` stay ignored. |

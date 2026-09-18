@@ -1136,6 +1136,8 @@ CDN:
 
 # Home page renders a page's content (e.g. about) instead of the post list
 # Falls back to the normal post list when the source page does not exist
+# Pair with site index_generator.path: /blog — that listing uses the inner-page
+# header (same as About / Links), not the full-screen typewriter hero
 home_about:
   enable: true
   source: about/index.md

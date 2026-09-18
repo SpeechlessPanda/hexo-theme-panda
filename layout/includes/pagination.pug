@@ -33,6 +33,6 @@ if page.total !== 1
   else
     nav#pagination
       .pagination
-        if globalPageType === 'home'
+        if is_home()
           - options.format = 'page/%d/#content-inner'
         !=paginator(options)

@@ -179,6 +179,9 @@ layout: home
 
 (source/index.md)
 
+`/` keeps the full-screen hero (title + typewriter). `/blog/` uses the same short header as About / Links (`#page-site-info`, i18n `page.articles`), not the homepage banner.
+
+
 ### Memos (shuoshuo)
 
 1. Create `source/memos/index.md`:
