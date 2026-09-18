@@ -261,7 +261,7 @@ feed:
   include_memos: true
 ```
 
-Entry identity lives entirely in the URL path (never query/fragment), which every reader preserves; memo entries link to their standalone pages and update entries to auto-generated redirect stubs.
+Entry identity lives entirely in the URL path (never query/fragment), which every reader preserves; memo entries link to their standalone pages and update entries to auto-generated redirect stubs. Series chapters are ordinary posts in the feed; series `index.md` is not a post and never appears. A series card on the post stream is dated by its latest chapter, so a new chapter also moves the card.
 
 ### OG share images
 
