@@ -5,6 +5,11 @@
     if theme.post_edit.enable
       a.post-edit-link(href=theme.post_edit.url + page.source title=_p('post.edit') target="_blank")
         i.fas.fa-pencil-alt
+    if page.blog_series
+      a.post-series-link(href=url_for(page.blog_series.path) title=page.blog_series.title)
+        i.fas.fa-layer-group.fa-fw
+        span= _p('blog_series.badge')
+        span= ' · ' + page.blog_series.title
 
   #post-meta
     .meta-firstline

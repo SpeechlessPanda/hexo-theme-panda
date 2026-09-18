@@ -613,6 +613,10 @@ module.exports = {
     search_injection: true,
     comment_count: true
   },
+  blog_series: {
+    enable: true,
+    path: '/series/'
+  },
   feed: {
     enable: true,
     path: 'atom.xml',

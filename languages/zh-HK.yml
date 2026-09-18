@@ -135,3 +135,8 @@ feed:
   updated_suffix: '(有更新)'
   redirecting: '有更新,正在跳轉原文…'
   click_here: '點擊直達'
+
+blog_series:
+  badge: 系列
+  count: '%d 篇'
+  latest: 最新更新

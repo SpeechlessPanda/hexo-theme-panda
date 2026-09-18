@@ -1,0 +1,18 @@
+//- New file in hexo-theme-panda (Apache-2.0): blog series landing page
+extends includes/layout.pug
+
+block content
+  #post
+    if top_img === false
+      include includes/header/series-info.pug
+
+    if page.content
+      article#article-container.container.post-content
+        != page.content
+
+    include includes/mixins/indexPostUI.pug
+    +indexPostUI({ membersOnly: true })
+
+    if page.comments !== false && theme.comments.use
+      - var commentsJsLoad = true
+      !=partial('includes/third-party/comments/index', {}, {cache: true})

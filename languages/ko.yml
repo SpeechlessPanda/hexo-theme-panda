@@ -135,3 +135,8 @@ feed:
   updated_suffix: '(업데이트됨)'
   redirecting: '게시물이 업데이트되었습니다. 원문으로 이동합니다…'
   click_here: '여기를 클릭'
+
+blog_series:
+  badge: 시리즈
+  count: '%d편'
+  latest: 최신

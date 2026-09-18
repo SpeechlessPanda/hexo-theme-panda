@@ -9,6 +9,8 @@ if !theme.disable_top_img && page.top_img !== false
   case globalPageType
     when 'post'
       - top_img = page.top_img || page.cover || theme.default_top_img
+    when 'series'
+      - top_img = page.top_img || page.cover || theme.default_top_img
     when 'page'
       - top_img = page.top_img || theme.default_top_img
     when 'tag'
@@ -24,13 +26,15 @@ if !theme.disable_top_img && page.top_img !== false
 
   if top_img !== false
     - bg_img = getBgPath(top_img)
-    - headerClassName = globalPageType === 'home' ? 'full_page' : globalPageType === 'post' ? 'post-bg' : 'not-home-page'
+    - headerClassName = globalPageType === 'home' ? 'full_page' : (globalPageType === 'post' || globalPageType === 'series') ? 'post-bg' : 'not-home-page'
 
 header#page-header(class=`${headerClassName + isFixedClass}` style=bg_img)
   include ./nav.pug
   if top_img !== false
     if globalPageType === 'post'
       include ./post-info.pug
+    else if globalPageType === 'series'
+      include ./series-info.pug
     else if globalPageType === 'home'
       #site-info
         h1#site-title=config.title
@@ -48,5 +52,5 @@ header#page-header(class=`${headerClassName + isFixedClass}` style=bg_img)
         h1#site-title=page.title || page.tag || page.category
   else
     //- improve seo
-    if globalPageType !== 'post'
+    if globalPageType !== 'post' && globalPageType !== 'series'
       h1.title-seo=page.title || page.tag || page.category || config.title

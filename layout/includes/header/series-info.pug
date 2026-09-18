@@ -1,0 +1,11 @@
+//- New file in hexo-theme-panda (Apache-2.0): series page header
+#post-info
+  h1.post-title= page.title || _p('no_title')
+  #post-meta
+    .meta-firstline
+      span.post-meta-date
+        i.fas.fa-layer-group.fa-fw.post-meta-icon
+        span.post-meta-label= _p('blog_series.badge')
+        if page.blog_series && page.blog_series.member_count
+          span.article-meta-separator |
+          span= _p('blog_series.count', page.blog_series.member_count)

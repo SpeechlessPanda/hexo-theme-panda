@@ -1160,6 +1160,13 @@ memos:
   # (needs GH_DISCUSSION_TOKEN env at build time; silently skipped without it)
   comment_count: true
 
+# Blog series (folder under source/_posts + index.md)
+# Not the same as Butterfly's `{% series %}` tag (`series.enable` above, still off)
+blog_series:
+  enable: true
+  # Public URL prefix for series landing pages
+  path: /series/
+
 # Atom feed with memos mixed in (replaces hexo-generator-feed; do not enable both)
 feed:
   enable: true

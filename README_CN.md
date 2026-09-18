@@ -15,7 +15,7 @@
   <a href="https://speechlesspanda.github.io"><img src="https://img.shields.io/badge/Demo-live-success?style=for-the-badge" alt="Demo" /></a>
 </p>
 
-<p align="center">卡片式 Hexo 主题：碎碎念时间线、渐变视觉、内置 Atom feed 与 OG 图生成</p>
+<p align="center">卡片式 Hexo 主题：碎碎念时间线、博客系列、渐变视觉、内置 Atom feed 与 OG 图生成</p>
 <p align="center">基于 <a href="https://github.com/jerryc127/hexo-theme-butterfly">hexo-theme-butterfly</a> 5.7.0 二次开发（Apache-2.0）</p>
 <p align="center"><strong>演示站点</strong>: <a href="https://speechlesspanda.github.io">SpeechlessPanda's Blog</a> · <strong>npm</strong>: <a href="https://www.npmjs.com/package/hexo-theme-panda">hexo-theme-panda</a></p>
 
@@ -28,6 +28,7 @@
 | 碎碎念增强 | 每条碎碎念独立 Giscus 评论区（多 iframe 方案）、有评论自动展开、独立页面深链、本地搜索命中 | 开 |
 | 首页即关于页 | 首页直接渲染 `about/index.md`，文章流移到 `/blog/` | 开（可关） |
 | 最新碎碎念卡片 | 文章流顶部展示最新一条碎碎念 | 开 |
+| 博客系列 | `_posts/<系列名>/` 加 `index.md` 在文章流显示一张系列卡片，章节不出现在文章流 | 开 |
 | Atom feed | 自写生成器：文章+碎碎念混排，旧文更新可重新推送 | 开 |
 | OG 分享图 | 每篇文章自动生成 1200×630 渐变分享图（需 `@resvg/resvg-js`） | 关 |
 | 渐变外观 | 蓝→紫→橙渐变页头/页脚/背景（可配置颜色，设背景图自动让位） | 开 |
@@ -82,9 +83,9 @@ npm install hexo-theme-panda hexo-renderer-pug hexo-renderer-stylus
 | 命令 | 作用 |
 |------|------|
 | `hexo new "第一篇文章"` | 新建文章 → `source/_posts/第一篇文章.md` |
+| `hexo new series "大学道路入门"` | 新建系列 → `source/_posts/大学道路入门/index.md`（文件夹用原标题，不 slugize） |
+| `hexo new --series "大学道路入门" "第一章"` | 在系列里新建章节 → `source/_posts/大学道路入门/第一章.md`（没有 `index.md` 会补一份） |
 | `hexo new page about` | 新建页面 → `source/about/index.md` |
-| `hexo new draft "草稿"` | 新建草稿 → `source/_drafts/草稿.md` |
-| `hexo publish 草稿` | 把草稿移到 `_posts` 发表 |
 | `hexo server` / `hexo s` | 本地预览 http://localhost:4000/ |
 | `hexo s --draft` | 预览时包含草稿 |
 | `hexo generate` / `hexo g` | 生成静态文件到 `public/` |
@@ -140,6 +141,7 @@ flowchart LR
   hexo --> layouts["layout/*.pug"]
   hexo --> memos["scripts/panda/memos.js"]
   hexo --> feed["scripts/panda/feed.js"]
+  hexo --> series["scripts/panda/blog-series.js"]
   hexo --> og["scripts/panda/og-image.js"]
 ```
 
@@ -219,6 +221,40 @@ memos:
 
 > `comment_count` 需要构建环境提供 `GH_DISCUSSION_TOKEN`（GitHub token，discussions 读权限）。没有 token 时静默跳过，评论区保持默认折叠。
 
+### 博客系列
+
+系列是 `source/_posts` 下一层文件夹，**不是** Butterfly 的 `{% series %}` 标签（`series.enable` 仍然默认关）。
+
+| 路径 | 角色 |
+|---|---|
+| `source/_posts/hello.md` | 独立文章，出现在文章流 |
+| `source/_posts/大学道路入门/index.md` | 只存系列元信息（必须有 `title`、`description` 两个键，`description` 可以空）。不是文章，不进 feed |
+| `source/_posts/大学道路入门/第一章.md` | 章节：出现在系列页，不出现在文章流，但仍是 RSS 条目 |
+
+`index.md` 示例：
+
+```markdown
+---
+title: 大学道路入门
+description: 从零到能跑起来
+cover:
+---
+```
+
+文章流按独立文章和系列卡片混排，新的在上。系列卡片的时间取**最新一章**。只有 `index.md`、还没有章节的空系列不出现。把已发表的文章拖进文件夹即可（不用改 front-matter），下次 `hexo g` / `hexo s` 就会从文章流消失。命令行：`hexo new series "大学道路入门"`、`hexo new --series "大学道路入门" "第一章"`（见[日常命令](#-日常命令)）。
+
+```yaml
+# _config.panda.yml
+blog_series:
+  enable: true
+  path: /series/    # 系列落地页 URL 前缀
+```
+
+落地页：`/series/<文件夹>/`。章节 permalink 仍走站点原来的 `permalink`。文章里的上一篇/下一篇只在同一系列的章节之间跳。系列页评论跟站点评论系统走；在 `index.md` 写 `comments: false` 可关掉。
+
+再深一层（`_posts/a/b/c.md`）会被忽略。
+
+
 ### Atom feed
 
 ```yaml
@@ -285,3 +321,5 @@ fish / typst 代码高亮开箱即用，无需配置。
 ## 📄 协议
 
 [Apache-2.0](LICENSE)。Panda 基于 [hexo-theme-butterfly](https://github.com/jerryc127/hexo-theme-butterfly)（作者 Jerry，Apache-2.0）二次开发，署名与修改说明见 [NOTICE](NOTICE)；被修改的文件头部均有修改声明。字体内嵌下载使用 [LXGW WenKai](https://github.com/lxgw/LxgwWenKai)（SIL OFL 1.1）。
+
+版本记录：[CHANGELOG.md](CHANGELOG.md)。

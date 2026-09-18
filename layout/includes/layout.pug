@@ -4,7 +4,7 @@
 - page.aside = globalPageType === 'archive' ? theme.aside.display.archive: globalPageType === 'category' ? theme.aside.display.category : globalPageType === 'tag' ? theme.aside.display.tag : page.aside
 - if (is_home()) page.aside = theme.aside.display.home !== false
 - var hideAside = !theme.aside.enable || page.aside === false ? 'hide-aside' : ''
-- var pageType = globalPageType === 'post' ? 'post' : 'page'
+- var pageType = (globalPageType === 'post' || globalPageType === 'series') ? 'post' : 'page'
 - pageType = page.type ? pageType + ' type-' + page.type : pageType
 
 doctype html

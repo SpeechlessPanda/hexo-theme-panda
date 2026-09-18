@@ -135,3 +135,8 @@ feed:
   updated_suffix: '(更新あり)'
   redirecting: '更新されました。元のページへリダイレクトしています…'
   click_here: 'ここをクリック'
+
+blog_series:
+  badge: シリーズ
+  count: '%d 件'
+  latest: 最新

@@ -203,6 +203,7 @@ hexo.extend.helper.register('getPageType', (page, isHome) => {
   if (category) return 'category'
   if (archive) return 'archive'
   if (type) {
+    if (type === 'blog_series') return 'series'
     if (type === 'tags' || type === 'categories' || type === '404') return type
     else return 'page'
   }

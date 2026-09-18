@@ -15,7 +15,7 @@
   <a href="https://speechlesspanda.github.io"><img src="https://img.shields.io/badge/Demo-live-success?style=for-the-badge" alt="Demo" /></a>
 </p>
 
-<p align="center">A card-style Hexo theme: memos timeline, gradient visuals, built-in Atom feed & OG image generation</p>
+<p align="center">A card-style Hexo theme: memos timeline, blog series, gradient visuals, built-in Atom feed &amp; OG image generation</p>
 <p align="center">Forked and extended from <a href="https://github.com/jerryc127/hexo-theme-butterfly">hexo-theme-butterfly</a> 5.7.0 (Apache-2.0)</p>
 <p align="center"><strong>Demo</strong>: <a href="https://speechlesspanda.github.io">SpeechlessPanda's Blog</a> · <strong>npm</strong>: <a href="https://www.npmjs.com/package/hexo-theme-panda">hexo-theme-panda</a></p>
 
@@ -28,6 +28,7 @@
 | Memos enhancements | Per-memo Giscus comment iframes, auto-expand commented memos, standalone deep-link pages, local-search injection | on |
 | Home-as-about | Home renders `about/index.md`; the post stream moves to `/blog/` | on (optional) |
 | Latest memo card | The newest memo pinned on top of the post stream | on |
+| Blog series | A `_posts/<name>/` folder with `index.md` becomes one card on the post stream; chapters stay off the stream | on |
 | Atom feed | Custom generator mixing posts + memos, with update-notification entries | on |
 | OG share images | Per-post 1200×630 gradient images (requires `@resvg/resvg-js`) | off |
 | Gradient look | Blue→purple→orange gradient header/footer/background (configurable, yields to your images) | on |
@@ -82,9 +83,9 @@ All of these run in the **site root**. Full CLI: [Hexo commands](https://hexo.io
 | Command | What it does |
 |---------|----------------|
 | `hexo new "My post"` | New article → `source/_posts/My-post.md` |
+| `hexo new series "Intro to X"` | New series → `source/_posts/Intro to X/index.md` (title is the folder name, not slugized) |
+| `hexo new --series "Intro to X" "Chapter 1"` | New chapter → `source/_posts/Intro to X/Chapter 1.md` (creates `index.md` if missing) |
 | `hexo new page about` | New page → `source/about/index.md` |
-| `hexo new draft "WIP"` | Draft → `source/_drafts/WIP.md` |
-| `hexo publish WIP` | Move a draft into `_posts` |
 | `hexo server` / `hexo s` | Local preview at http://localhost:4000/ |
 | `hexo s --draft` | Preview including drafts |
 | `hexo generate` / `hexo g` | Build static files into `public/` |
@@ -132,6 +133,7 @@ flowchart LR
   hexo --> layouts["layout/*.pug"]
   hexo --> memos["scripts/panda/memos.js"]
   hexo --> feed["scripts/panda/feed.js"]
+  hexo --> series["scripts/panda/blog-series.js"]
   hexo --> og["scripts/panda/og-image.js"]
 ```
 
@@ -213,6 +215,39 @@ Comments use Giscus (`comments.use: Giscus` + `giscus.*`, same as Butterfly). Ea
 
 > `comment_count` needs `GH_DISCUSSION_TOKEN` (a GitHub token with discussions read access) in the build environment. Without it, the step is skipped silently and comment areas stay collapsed.
 
+### Blog series
+
+A series is a **one-level folder** under `source/_posts`, not Butterfly's `{% series %}` tag (`series.enable` stays off).
+
+| Path | Role |
+|---|---|
+| `source/_posts/hello.md` | Independent post, shown on the post stream |
+| `source/_posts/Intro to X/index.md` | Series metadata only (`title` + `description` keys required; `description` may be empty). Not a post, not in the feed |
+| `source/_posts/Intro to X/Chapter 1.md` | Chapter: listed on the series page, hidden from the post stream, still an RSS entry |
+
+`index.md` example:
+
+```markdown
+---
+title: Intro to X
+description: From zero to a working setup
+cover:
+---
+```
+
+The post stream mixes independent posts and series cards, newest first. A series card's date is its **latest chapter**. Empty series (index only) are omitted. Drag existing posts into the folder — no extra front-matter — and they leave the stream on the next `hexo g` / `hexo s`. CLI: `hexo new series "Intro to X"` and `hexo new --series "Intro to X" "Chapter 1"` (see [Daily commands](#-daily-commands)).
+
+```yaml
+# _config.panda.yml
+blog_series:
+  enable: true
+  path: /series/    # landing page URL prefix
+```
+
+Landing pages: `/series/<folder>/`. Chapter permalinks stay whatever your site `permalink` already is. In-series prev/next only walks sibling chapters. Comments on the series page follow the site comment system; set `comments: false` on `index.md` to turn them off.
+
+Deeper than one folder (`_posts/a/b/c.md`) is ignored.
+
 ### Atom feed
 
 ```yaml
@@ -279,3 +314,5 @@ fish / typst code highlighting works out of the box.
 ## 📄 License
 
 [Apache-2.0](LICENSE). Panda is derived from [hexo-theme-butterfly](https://github.com/jerryc127/hexo-theme-butterfly) by Jerry (Apache-2.0); see [NOTICE](NOTICE) for attribution and the list of changes. Modified files carry a notice in their header comments. The OG font [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) is SIL OFL 1.1.
+
+Releases: [CHANGELOG.md](CHANGELOG.md).

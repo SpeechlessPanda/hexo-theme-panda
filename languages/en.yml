@@ -135,3 +135,8 @@ feed:
   updated_suffix: ' (updated)'
   redirecting: 'This post was updated; redirecting to the original…'
   click_here: 'Click here'
+
+blog_series:
+  badge: Series
+  count: '%d articles'
+  latest: Latest
