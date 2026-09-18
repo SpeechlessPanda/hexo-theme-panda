@@ -8,6 +8,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/github/license/SpeechlessPanda/hexo-theme-panda?style=for-the-badge" alt="License" /></a>
+  <a href="https://www.npmjs.com/package/hexo-theme-panda"><img src="https://img.shields.io/npm/v/hexo-theme-panda?style=for-the-badge" alt="npm" /></a>
   <a href="https://hexo.io"><img src="https://img.shields.io/badge/Hexo-%3E%3D%205.3.0-0E83CD?style=for-the-badge&amp;logo=hexo&amp;logoColor=white" alt="Hexo" /></a>
   <a href="https://nodejs.org"><img src="https://img.shields.io/badge/Node.js-%3E%3D%2018-339933?style=for-the-badge&amp;logo=nodedotjs&amp;logoColor=white" alt="Node.js" /></a>
   <a href="https://speechlesspanda.github.io"><img src="https://img.shields.io/badge/Demo-live-success?style=for-the-badge" alt="Demo" /></a>
@@ -36,28 +37,79 @@ Everything Butterfly offers (PJAX, dark mode, comment systems, search, word coun
 
 ## 📦 Installation
 
-### Git clone (recommended)
+### npm (recommended)
+
+Hexo **≥ 5.3.0**. Run this in the Hexo **site** root (not inside the theme):
 
 ```bash
-cd your-hexo-site
+npm install hexo-theme-panda hexo-renderer-pug hexo-renderer-stylus
+```
+
+### Git clone
+
+```bash
 git clone https://github.com/SpeechlessPanda/hexo-theme-panda.git themes/panda
 npm install hexo-renderer-pug hexo-renderer-stylus hexo-util moment-timezone
 ```
 
-### npm
-
-The package is **not on the npm registry yet**. Use git clone until a release is published:
-
-```bash
-# after publication:
-npm install hexo-theme-panda
-```
-
-Then set the theme in the site `_config.yml`:
+Enable the theme in the site `_config.yml`:
 
 ```yaml
 theme: panda
 ```
+
+New site from scratch:
+
+```bash
+npm install -g hexo-cli
+hexo init my-blog && cd my-blog
+npm install hexo-theme-panda hexo-renderer-pug hexo-renderer-stylus
+```
+
+Then set `theme: panda` as above.
+
+## 🖥️ Daily commands
+
+All of these run in the **site root**. Full CLI: [Hexo commands](https://hexo.io/docs/commands).
+
+| Command | What it does |
+|---------|----------------|
+| `hexo new "My post"` | New article → `source/_posts/My-post.md` |
+| `hexo new page about` | New page → `source/about/index.md` |
+| `hexo new draft "WIP"` | Draft → `source/_drafts/WIP.md` |
+| `hexo publish WIP` | Move a draft into `_posts` |
+| `hexo server` / `hexo s` | Local preview at http://localhost:4000/ |
+| `hexo s --draft` | Preview including drafts |
+| `hexo generate` / `hexo g` | Build static files into `public/` |
+| `hexo deploy` / `hexo d` | Publish `public/` with your deployer |
+| `hexo g -d` | Generate, then deploy |
+| `hexo clean` | Delete `db.json` and `public/` |
+| `hexo clean && hexo g -d` | Full republish |
+| `hexo clean && hexo s` | Stale theme/config? wipe cache, then preview |
+
+Memos (碎碎念) are **not** created with `hexo new`. Edit `source/_data/shuoshuo.yml`, then `hexo s` or `hexo g`.
+
+### Deploy (publish the blog)
+
+`hexo deploy` needs a deployer plugin. GitHub Pages example:
+
+```bash
+npm install hexo-deployer-git
+```
+
+```yaml
+# site _config.yml
+deploy:
+  type: git
+  repo: git@github.com:<user>/<user>.github.io.git
+  branch: main
+```
+
+```bash
+hexo clean && hexo g -d
+```
+
+Panda writes `public/atom.xml` itself. Do **not** also enable `hexo-generator-feed` (both would claim the same path).
 
 ## ⚙️ Configuration
 

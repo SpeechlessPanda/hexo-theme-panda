@@ -8,6 +8,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/github/license/SpeechlessPanda/hexo-theme-panda?style=for-the-badge" alt="License" /></a>
+  <a href="https://www.npmjs.com/package/hexo-theme-panda"><img src="https://img.shields.io/npm/v/hexo-theme-panda?style=for-the-badge" alt="npm" /></a>
   <a href="https://hexo.io"><img src="https://img.shields.io/badge/Hexo-%3E%3D%205.3.0-0E83CD?style=for-the-badge&amp;logo=hexo&amp;logoColor=white" alt="Hexo" /></a>
   <a href="https://nodejs.org"><img src="https://img.shields.io/badge/Node.js-%3E%3D%2018-339933?style=for-the-badge&amp;logo=nodedotjs&amp;logoColor=white" alt="Node.js" /></a>
   <a href="https://speechlesspanda.github.io"><img src="https://img.shields.io/badge/Demo-live-success?style=for-the-badge" alt="Demo" /></a>
@@ -36,28 +37,79 @@ Butterfly 原有的全部能力（PJAX、深色模式、多种评论、搜索、
 
 ## 📦 安装
 
-### 方式一：Git clone（推荐）
+### 方式一：npm（推荐）
+
+需要 Hexo **≥ 5.3.0**。在 Hexo **站点根目录**执行（不要进主题文件夹）：
 
 ```bash
-cd 你的 Hexo 站点
+npm install hexo-theme-panda hexo-renderer-pug hexo-renderer-stylus
+```
+
+### 方式二：Git clone
+
+```bash
 git clone https://github.com/SpeechlessPanda/hexo-theme-panda.git themes/panda
 npm install hexo-renderer-pug hexo-renderer-stylus hexo-util moment-timezone
 ```
 
-### 方式二：npm
-
-**尚未发布到 npm**。在正式上架前请用上面的 git clone 安装：
-
-```bash
-# 上架后:
-npm install hexo-theme-panda
-```
-
-然后修改站点 `_config.yml`：
+然后改站点 `_config.yml`：
 
 ```yaml
 theme: panda
 ```
+
+从零建站：
+
+```bash
+npm install -g hexo-cli
+hexo init my-blog && cd my-blog
+npm install hexo-theme-panda hexo-renderer-pug hexo-renderer-stylus
+```
+
+再设置 `theme: panda`。
+
+## 🖥️ 日常命令
+
+全部在**站点根目录**执行。完整列表见 [Hexo 指令](https://hexo.io/zh-cn/docs/commands)。
+
+| 命令 | 作用 |
+|------|------|
+| `hexo new "第一篇文章"` | 新建文章 → `source/_posts/第一篇文章.md` |
+| `hexo new page about` | 新建页面 → `source/about/index.md` |
+| `hexo new draft "草稿"` | 新建草稿 → `source/_drafts/草稿.md` |
+| `hexo publish 草稿` | 把草稿移到 `_posts` 发表 |
+| `hexo server` / `hexo s` | 本地预览 http://localhost:4000/ |
+| `hexo s --draft` | 预览时包含草稿 |
+| `hexo generate` / `hexo g` | 生成静态文件到 `public/` |
+| `hexo deploy` / `hexo d` | 按站点 `deploy` 配置发布 `public/` |
+| `hexo g -d` | 先生成再发布 |
+| `hexo clean` | 删除 `db.json` 和 `public/` |
+| `hexo clean && hexo g -d` | 全量重新发布博客 |
+| `hexo clean && hexo s` | 改主题/配置后页面还是旧的：清缓存再预览 |
+
+碎碎念**不是**用 `hexo new` 建的。改 `source/_data/shuoshuo.yml`，再 `hexo s` 或 `hexo g`。
+
+### 发布博客
+
+`hexo deploy` 需要部署插件。GitHub Pages 示例：
+
+```bash
+npm install hexo-deployer-git
+```
+
+```yaml
+# 站点 _config.yml
+deploy:
+  type: git
+  repo: git@github.com:<user>/<user>.github.io.git
+  branch: main
+```
+
+```bash
+hexo clean && hexo g -d
+```
+
+Panda 自己写 `public/atom.xml`。**不要**同时启用 `hexo-generator-feed`（会抢同一个路径）。
 
 ## ⚙️ 配置方式
 
