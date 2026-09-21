@@ -46,10 +46,14 @@ Butterfly 原有的全部能力（PJAX、深色模式、多种评论、搜索、
 需要 Hexo **≥ 5.3.0**。在 Hexo **站点根目录**执行（不要进主题文件夹）。包地址：[hexo-theme-panda](https://www.npmjs.com/package/hexo-theme-panda)。
 
 ```bash
-npm install hexo-theme-panda hexo-renderer-pug hexo-renderer-stylus
+npm install hexo-theme-panda
 ```
 
-Hexo 5+ 从 `node_modules` 加载 `hexo-theme-panda`，**不要**再拷进 `themes/`。以后升级：
+Panda 需要的渲染器（`hexo-renderer-pug`、`hexo-renderer-stylus`、`hexo-util`、`moment-timezone`）都写在主题自己的 `dependencies` 里，npm/pnpm/yarn 会自动装上。Hexo 5+ 从 `node_modules` 加载 `hexo-theme-panda`。
+
+> **`themes/` 优先于 `node_modules`。** Hexo 先找 `themes/<theme>`，找不到才回退到 `node_modules/hexo-theme-<theme>`。如果你以前是 clone 安装的，**把 `themes/panda/` 删掉**——否则旧副本会一直生效，`npm update hexo-theme-panda` 悄悄不起作用。出现这种情况时构建会打印警告。
+
+以后升级：
 
 ```bash
 npm update hexo-theme-panda
@@ -57,9 +61,10 @@ npm update hexo-theme-panda
 
 ### 方式二：Git clone
 
+只在你想改主题本身时用。
+
 ```bash
 git clone https://github.com/SpeechlessPanda/hexo-theme-panda.git themes/panda
-npm install hexo-renderer-pug hexo-renderer-stylus hexo-util moment-timezone
 ```
 
 然后改站点 `_config.yml`：
@@ -73,7 +78,7 @@ theme: panda
 ```bash
 npm install -g hexo-cli
 hexo init my-blog && cd my-blog
-npm install hexo-theme-panda hexo-renderer-pug hexo-renderer-stylus
+npm install hexo-theme-panda
 ```
 
 再设置 `theme: panda`。

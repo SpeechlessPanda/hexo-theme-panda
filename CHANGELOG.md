@@ -2,6 +2,29 @@
 
 All notable changes to [hexo-theme-panda](https://github.com/SpeechlessPanda/hexo-theme-panda) are documented here.
 
+## [1.1.3] - 2026-09-21
+
+### Changed
+
+- npm install is now a single command: `npm install hexo-theme-panda`. The renderers Panda needs (`hexo-renderer-pug`, `hexo-renderer-stylus`, `hexo-util`, `moment-timezone`) are already declared in the theme's own `dependencies`, so every package manager installs them automatically — the README's extra renderer flags were redundant. Git clone is now documented as the "hacking on the theme" path, not the default.
+
+### Added
+
+- The build warns when Panda loads from a vendored `themes/` copy. Hexo resolves `themes/<theme>` **before** `node_modules/hexo-theme-<theme>` (`hexo/lib/hexo/load_config.js`), so a leftover clone silently shadows the npm package and `npm update hexo-theme-panda` appears to do nothing while the old theme keeps rendering. The warning names the directory it loaded from and tells you which of the two modes you are in.
+
+### Release audit
+
+| Check | Result |
+|-------|--------|
+| Dependency / security | No dependency changes — the four renderers were already declared. Only the README instructions and one `hexo.log.warn` are new. No network surface. |
+| Tests | `node --test test/*.test.js` 30/30. Generate smokes (blog header, series ×8, hideToggle, nav band) unchanged and passing. |
+| Packaging | Same `files` as 1.1.2. Version bump is load-bearing: the local CDN `?v=` reads `package.json`, so 1.1.3 is also the cache-bust for the new warning and the doc-only changes. |
+| Runtime smoke | Temp site with the theme installed from `node_modules`: banner + version render, `theme_dir` resolves to `node_modules/hexo-theme-panda`, no warning. Same site with a `themes/panda` clone present: warning fires and names that directory. |
+| Performance | One string compare on `ready`. No render-path change. |
+| Docs | README EN/CN installation section (single-command install, `themes/` precedence warning, upgrade command), `_config.yml` untouched, this changelog. |
+| Content / assets | No new fonts or CDN. NOTICE unchanged (no upstream delta). |
+| Deferred | None. |
+
 ## [1.1.2] - 2026-09-21
 
 ### Added
@@ -86,6 +109,7 @@ All notable changes to [hexo-theme-panda](https://github.com/SpeechlessPanda/hex
 
 Initial public release. Fork of hexo-theme-butterfly 5.7.0 with memos, Atom feed, OG images, home-as-about, and gradient visuals.
 
+[1.1.3]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.2...1.1.3
 [1.1.2]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.1...1.1.2
 [1.1.1]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.0...1.1.1
 [1.1.0]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.0.0...1.1.0

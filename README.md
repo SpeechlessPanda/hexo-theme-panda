@@ -46,10 +46,14 @@ Everything Butterfly offers (PJAX, dark mode, comment systems, search, word coun
 Hexo **≥ 5.3.0**. Run this in the Hexo **site** root (not inside the theme). Package: [hexo-theme-panda](https://www.npmjs.com/package/hexo-theme-panda).
 
 ```bash
-npm install hexo-theme-panda hexo-renderer-pug hexo-renderer-stylus
+npm install hexo-theme-panda
 ```
 
-Hexo 5+ loads `hexo-theme-panda` from `node_modules`. Do **not** copy it into `themes/`. Upgrade later:
+The renderers Panda needs (`hexo-renderer-pug`, `hexo-renderer-stylus`, `hexo-util`, `moment-timezone`) are its own `dependencies`, so npm/pnpm/yarn installs them automatically. Hexo 5+ loads `hexo-theme-panda` from `node_modules`.
+
+> **`themes/` wins over `node_modules`.** Hexo looks for `themes/<theme>` *first* and only falls back to `node_modules/hexo-theme-<theme>`. If you previously cloned the theme, **delete `themes/panda/`** — otherwise the stale copy keeps loading and `npm update hexo-theme-panda` silently does nothing. The build prints a warning when this happens.
+
+Upgrade later:
 
 ```bash
 npm update hexo-theme-panda
@@ -57,9 +61,10 @@ npm update hexo-theme-panda
 
 ### Git clone
 
+Only if you want to hack on the theme itself.
+
 ```bash
 git clone https://github.com/SpeechlessPanda/hexo-theme-panda.git themes/panda
-npm install hexo-renderer-pug hexo-renderer-stylus hexo-util moment-timezone
 ```
 
 Enable the theme in the site `_config.yml`:
@@ -73,7 +78,7 @@ New site from scratch:
 ```bash
 npm install -g hexo-cli
 hexo init my-blog && cd my-blog
-npm install hexo-theme-panda hexo-renderer-pug hexo-renderer-stylus
+npm install hexo-theme-panda
 ```
 
 Then set `theme: panda` as above.

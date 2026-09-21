@@ -99,7 +99,7 @@ band body
     const bandBlock = (html.match(/<style>[\s\S]*?<\/style>/g) || []).find(block => block.includes('.panda-nav-band'))
 
     ok(html.includes('BAND_POST'), 'post title missing')
-    ok(html.includes('?v=1.1.2'), 'asset URLs missing ?v=1.1.2 cache-bust')
+    ok(html.includes(`?v=${require('../package.json').version}`), 'asset URLs missing the version cache-bust')
     ok(html.includes('<div class="bg-animation" id="web_bg"'), '#web_bg div missing')
 
     if (bandBlock) {

@@ -18,4 +18,16 @@ hexo.on('ready', () => {
   }
   const indent = '  '
   hexo.log.info(['', rule, ...art, center(version), rule].map(line => indent + line).join('\n'))
+
+  // Hexo resolves `themes/<theme>` BEFORE `node_modules/hexo-theme-<theme>`
+  // (hexo/lib/hexo/load_config.js), so a leftover clone silently shadows the npm
+  // package and `npm update hexo-theme-panda` appears to do nothing.
+  const themeDir = String(hexo.theme_dir || '').replace(/\\/g, '/')
+  if (themeDir.includes('/themes/')) {
+    hexo.log.warn([
+      'Panda is loading from a vendored copy: ' + themeDir,
+      '`themes/` overrides `node_modules/hexo-theme-panda`, so `npm update hexo-theme-panda` has no effect.',
+      'Delete `themes/panda` to run the npm package (recommended), or keep the clone and `git pull` it yourself.'
+    ].join('\n'))
+  }
 })
