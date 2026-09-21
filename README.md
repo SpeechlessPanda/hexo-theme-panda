@@ -32,6 +32,7 @@
 | Atom feed | Custom generator mixing posts + memos, with update-notification entries | on |
 | OG share images | Per-post 1200×630 gradient images (requires `@resvg/resvg-js`) | off |
 | Gradient look | Blue→purple→orange gradient header/footer/background (configurable, yields to your images) | on |
+| Nav background band | With an image `background`, the fixed nav paints that image's top band, viewport-locked and aligned with `#web_bg` | on |
 | Link target blank | Article/memo links open in a new tab | on |
 | Extra highlighting | fish & typst grammars registered out of the box | built-in |
 | `{% hideToggle %}` collapse | Expanded blocks get a bottom collapse bar that scrolls back to the header | on |
@@ -307,6 +308,36 @@ gradient:
 ```
 
 Disable entirely: `gradient.enable: false`.
+
+### Website background & nav band
+
+Butterfly's `background` paints the page background (`#web_bg`). Panda adds one thing on top: when that value is an **image**, the fixed nav bar paints the **top band of the same image**, locked to the viewport. It no longer scrolls away, and it no longer falls back to a flat gradient bar.
+
+```yaml
+# _config.panda.yml
+background: /img/bg.webp        # an array works too — a random pick on each load
+```
+
+Why it lines up: `#web_bg` is a viewport-sized box with `background-size: cover` + `background-position: center`. The nav rule uses the same geometry with `background-attachment: fixed`, so its 60px window shows exactly the top strip of the rendered page background — same pixels, no seam, no scroll.
+
+Legibility: the band carries a scrim (`gradient.nav_band_mask_light/dark`) under white / `#eaf4ff` nav text. Measured against a mid-tone photo: 5.0:1 in light mode, 5.2:1 in dark mode. Unusually light or dark image? Retune:
+
+```yaml
+# _config.panda.yml
+nav:
+  background_band: true      # false keeps the gradient nav bar
+  band_text_light: '#ffffff'
+  band_text_dark: '#eaf4ff'
+gradient:
+  nav_band_mask_light: 'linear-gradient(180deg, rgba(12, 24, 44, 0.6) 0%, rgba(12, 24, 44, 0.42) 100%)'
+  nav_band_mask_dark: 'linear-gradient(180deg, rgba(0, 0, 0, 0.58) 0%, rgba(0, 0, 0, 0.42) 100%)'
+```
+
+Edge cases:
+
+- A color or a raw CSS gradient in `background` has no "top band", so the nav keeps the normal gradient bar.
+- A random-array `background` keeps the nav on the image `#web_bg` actually picked (synced at runtime, PJAX included).
+- iOS Safari treats `background-attachment: fixed` as `scroll`, which would zoom the image into the 60px bar. There the theme drops the image and keeps the scrim + blur.
 
 ### Misc
 

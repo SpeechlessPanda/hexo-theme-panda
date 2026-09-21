@@ -32,6 +32,7 @@
 | Atom feed | 自写生成器：文章+碎碎念混排，旧文更新可重新推送 | 开 |
 | OG 分享图 | 每篇文章自动生成 1200×630 渐变分享图（需 `@resvg/resvg-js`） | 关 |
 | 渐变外观 | 蓝→紫→橙渐变页头/页脚/背景（可配置颜色，设背景图自动让位） | 开 |
+| 导航栏背景带 | `background` 是图片时，固定导航栏铺该图最上方那条带，锁视口、与 `#web_bg` 对齐 | 开 |
 | 链接新标签 | 正文/碎碎念链接统一新标签页打开 | 开 |
 | 代码高亮扩展 | 额外注册 fish、typst 语法高亮 | 内置 |
 | `{% hideToggle %}` 底部收起 | 展开后底部出现收起条，点一下滚回该块标题 | 开 |
@@ -314,6 +315,36 @@ gradient:
 ```
 
 整体关闭：`gradient.enable: false`。
+
+### 网页背景与导航栏背景带
+
+Butterfly 的 `background` 负责铺页面背景（`#web_bg`）。Panda 在此之上补了一条：当它是**图片**时，固定导航栏直接铺**同一张图最上方那条带**，锁在视口上——不再随滚动跑掉，也不再退化成一块纯色/渐变条。
+
+```yaml
+# _config.panda.yml
+background: /img/bg.webp        # 也支持数组：每次加载随机选一张
+```
+
+为什么能对齐：`#web_bg` 本身就是视口大小的盒子，`background-size: cover` + `background-position: center`；导航栏规则用同样的几何参数再加 `background-attachment: fixed`，于是它那 60px 窗口拿到的正是页面背景渲染结果的顶部一条——同一批像素，没有接缝，也不随滚动移动。
+
+可读性：图片带上叠了一层遮罩（`gradient.nav_band_mask_light/dark`），配白色 / `#eaf4ff` 导航文字。以一张中间调照片实测：浅色模式 5.0:1，深色模式 5.2:1。图片特别亮或特别暗时自己调：
+
+```yaml
+# _config.panda.yml
+nav:
+  background_band: true      # 设 false 恢复原来的渐变导航栏
+  band_text_light: '#ffffff'
+  band_text_dark: '#eaf4ff'
+gradient:
+  nav_band_mask_light: 'linear-gradient(180deg, rgba(12, 24, 44, 0.6) 0%, rgba(12, 24, 44, 0.42) 100%)'
+  nav_band_mask_dark: 'linear-gradient(180deg, rgba(0, 0, 0, 0.58) 0%, rgba(0, 0, 0, 0.42) 100%)'
+```
+
+边界情况：
+
+- `background` 是颜色或原生 CSS 渐变时没有"最上方那条带"可言，导航栏保持原来的渐变样式。
+- 随机数组背景会在运行时把导航栏同步到 `#web_bg` 真正选中的那张图（PJAX 切换同样同步）。
+- iOS Safari 把 `background-attachment: fixed` 当 `scroll` 处理，会把图硬塞进 60px 条里；这类设备上去掉图片、保留遮罩和模糊。
 
 ### 其他
 

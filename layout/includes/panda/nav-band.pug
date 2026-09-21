@@ -1,0 +1,85 @@
+//- New file in hexo-theme-panda (Apache-2.0): the fixed nav bar paints the top band of the
+//- website background image (`background`), locked to the viewport so it never scrolls with
+//- the page. `#web_bg` and this rule share the same viewport-sized box + `cover` + `center`,
+//- so the 60px nav window shows exactly the top strip of the rendered page background.
+//- No band when `background` is a color or raw CSS — a plain background has no "top region".
+//- Emitted after the Panda gradient partial, so it wins over `gradient.nav_light/nav_dark`.
+-
+  const navCfg = theme.nav || {}
+  const gradientCfg = theme.gradient || {}
+  const bgValue = theme.background
+  const singleImage = bgValue && !Array.isArray(bgValue) ? bgImageUrl(bgValue) : ''
+  const arrayHasImage = Array.isArray(bgValue) && bgValue.some(item => bgImageUrl(item))
+  // Single image: bake the URL as the var default (no JS, no inline style needed).
+  // Array background: the random-bg script in layout.pug sets the var to the picked image.
+  const bandImage = singleImage
+    ? `var(--panda-nav-bg-image, url('${singleImage}'))`
+    : (arrayHasImage ? 'var(--panda-nav-bg-image, none)' : '')
+  const maskLight = gradientCfg.nav_band_mask_light || 'linear-gradient(180deg, rgba(12, 24, 44, 0.6) 0%, rgba(12, 24, 44, 0.42) 100%)'
+  const maskDark = gradientCfg.nav_band_mask_dark || 'linear-gradient(180deg, rgba(0, 0, 0, 0.58) 0%, rgba(0, 0, 0, 0.42) 100%)'
+  const textLight = navCfg.band_text_light || '#ffffff'
+  const textDark = navCfg.band_text_dark || '#eaf4ff'
+  // Every selector must carry the gate: an array background drops `panda-nav-band`
+  // at runtime when the random pick is a color, and then no band rule may apply.
+  // `panda-nav-band`, `data-theme` and `apple` all sit on <html>, so the mode gates
+  // must be COMPOUND (e.g. `[data-theme='dark'].panda-nav-band`) — a descendant
+  // combinator between them would never match.
+  const navState = ['#page-header.nav-fixed #nav']
+  const navText = [
+    '#page-header.nav-fixed #nav a',
+    '#page-header.nav-fixed #nav .site-page',
+    '#page-header.nav-fixed #nav .site-name',
+    '#page-header.nav-fixed #nav #toggle-menu',
+    '#page-header.nav-fixed #nav #search-button',
+    '#page-header.nav-fixed #nav #nav-right div',
+    '#page-header.nav-fixed #nav .menus_item_child li a'
+  ]
+  const gate = (prefix, selectors) => selectors.map(selector => `${prefix}${selector}`).join(',\n    ')
+  const css = []
+
+if navCfg.background_band !== false && bandImage
+  -
+    const band = mask => `
+      background-image: ${mask}, ${bandImage} !important;
+      background-attachment: fixed !important;
+      background-position: center !important;
+      background-size: cover !important;
+      background-repeat: no-repeat !important;
+    `.trim()
+    css.push(`
+      ${gate('.panda-nav-band ', navState)} {
+        ${band(maskLight)}
+        box-shadow: 0 8px 20px rgba(38, 79, 126, 0.2) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+      }
+      ${gate("[data-theme='dark'].panda-nav-band ", navState)} {
+        ${band(maskDark)}
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+      }
+      ${gate('.panda-nav-band ', navText)} {
+        color: ${textLight} !important;
+        text-shadow: 0 2px 12px rgba(28, 58, 92, 0.38);
+      }
+      ${gate("[data-theme='dark'].panda-nav-band ", navText)} {
+        color: ${textDark} !important;
+        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.42);
+      }
+      /* iOS treats background-attachment: fixed as scroll, which would zoom the image
+         into the 60px bar. Keep the scrim + blur there, drop the image. */
+      ${gate('.apple.panda-nav-band ', navState)} {
+        background-image: ${maskLight} !important;
+        backdrop-filter: saturate(130%) blur(6px) !important;
+        -webkit-backdrop-filter: saturate(130%) blur(6px) !important;
+      }
+      ${gate("[data-theme='dark'].apple.panda-nav-band ", navState)} {
+        background-image: ${maskDark} !important;
+        backdrop-filter: saturate(120%) blur(6px) !important;
+        -webkit-backdrop-filter: saturate(120%) blur(6px) !important;
+      }
+    `)
+
+if css.length
+  style!= css.join('\n')

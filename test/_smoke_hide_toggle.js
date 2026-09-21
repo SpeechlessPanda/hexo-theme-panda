@@ -92,7 +92,7 @@ hexo.init().then(() => hexo.call('generate', {})).then(() => {
   if (!html.includes('class="toggle-collapse"')) fail('collapse button missing')
   if (!html.includes('>收起</button>')) fail('zh-CN collapse label missing')
   if (!html.includes('分类A')) fail('toggle title missing')
-  if (!html.includes('?v=1.1.1')) fail('asset URLs missing ?v=1.1.1 cache-bust')
+  if (!html.includes(`?v=${require('../package.json').version}`)) fail('asset URLs missing the version cache-bust')
   if (!css.includes('.toggle-collapse')) fail('compiled CSS missing .toggle-collapse')
   if (!js.includes("closest('.toggle-collapse')")) fail('main.js missing collapse handler')
 }).then(() => {

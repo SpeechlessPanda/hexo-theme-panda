@@ -132,6 +132,18 @@ hexo.extend.helper.register('getBgPath', function (path) {
   }
 })
 
+// New helper in hexo-theme-panda: resolved image URL for a `background` value, or ''
+// when the value is a color / raw CSS (same classification as getBgPath).
+hexo.extend.helper.register('bgImageUrl', function (path) {
+  if (!path) return ''
+
+  if (colorPattern.test(path)) return ''
+  if (absoluteUrlPattern.test(path) || relativeUrlPattern.test(path) || simpleFilePattern.test(path)) {
+    return this.url_for(path)
+  }
+  return ''
+})
+
 hexo.extend.helper.register('shuoshuoFN', (data, page) => {
   const { limit } = page
 

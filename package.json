@@ -1,6 +1,6 @@
 {
   "name": "hexo-theme-panda",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "A card-style Hexo theme with memos timeline, blog series, gradient visuals and built-in feed/OG-image generators. Forked and extended from hexo-theme-butterfly (Apache-2.0).",
   "main": "package.json",
   "files": [

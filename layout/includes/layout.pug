@@ -7,9 +7,11 @@
 - var hideAside = !theme.aside.enable || page.aside === false ? 'hide-aside' : ''
 - var pageType = (globalPageType === 'post' || globalPageType === 'series') ? 'post' : 'page'
 - pageType = page.type ? pageType + ' type-' + page.type : pageType
+//- Panda: a single image `background` lets the fixed nav paint its top band (see includes/panda/nav-band.pug)
+- var navBandClass = theme.background && !Array.isArray(theme.background) && bgImageUrl(theme.background) ? 'panda-nav-band' : ''
 
 doctype html
-html(lang=config.language data-theme=theme.display_mode class=htmlClassHideAside)
+html(lang=config.language data-theme=theme.display_mode class=[htmlClassHideAside, navBandClass])
   head
     include ./head.pug
   body
@@ -21,21 +23,40 @@ html(lang=config.language data-theme=theme.display_mode class=htmlClassHideAside
       else
         #web_bg.bg-animation
         - const bgStyleArr = theme.background.map(getBgPath)
+        - const bgImgArr = theme.background.map(item => {
+        -   const imgUrl = bgImageUrl(item)
+        -   return imgUrl ? `url('${imgUrl}')` : null
+        - })
         script.
           (() => {
             const arr = !{JSON.stringify(bgStyleArr)}
+            const imgs = !{JSON.stringify(bgImgArr)}
             const webBgDiv = document.getElementById('web_bg')
+            const root = document.documentElement
 
             const setRandomBg = () => {
-              webBgDiv.style = arr[Math.floor(Math.random() * arr.length)]
+              const index = Math.floor(Math.random() * arr.length)
+              webBgDiv.style = arr[index]
+              // Panda: keep the fixed nav band on the same image as #web_bg
+              const img = imgs[index]
+              if (img) {
+                root.classList.add('panda-nav-band')
+                root.style.setProperty('--panda-nav-bg-image', img)
+              } else {
+                root.classList.remove('panda-nav-band')
+                root.style.removeProperty('--panda-nav-bg-image')
+              }
               requestAnimationFrame(() => webBgDiv.classList.add('bg-animation'))
             }
 
-            document.addEventListener('pjax:send', () => {
+            const clearBg = () => {
               webBgDiv.style = ''
               webBgDiv.classList.remove('bg-animation')
-            })
+              root.classList.remove('panda-nav-band')
+              root.style.removeProperty('--panda-nav-bg-image')
+            }
 
+            document.addEventListener('pjax:send', clearBg)
             document.addEventListener('pjax:complete', setRandomBg)
             document.addEventListener('DOMContentLoaded', setRandomBg)
           })()

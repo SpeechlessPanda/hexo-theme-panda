@@ -120,19 +120,22 @@ hexo.on('new', post => {
   }
 })
 
-let postWrapped = false
+// Wrap whatever `post` generator is current. Script load order is not guaranteed
+// (random_cover.js also registers `post`), so re-wrap at after_init: if another
+// script took the slot after us, wrapping is what keeps the series rewiring alive.
+let registeredWrapper = null
 function wrapPostGenerator () {
-  if (postWrapped) return
-  const original = hexo.extend.generator.get('post')
-  if (!original) return
-  postWrapped = true
-  hexo.extend.generator.register('post', function (locals) {
-    return Promise.resolve(original.call(this, locals)).then(routes => {
+  const current = hexo.extend.generator.get('post')
+  if (!current || current === registeredWrapper) return
+  const wrapped = current
+  registeredWrapper = function (locals) {
+    return Promise.resolve(wrapped.call(this, locals)).then(routes => {
       if (!isSeriesEnabled(this.theme.config)) return routes
       rewireNeighbors(classifyFromLocals(this, locals))
       return routes
     })
-  })
+  }
+  hexo.extend.generator.register('post', registeredWrapper)
 }
 
 wrapPostGenerator()

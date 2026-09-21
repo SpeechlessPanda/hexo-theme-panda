@@ -6,7 +6,10 @@ module.exports = {
     logo: null,
     display_title: true,
     display_post_title: true,
-    fixed: false
+    fixed: false,
+    background_band: true,
+    band_text_light: '#ffffff',
+    band_text_dark: '#eaf4ff'
   },
   menu: null,
   code_blocks: {
@@ -638,6 +641,8 @@ module.exports = {
     header_mask_dark: 'linear-gradient(180deg, rgba(6, 12, 24, 0.2) 0%, rgba(6, 12, 24, 0.38) 100%)',
     nav_light: 'linear-gradient(135deg, rgba(79, 172, 254, 0.96) 0%, rgba(161, 140, 209, 0.96) 55%, rgba(255, 210, 168, 0.96) 100%)',
     nav_dark: 'linear-gradient(135deg, rgba(2, 0, 36, 0.96) 0%, rgba(26, 36, 64, 0.96) 50%, rgba(157, 78, 221, 0.96) 100%)',
+    nav_band_mask_light: 'linear-gradient(180deg, rgba(12, 24, 44, 0.6) 0%, rgba(12, 24, 44, 0.42) 100%)',
+    nav_band_mask_dark: 'linear-gradient(180deg, rgba(0, 0, 0, 0.58) 0%, rgba(0, 0, 0, 0.42) 100%)',
     web_bg_light: 'linear-gradient(180deg, #f3f9ff 0%, #edf2ff 55%, #fff8f3 100%)',
     web_bg_dark: 'linear-gradient(180deg, #0a0a1a 0%, #11132e 55%, #1a1529 100%)'
   },

@@ -2,6 +2,34 @@
 
 All notable changes to [hexo-theme-panda](https://github.com/SpeechlessPanda/hexo-theme-panda) are documented here.
 
+## [1.1.2] - 2026-09-21
+
+### Added
+
+- Website background image drives the fixed nav bar. When Butterfly's `background` is an image, `#page-header.nav-fixed #nav` paints the **top band of that same image**, locked to the viewport (`background-attachment: fixed` + `cover` + `center` — the exact geometry `#web_bg` already uses), so the 60px nav window shows the top strip of the rendered page background: same pixels, no seam, nothing scrolls away, and no flat gradient bar pasted on top.
+- Legibility by mode: a scrim (`gradient.nav_band_mask_light/dark`) under white / `#eaf4ff` nav text. Measured on a mid-tone 1727×910 photo: 5.0:1 (light) and 5.2:1 (dark). Both the scrims and the text colors are configurable, because a very light or very dark image can need a different tone.
+- Config keys: `nav.background_band` (default on), `nav.band_text_light`, `nav.band_text_dark`, `gradient.nav_band_mask_light`, `gradient.nav_band_mask_dark`.
+- Random-array `background` keeps the nav on the image `#web_bg` actually picked: the existing random-pick script now also sets `--panda-nav-bg-image` and toggles the `panda-nav-band` class (PJAX send/complete included). A color or CSS-gradient pick falls back to the normal gradient nav.
+- iOS Safari fallback: `background-attachment: fixed` degrades to `scroll` there, which would zoom the image into the 60px bar, so `.apple` drops the image and keeps the scrim + blur.
+- The band rules live in their own partial emitted after the gradient partial, so they also apply with `gradient.enable: false`.
+
+### Fixed
+
+- Series chapter prev/next could silently fall back to the global date chain. `wrapPostGenerator` wrapped the `post` generator once at script-load time, but `scripts/filters/random_cover.js` also registers `post` and theme script load order is not guaranteed — when it loaded after the wrapper, it replaced it and the series rewiring never ran (chapter pages linked to unrelated posts). The wrapper now tracks what it registered and re-wraps the current generator at `after_init`, so the rewiring survives either load order. Reproduced on ~50% of builds before the fix; `test/_smoke_series.js` now passes 8/8 consecutive runs.
+
+### Release audit
+
+| Check | Result |
+|-------|--------|
+| Dependency / security | No new dependencies. One build-time helper (`bgImageUrl`, same classification as `getBgPath`), one new pug partial, one extra runtime property write for array backgrounds. No network surface. |
+| Tests | `node --test test/*.test.js` 30/30. New generate smoke `test/_smoke_nav_band.js`: single image (`<html>` carries `panda-nav-band`; band rule present with fixed/center/cover; compound `[data-theme='dark'].panda-nav-band` / `.apple.panda-nav-band` gates; every selector inside the band block gated; band emitted after `gradient.nav_light`), array background (no baked class, `var(--panda-nav-bg-image, none)`, script syncs url + `null` for non-images), color background (no band at all). Existing smokes (blog header, series, hideToggle) pass; series smoke re-run 8× to confirm the load-order fix; hideToggle smoke now reads the version from `package.json` instead of pinning `?v=1.1.1`. |
+| Packaging | Same `files` as 1.1.1. Version bump is load-bearing: the local CDN `?v=` reads `package.json`. |
+| Runtime smoke | Temp site with a real background image, `nav.fixed: true`, scrolled: nav computed `background-attachment: fixed, fixed` / `background-position: 50% 50%` / `background-size: cover` — identical geometry to `#web_bg`. Sampled nav text row: light (109,113,94) → 5.0:1 vs `#ffffff`; dark (104,103,73) → 5.2:1 vs `#eaf4ff`. `.apple` + dark: image layer gone, `backdrop-filter: saturate(1.2) blur(6px)` restored. |
+| Performance | One extra background-image on the nav while scrolled; `backdrop-filter` is switched off in the band state (it only blurred content that the band now covers). No extra JS listeners. |
+| Docs | README EN/CN feature table + "Website background & nav band" section, `_config.yml` comments, `default_config.js` mirror, NOTICE, this changelog. |
+| Content / assets | No new fonts or CDN. Apache-2.0 NOTICE updated. |
+| Deferred | None. |
+
 ## [1.1.1] - 2026-09-18
 
 ### Added
@@ -58,6 +86,7 @@ All notable changes to [hexo-theme-panda](https://github.com/SpeechlessPanda/hex
 
 Initial public release. Fork of hexo-theme-butterfly 5.7.0 with memos, Atom feed, OG images, home-as-about, and gradient visuals.
 
+[1.1.2]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.1...1.1.2
 [1.1.1]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.0...1.1.1
 [1.1.0]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.0.0...1.1.0
 [1.0.0]: https://github.com/SpeechlessPanda/hexo-theme-panda/releases/tag/1.0.0

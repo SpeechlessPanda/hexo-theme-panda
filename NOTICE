@@ -21,6 +21,10 @@ files added by Panda are marked as new. Major changes include:
   card on the post stream (distinct from Butterfly's `{% series %}` tag)
 - `{% hideToggle %}` expanded blocks get a bottom collapse bar that scrolls
   back to the header
+- Website background image drives the fixed nav bar: when `background` is an
+  image, the scrolled nav paints that image's top band, viewport-locked and
+  aligned with `#web_bg`, with mode-matched scrims / text colors and an iOS
+  fallback that drops the image
 - Rebranding: package name, terminal banner, footer credit, default avatar icon
 
 The original project does not distribute a NOTICE file.
