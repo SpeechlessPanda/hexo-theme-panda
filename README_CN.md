@@ -93,6 +93,8 @@ hexo clean && hexo generate
 
 用 pnpm / yarn 就换成 `pnpm update` / `yarn upgrade`。
 
+如果 `npm update` 报 **Already up to date**,而 [npm](https://www.npmjs.com/package/hexo-theme-panda) 上明明已经有更新版本，说明你走的是还没同步的注册表镜像。直接锁版本号绕开它：`npm install hexo-theme-panda@latest`（`pnpm add` / `yarn up` 同理）。
+
 ### 如果你的站点由 CI 或托管平台构建
 
 GitHub Actions、Vercel、Netlify、Cloudflare Pages 这类都是按**提交进仓库的 lockfile**构建，不是你本机的状态。跑完上面两条命令后，把结果提交并推送：

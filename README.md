@@ -93,6 +93,8 @@ hexo clean && hexo generate
 
 Swap in `pnpm update` / `yarn upgrade` if that is your package manager.
 
+If `npm update` says **Already up to date** while a newer release exists on [npm](https://www.npmjs.com/package/hexo-theme-panda), you are resolving through a registry mirror that has not caught up yet. Pin the version to get past it: `npm install hexo-theme-panda@latest` (`pnpm add` / `yarn up` behave the same way).
+
 ### If a CI or a host builds your site
 
 GitHub Actions, Vercel, Netlify, Cloudflare Pages and friends build from **the committed lockfile**, not from your laptop. After the two commands above, commit the result and push:

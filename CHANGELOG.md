@@ -2,6 +2,12 @@
 
 All notable changes to [hexo-theme-panda](https://github.com/SpeechlessPanda/hexo-theme-panda) are documented here.
 
+## [Unreleased]
+
+### Changed
+
+- Upgrading docs: note that a registry mirror which has not caught up yet makes `npm update` report "Already up to date" while a newer release exists on npm — pin the version instead (`npm install hexo-theme-panda@latest`).
+
 ## [1.1.4] - 2026-09-22
 
 ### Added
