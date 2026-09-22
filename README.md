@@ -53,11 +53,7 @@ The renderers Panda needs (`hexo-renderer-pug`, `hexo-renderer-stylus`, `hexo-ut
 
 > **`themes/` wins over `node_modules`.** Hexo looks for `themes/<theme>` *first* and only falls back to `node_modules/hexo-theme-<theme>`. If you previously cloned the theme, **delete `themes/panda/`** — otherwise the stale copy keeps loading and `npm update hexo-theme-panda` silently does nothing. The build prints a warning when this happens.
 
-Upgrade later:
-
-```bash
-npm update hexo-theme-panda
-```
+Upgrading an existing install: see [🔄 Upgrading](#-upgrading).
 
 ### Git clone
 
@@ -82,6 +78,43 @@ npm install hexo-theme-panda
 ```
 
 Then set `theme: panda` as above.
+
+## 🔄 Upgrading
+
+Two commands, and both of them matter:
+
+```bash
+npm update hexo-theme-panda
+hexo clean && hexo generate
+```
+
+- **`npm update` only swaps files in `node_modules`.** It rebuilds nothing, so a `public/` written by the previous theme keeps rendering exactly what it had — including the old version in the footer.
+- **`hexo clean` before `hexo generate`.** An upgrade can drop or rename files under `source/`; `hexo clean` deletes `public/` and `db.json` so nothing from the old theme survives. Running `hexo generate` alone after a theme upgrade is the usual cause of a site that looks half-updated.
+
+Swap in `pnpm update` / `yarn upgrade` if that is your package manager.
+
+### If a CI or a host builds your site
+
+GitHub Actions, Vercel, Netlify, Cloudflare Pages and friends build from **the committed lockfile**, not from your laptop. After the two commands above, commit the result and push:
+
+```bash
+git add package.json package-lock.json   # or pnpm-lock.yaml / yarn.lock
+git commit -m "chore(deps): bump Panda theme"
+git push
+```
+
+Skipping this is the single most common "I upgraded but the footer still shows the old version" report: your local `public/` runs the new theme, while the deployed site keeps rendering whatever the lockfile in the repository still pins. The build now prints the version it used, so the CI log tells you which theme produced the deployment.
+
+### Verify
+
+| Where | What you should see |
+|-------|---------------------|
+| `hexo g` output | `[panda] theme X.Y.Z · Hexo A.B.C · N files generated` (plus the banner at startup) |
+| CI log | the same `[panda] theme X.Y.Z` line on the run that deployed |
+| Any page footer | `Panda X.Y.Z` next to the Hexo version |
+| Page source | theme assets carrying `?v=X.Y.Z` |
+
+If the `[panda]` line, the footer and the `?v=` disagree, the page you are reading was not built by the theme you have installed — regenerate, then redeploy.
 
 ## 🖥️ Daily commands
 

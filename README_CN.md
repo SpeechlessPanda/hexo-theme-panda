@@ -53,11 +53,7 @@ Panda 需要的渲染器（`hexo-renderer-pug`、`hexo-renderer-stylus`、`hexo-
 
 > **`themes/` 优先于 `node_modules`。** Hexo 先找 `themes/<theme>`，找不到才回退到 `node_modules/hexo-theme-<theme>`。如果你以前是 clone 安装的，**把 `themes/panda/` 删掉**——否则旧副本会一直生效，`npm update hexo-theme-panda` 悄悄不起作用。出现这种情况时构建会打印警告。
 
-以后升级：
-
-```bash
-npm update hexo-theme-panda
-```
+以后升级：见 [🔄 升级](#-升级)。
 
 ### 方式二：Git clone
 
@@ -82,6 +78,43 @@ npm install hexo-theme-panda
 ```
 
 再设置 `theme: panda`。
+
+## 🔄 升级
+
+两条命令，两条都少不了：
+
+```bash
+npm update hexo-theme-panda
+hexo clean && hexo generate
+```
+
+- **`npm update` 只换 `node_modules` 里的文件。** 它不会重建任何东西，所以上一个主题生成的 `public/` 会原样继续被渲染——页脚里的旧版本号也一样。
+- **`hexo generate` 之前先 `hexo clean`。** 升级可能删掉或改名 `source/` 下的文件，`hexo clean` 会连 `public/` 和 `db.json` 一起删掉，旧主题的东西才不留残余。只跑 `hexo generate` 就升级，通常就是"网站看起来只升了一半"的原因。
+
+用 pnpm / yarn 就换成 `pnpm update` / `yarn upgrade`。
+
+### 如果你的站点由 CI 或托管平台构建
+
+GitHub Actions、Vercel、Netlify、Cloudflare Pages 这类都是按**提交进仓库的 lockfile**构建，不是你本机的状态。跑完上面两条命令后，把结果提交并推送：
+
+```bash
+git add package.json package-lock.json   # 或 pnpm-lock.yaml / yarn.lock
+git commit -m "chore(deps): bump Panda theme"
+git push
+```
+
+漏掉这一步，就是最常见的"我升级了但页脚还是旧版本"：你本机 `public/` 已经是新主题，线上却还按仓库里锁的旧版本渲染。现在构建会打印它实际使用的版本号，看 CI 日志就知道这次部署用的是哪个主题。
+
+### 怎么确认真的升上来了
+
+| 看哪里 | 应该出现 |
+|--------|----------|
+| `hexo g` 输出 | `[panda] theme X.Y.Z · Hexo A.B.C · N files generated`（启动时还有横幅） |
+| CI 日志 | 完成部署的那次运行里有同一行 `[panda] theme X.Y.Z` |
+| 任意页面页脚 | Hexo 版本旁边跟着 `Panda X.Y.Z` |
+| 页面源码 | 主题资源带 `?v=X.Y.Z` |
+
+如果 `[panda]` 那行、页脚、`?v=` 三者对不上，说明你正在看的页面不是当前装的主题生成的——重新生成，再重新部署。
 
 ## 🖥️ 日常命令
 

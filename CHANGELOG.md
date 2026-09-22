@@ -2,6 +2,26 @@
 
 All notable changes to [hexo-theme-panda](https://github.com/SpeechlessPanda/hexo-theme-panda) are documented here.
 
+## [1.1.4] - 2026-09-22
+
+### Added
+
+- `hexo generate` now closes with `[panda] theme X.Y.Z · Hexo A.B.C · N files generated`. Hexo's own summary line counts files but never names the theme that wrote them, so after an upgrade there was no place to check which version actually produced a build — the footer and the `?v=` cache-bust only describe output that is already in front of you. On a CI-built site the log line is the only witness, and it now names the theme, the Hexo version and the file count.
+- `🔄 Upgrading` section in README / README_CN: the two commands that make an upgrade real (`npm update` + `hexo clean && hexo generate`), why each half matters, the CI case (commit `package.json` and the lockfile, or the deployed site keeps rendering the pinned version), and a four-row table for confirming the bump landed.
+
+### Release audit
+
+| Check | Result |
+|-------|--------|
+| Dependency / security | No dependency change. New file is one `generateAfter` listener that reads `package.json` and logs; no network, no filesystem writes. |
+| Tests | `node --test test/*.test.js` 33/33. `test/generate-report.test.js` covers the emitted line (theme version must match `package.json` exactly, hexo version, file count), the zero-route case, and a hexo instance with no router. |
+| Packaging | `scripts/events/generate-report.js` ships inside the existing `scripts` entry of `files`; nothing new to include. Version bump is load-bearing as before — the local `?v=` reads `package.json`, so 1.1.4 is also the cache-bust. |
+| Runtime smoke | Real site (`D:/project/blog`, Hexo 8.1.2) rebuilt against the working tree: start banner `1.1.4`, closing line `[panda] theme 1.1.4 · Hexo 8.1.2 · 58 files generated`, footer `Panda 1.1.4`, assets `?v=1.1.4`. Restored the installed theme and rebuilt, footer back to `Panda 1.1.3`. |
+| Performance | One string interpolation on `generateAfter`, outside every render path. |
+| Docs | README EN/CN install stub now points at the new `🔄 Upgrading` section instead of repeating a one-line command; `_config.yml` untouched; this changelog. |
+| Content / assets | No new fonts, no CDN, NOTICE unchanged. |
+| Deferred | None. |
+
 ## [1.1.3] - 2026-09-21
 
 ### Changed
@@ -109,6 +129,7 @@ All notable changes to [hexo-theme-panda](https://github.com/SpeechlessPanda/hex
 
 Initial public release. Fork of hexo-theme-butterfly 5.7.0 with memos, Atom feed, OG images, home-as-about, and gradient visuals.
 
+[1.1.4]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.3...1.1.4
 [1.1.3]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.2...1.1.3
 [1.1.2]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.1...1.1.2
 [1.1.1]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.0...1.1.1
