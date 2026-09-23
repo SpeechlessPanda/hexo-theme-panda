@@ -15,8 +15,8 @@ nav:
   display_post_title: true
   # Whether to fix navigation bar
   fixed: false
-  # Panda: the fixed nav bar paints the top band of the `background` image, locked to the
-  # viewport and aligned with #web_bg (it no longer scrolls away with the page).
+  # Panda: the fixed nav bar paints the top band of the `background` image via a
+  # viewport-sized #nav::before (cover on the 60px bar itself zooms into the photo).
   # Ignored when `background` is a color or raw CSS — a plain background has no top band.
   background_band: true
   # Nav text color over that band. Tune these when your image is very light or very dark.

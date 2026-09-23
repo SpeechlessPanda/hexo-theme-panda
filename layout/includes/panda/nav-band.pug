@@ -1,7 +1,7 @@
 //- New file in hexo-theme-panda (Apache-2.0): the fixed nav bar paints the top band of the
-//- website background image (`background`), locked to the viewport so it never scrolls with
-//- the page. `#web_bg` and this rule share the same viewport-sized box + `cover` + `center`,
-//- so the 60px nav window shows exactly the top strip of the rendered page background.
+//- website background image (`background`). `cover` on the 60px #nav box zooms into the
+//- photo's middle; a viewport-sized #nav::before (absolute, clipped to 60px) uses the same
+//- 100vw×100vh + cover + center geometry as #web_bg, so the bar is that wallpaper's top strip.
 //- No band when `background` is a color or raw CSS — a plain background has no "top region".
 //- Emitted after the Panda gradient partial, so it wins over `gradient.nav_light/nav_dark`.
 -
@@ -39,25 +39,45 @@
 
 if navCfg.background_band !== false && bandImage
   -
-    const band = mask => `
+    const layer = mask => `
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 0;
       background-image: ${mask}, ${bandImage} !important;
-      background-attachment: fixed !important;
       background-position: center !important;
       background-size: cover !important;
       background-repeat: no-repeat !important;
+      clip-path: inset(0 0 calc(100vh - 60px) 0);
+    `.trim()
+    const bar = shadow => `
+      background: transparent !important;
+      background-image: none !important;
+      box-shadow: ${shadow} !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      will-change: auto !important;
     `.trim()
     css.push(`
       ${gate('.panda-nav-band ', navState)} {
-        ${band(maskLight)}
-        box-shadow: 0 8px 20px rgba(38, 79, 126, 0.2) !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
+        ${bar('0 8px 20px rgba(38, 79, 126, 0.2)')}
+      }
+      ${gate('.panda-nav-band ', navState.map(s => s + '::before'))} {
+        ${layer(maskLight)}
       }
       ${gate("[data-theme='dark'].panda-nav-band ", navState)} {
-        ${band(maskDark)}
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35) !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
+        ${bar('0 8px 20px rgba(0, 0, 0, 0.35)')}
+      }
+      ${gate("[data-theme='dark'].panda-nav-band ", navState.map(s => s + '::before'))} {
+        ${layer(maskDark)}
+      }
+      ${gate('.panda-nav-band ', navState.map(s => s + ' > *'))} {
+        position: relative;
+        z-index: 1;
       }
       ${gate('.panda-nav-band ', navText)} {
         color: ${textLight} !important;
@@ -67,8 +87,8 @@ if navCfg.background_band !== false && bandImage
         color: ${textDark} !important;
         text-shadow: 0 2px 12px rgba(0, 0, 0, 0.42);
       }
-      /* iOS treats background-attachment: fixed as scroll, which would zoom the image
-         into the 60px bar. Keep the scrim + blur there, drop the image. */
+      /* iOS Safari still mishandles a viewport-locked image in the 60px bar.
+         Keep the scrim + blur there, drop the image layer. */
       ${gate('.apple.panda-nav-band ', navState)} {
         background-image: ${maskLight} !important;
         backdrop-filter: saturate(130%) blur(6px) !important;
@@ -78,6 +98,9 @@ if navCfg.background_band !== false && bandImage
         background-image: ${maskDark} !important;
         backdrop-filter: saturate(120%) blur(6px) !important;
         -webkit-backdrop-filter: saturate(120%) blur(6px) !important;
+      }
+      ${gate('.apple.panda-nav-band ', navState.map(s => s + '::before'))} {
+        content: none !important;
       }
     `)
 

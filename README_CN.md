@@ -365,7 +365,7 @@ Butterfly 的 `background` 负责铺页面背景（`#web_bg`）。Panda 在此�
 background: /img/bg.webp        # 也支持数组：每次加载随机选一张
 ```
 
-为什么能对齐：`#web_bg` 本身就是视口大小的盒子，`background-size: cover` + `background-position: center`；导航栏规则用同样的几何参数再加 `background-attachment: fixed`，于是它那 60px 窗口拿到的正是页面背景渲染结果的顶部一条——同一批像素，没有接缝，也不随滚动移动。
+为什么能对齐：`#web_bg` 本身就是视口大小的盒子，`background-size: cover` + `background-position: center`。把同样的 `cover` 直接铺在 60px 的 `#nav` 上，会缩进照片中间一条。滚动后的导航栏改用视口大小的 `#nav::before`（`100vw×100vh`、`cover`、`center`，再裁成 60px），拿到的才是页面背景渲染结果的顶部一条——同一批像素，没有接缝，也不随滚动移动。
 
 可读性：图片带上叠了一层遮罩（`gradient.nav_band_mask_light/dark`），配白色 / `#eaf4ff` 导航文字。以一张中间调照片实测：浅色模式 5.0:1，深色模式 5.2:1。图片特别亮或特别暗时自己调：
 
@@ -384,7 +384,7 @@ gradient:
 
 - `background` 是颜色或原生 CSS 渐变时没有"最上方那条带"可言，导航栏保持原来的渐变样式。
 - 随机数组背景会在运行时把导航栏同步到 `#web_bg` 真正选中的那张图（PJAX 切换同样同步）。
-- iOS Safari 把 `background-attachment: fixed` 当 `scroll` 处理，会把图硬塞进 60px 条里；这类设备上去掉图片、保留遮罩和模糊。
+- iOS Safari 仍然处理不好锁在视口上的 60px 图片带；这类设备上去掉图片层、保留遮罩和模糊。
 
 ### 其他
 

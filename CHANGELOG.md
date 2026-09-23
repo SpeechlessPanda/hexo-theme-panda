@@ -2,11 +2,28 @@
 
 All notable changes to [hexo-theme-panda](https://github.com/SpeechlessPanda/hexo-theme-panda) are documented here.
 
-## [Unreleased]
+## [1.1.5] - 2026-09-23
+
+### Fixed
+
+- Scrolled nav band no longer zooms into the middle of the background photo. `background-size: cover` on the 60px `#nav` box sized the image against that bar, so the window showed a random mid-slice instead of the top of `#web_bg`. The band now paints a viewport-sized `#nav::before` (`100vw×100vh`, `cover`, `center`, clipped to 60px). Rest-state `#nav` stays transparent. iOS still drops the image layer and keeps the scrim + blur.
 
 ### Changed
 
 - Upgrading docs: note that a registry mirror which has not caught up yet makes `npm update` report "Already up to date" while a newer release exists on npm — pin the version instead (`npm install hexo-theme-panda@latest`).
+
+### Release audit
+
+| Check | Result |
+|-------|--------|
+| Dependency / security | No dependency change. CSS-only: one extra pseudo-element on the scrolled nav, no network, no filesystem writes. |
+| Tests | `node --test test/*.test.js` **33/33**. `test/_smoke_nav_band.js` single / array / color. Smoke now pins `::before`, `100vw`/`100vh`, `clip-path`, and forbids `background-attachment: fixed` on the 60px box. Existing smokes (blog header, series, hideToggle) pass. |
+| Packaging | Same `files` as 1.1.4. Version bump is load-bearing — the local `?v=` reads `package.json`, so 1.1.5 is also the cache-bust. |
+| Runtime smoke | Isolated nav-band generate smoke: single / array / color. Real site (`D:/project/blog`, Hexo 8.1.2) rebuilt against the working tree: start banner `1.1.5`, closing line `[panda] theme 1.1.5 · Hexo 8.1.2 · 145 files generated`, footer `Panda 1.1.5`, assets `?v=1.1.5`. Restored the installed 1.1.4 package afterwards. |
+| Performance | One extra composited layer on the 60px bar while scrolled. No extra JS listeners. |
+| Docs | README EN/CN "Website background & nav band", `_config.yml` comments, this changelog. NOTICE unchanged (behavior, not a new feature). |
+| Content / assets | No new fonts, no CDN. |
+| Deferred | npm publish is manual (`npm publish` after the GitHub release). |
 
 ## [1.1.4] - 2026-09-22
 
@@ -135,6 +152,7 @@ All notable changes to [hexo-theme-panda](https://github.com/SpeechlessPanda/hex
 
 Initial public release. Fork of hexo-theme-butterfly 5.7.0 with memos, Atom feed, OG images, home-as-about, and gradient visuals.
 
+[1.1.5]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.4...1.1.5
 [1.1.4]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.3...1.1.4
 [1.1.3]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.2...1.1.3
 [1.1.2]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.1...1.1.2
