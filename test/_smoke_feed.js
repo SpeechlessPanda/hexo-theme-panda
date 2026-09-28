@@ -217,5 +217,26 @@ old body revised
     if (!fs.existsSync(stub)) fail(`build 4: stub page missing on disk: ${stub}`)
   }
 
+  // Phase 5: no shuoshuo.yml at all -> theme ships one sample memo, visible in
+  // the feed, on the timeline page and as a standalone page
+  fs.unlinkSync(path.join(site, 'source/_data/shuoshuo.yml'))
+  write('source/memos/index.md', `---
+title: Memos
+type: shuoshuo
+---
+`)
+  run('5')
+  const fifth = ids('5')
+  if (!fifth.some(id => id.includes('/memos/2026-01-01T00-00'))) {
+    fail('build 5: built-in sample memo missing from feed when data file absent')
+  }
+  const timeline = path.join(site, 'public/memos/index.html')
+  if (!fs.existsSync(timeline) || !fs.readFileSync(timeline, 'utf8').includes("Hello, it")) {
+    fail('build 5: sample memo not rendered on the /memos/ timeline page')
+  }
+  if (!fs.existsSync(path.join(site, 'public/memos/2026-01-01T00-00/index.html'))) {
+    fail('build 5: sample memo standalone page missing')
+  }
+
   if (!process.exitCode) console.log('SMOKE OK: feed entry ids stable across CI mtimes; new memo synced')
 }

@@ -1151,6 +1151,8 @@ home_about:
 
 # Memos (shuoshuo) enhancements
 # Page setup: create source/memos/index.md with `type: shuoshuo`, data in source/_data/shuoshuo.yml
+# A built-in sample memo ("Hello, it's my blog!") demonstrates the feature until
+# you write your first entry in the data file
 memos:
   enable: true
   # Path of the memos page (used by the latest-memo card link and standalone pages)

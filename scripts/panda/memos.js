@@ -4,7 +4,41 @@
 // strings come from theme config + i18n instead of hardcoding.
 'use strict'
 
-const { escapeXml, memosConfig, memosEnabled, getMemos, memosPath, siteLang, memoSlugs } = require('./lib/memo-utils')
+const { escapeXml, memosConfig, memosEnabled, memosDataKey, getMemos, memosPath, siteLang, memoSlugs } = require('./lib/memo-utils')
+
+// Ships one sample memo so a fresh site shows the feature working (timeline,
+// latest card, standalone page, feed). Injected into site data before generate
+// only while the site's own data file is missing/empty — the first real memo
+// the user writes replaces it everywhere.
+const SAMPLE_MEMO = {
+  date: '2026-01-01 00:00',
+  content: "Hello, it's my blog! 👋\n\nThis sample memo ships with the theme. Write your own in `source/_data/shuoshuo.yml` — one entry per memo with `date`, `content` and optional `tags` — and this placeholder disappears.",
+  tags: ['demo']
+}
+
+// The locals `data` getter rebuilds a fresh object from the Data model on every
+// generate (hexo/dist/hexo/index.js), so injecting into locals is useless — the
+// model is the only seam every consumer (timeline pug, latest card, standalone
+// pages, feed, search) actually reads. Insert at generateBefore, remove at
+// generateAfter so the sample never persists into the site's db.json.
+let sampleInjected = false
+
+hexo.on('generateBefore', () => {
+  sampleInjected = false
+  if (!memosEnabled(hexo)) return
+  const Data = hexo.model('Data')
+  const key = memosDataKey(hexo)
+  const doc = Data.findById(key)
+  if (doc && Array.isArray(doc.data) && doc.data.length) return
+  Data.save({ _id: key, data: [SAMPLE_MEMO] })
+  sampleInjected = true
+})
+
+hexo.on('generateAfter', () => {
+  if (!sampleInjected) return
+  hexo.model('Data').removeById(memosDataKey(hexo))
+  sampleInjected = false
+})
 
 // latest_memo(): data for the "latest memo" card on the post stream
 hexo.extend.helper.register('latest_memo', function () {

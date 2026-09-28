@@ -256,6 +256,8 @@ memos:
   comment_count: true      # build-time Giscus counts -> auto-expand commented memos
 ```
 
+While the data file is missing or empty, the theme shows one built-in sample memo ("Hello, it's my blog!") on the timeline, the latest-memo card and the feed, so a fresh site demonstrates the format end to end. It disappears everywhere the moment you write your first real entry, and it is never persisted into your `db.json`.
+
 Comments use Giscus (`comments.use: Giscus` + `giscus.*`, same as Butterfly). Each memo gets its own discussion via the theme's multi-iframe giscus `/widget` integration.
 
 > `comment_count` needs `GH_DISCUSSION_TOKEN` (a GitHub token with discussions read access) in the build environment. Without it, the step is skipped silently and comment areas stay collapsed.

@@ -4,6 +4,10 @@ All notable changes to [hexo-theme-panda](https://github.com/SpeechlessPanda/hex
 
 ## [Unreleased]
 
+### Added
+
+- Built-in sample memo: while `source/_data/shuoshuo.yml` is missing/empty, the theme injects one sample entry ("Hello, it's my blog!") into the Data model at `generateBefore` (removed at `generateAfter`, never persisted to `db.json`), so a fresh site shows the timeline, latest-memo card, standalone page and feed entry working end to end. The first real entry replaces it everywhere.
+
 ### Fixed
 
 - RSS false re-push on CI: post update-notification ids derived from `post.updated`, which under Hexo's default `updated_option: mtime` is the file mtime — checkout time on CI (GitHub Actions, Netlify, ...). Any rebuild (e.g. adding a memo) re-pushed every old post with a fresh `<post>/u/<timestamp>/` id; readers surfaced the newest one, i.e. "adding a 碎碎念 re-pushes the latest blog post". Re-push now requires an explicit front-matter `updated:` (mtime is ignored), and the stub id is a content hash of the raw file instead of a timestamp: same content → same id on every machine, any edit → exactly one fresh notification. Sites that relied on mtime-based re-push should add `updated:` to the post's front-matter when revising it. Upgrading reverts mtime-stubbed posts to their permalink id once (a one-time, bounded reader notification).
@@ -12,6 +16,7 @@ All notable changes to [hexo-theme-panda](https://github.com/SpeechlessPanda/hex
 ### Tests
 
 - New `test/_smoke_feed.js`: three-phase CI simulation (fresh-checkout mtimes per build, `db.json` deleted) asserts post/memo entry ids stay stable across builds, a newly added memo appears, ISO-`T` memo dates enter the feed, and an explicit `updated:` post gets a hash stub id plus an on-disk stub page. Red before the fix (`post id unstable across CI builds`), green after. Full suite `node --test test/*.test.js` 33/33; real site (`D:/project/blog`, Hexo 8.1.2) rebuilt against the working tree: all 33 memo entries intact, all post ids stable permalinks, zero mtime stubs; installed 1.1.5 package restored afterwards.
+- Sample memo: smoke phase 5 asserts it appears in the feed, on the `/memos/` timeline page and as a standalone page when the data file is absent. The first locals-based injection attempt went red here — Hexo rebuilds `locals.data` from the Data model on every generate — the shipped implementation injects at the Data-model seam (`generateBefore`/`generateAfter`).
 
 
 ## [1.1.5] - 2026-09-23
