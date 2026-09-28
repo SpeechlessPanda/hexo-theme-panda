@@ -2,7 +2,7 @@
 
 const { test } = require('node:test')
 const assert = require('node:assert/strict')
-const { explicitUpdated, contentStamp, ensureUpdatedField } = require('../scripts/panda/lib/post-updated')
+const { explicitUpdated, contentStamp, ensurePostDefaults } = require('../scripts/panda/lib/post-updated')
 
 const post = raw => ({ raw })
 
@@ -44,19 +44,27 @@ test('contentStamp', t => {
   })
 })
 
-test('ensureUpdatedField', t => {
-  t.test('inserts updated: false right after the date line', () => {
-    const out = ensureUpdatedField('---\ntitle: A\ndate: 2026-09-28 21:00:00\ntags:\n---\nbody')
-    assert.equal(out, '---\ntitle: A\ndate: 2026-09-28 21:00:00\nupdated: false\ntags:\n---\nbody')
+test('ensurePostDefaults', t => {
+  t.test('inserts updated: false and sticky: false right after the date line', () => {
+    const out = ensurePostDefaults('---\ntitle: A\ndate: 2026-09-28 21:00:00\ntags:\n---\nbody')
+    assert.equal(out, '---\ntitle: A\ndate: 2026-09-28 21:00:00\nupdated: false\nsticky: false\ntags:\n---\nbody')
   })
 
-  t.test('already has updated key -> no change', () => {
-    assert.equal(ensureUpdatedField('---\ndate: 2026-09-28 21:00:00\nupdated: false\n---\n'), null)
-    assert.equal(ensureUpdatedField('---\ndate: 2026-09-28 21:00:00\nupdated: 2026-09-29 10:00:00\n---\n'), null)
+  t.test('adds only the missing key (existing keys stay put)', () => {
+    assert.equal(
+      ensurePostDefaults('---\ndate: 2026-09-28 21:00:00\nsticky: true\n---\n'),
+      '---\ndate: 2026-09-28 21:00:00\nupdated: false\nsticky: true\n---\n')
+    assert.equal(
+      ensurePostDefaults('---\ndate: 2026-09-28 21:00:00\nupdated: 2026-09-29 10:00:00\n---\n'),
+      '---\ndate: 2026-09-28 21:00:00\nsticky: false\nupdated: 2026-09-29 10:00:00\n---\n')
+  })
+
+  t.test('both present -> no change', () => {
+    assert.equal(ensurePostDefaults('---\ndate: 2026-09-28 21:00:00\nupdated: false\nsticky: false\n---\n'), null)
   })
 
   t.test('no date (series index) or no front-matter -> no change', () => {
-    assert.equal(ensureUpdatedField('---\ntitle: S\ndescription:\n---\n'), null)
-    assert.equal(ensureUpdatedField('plain markdown'), null)
+    assert.equal(ensurePostDefaults('---\ntitle: S\ndescription:\n---\n'), null)
+    assert.equal(ensurePostDefaults('plain markdown'), null)
   })
 })

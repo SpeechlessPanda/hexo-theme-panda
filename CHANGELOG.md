@@ -8,6 +8,7 @@ All notable changes to [hexo-theme-panda](https://github.com/SpeechlessPanda/hex
 
 - Built-in sample memo: while `source/_data/shuoshuo.yml` is missing/empty, the theme injects one sample entry ("Hello, it's my blog!") into the Data model at `generateBefore` (removed at `generateAfter`, never persisted to `db.json`), so a fresh site shows the timeline, latest-memo card, standalone page and feed entry working end to end. The first real entry replaces it everywhere.
 - `hexo new` posts now scaffold `updated: false` (scripts/panda/updated-scaffold.js, `hexo.on('new')` — site scaffolds always win over theme-side scaffold defaults, so the post-creation rewrite is the reliable seam). `false`/`null`/empty `updated:` values mean "never revised" and never trigger a re-push; flipping to a real date re-pushes once, and every subsequent edit re-pushes exactly once more (smoke phases 6-7: second revision gets a fresh hash id, an unchanged rebuild does not move it). Update-identity logic extracted to `scripts/panda/lib/post-updated.js` with unit tests (`test/post-updated.test.js`, 12 cases).
+- New posts also scaffold `sticky: false` (same `hexo.on('new')` hook; added independently of `updated:`, either missing key is inserted after `date:`). Series chapters are covered too — they are ordinary posts under `_posts/<series>/`, and smoke phase 8 pins that an explicit `updated:` on a chapter produces the hash-stub re-push entry (`/S8SERIES/ch1/u/<hash>/`) with an on-disk stub page, while the series `index.md` never enters the feed.
 
 ### Fixed
 

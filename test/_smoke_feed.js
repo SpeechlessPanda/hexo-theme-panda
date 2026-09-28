@@ -265,5 +265,45 @@ old body revised again
     fail(`build 7: id moved without any edit:\n  build6: ${postId6}\n  build7: ${postId7}`)
   }
 
+  // Phase 8: series chapters are posts too — an explicit `updated:` on a
+  // chapter must produce the same hash-stub re-push entry
+  write('_config.panda.yml', `
+home_about:
+  enable: false
+memos:
+  enable: true
+og_image:
+  enable: false
+feed:
+  enable: true
+blog_series:
+  enable: true
+  path: /series/
+`)
+  write('source/_posts/S8SERIES/index.md', `---
+title: S8_SERIES
+description: S8_DESC
+---
+`)
+  write('source/_posts/S8SERIES/ch1.md', `---
+title: S8CH1
+date: 2026-08-01 12:00:00
+updated: 2026-08-20 12:00:00
+---
+chapter body
+`)
+  run('8')
+  const eighth = ids('8')
+  const chId = eighth.find(id => id.includes('/S8SERIES/ch1'))
+  if (!/\/S8SERIES\/ch1\/u\/[0-9a-f]{10}\/$/.test(chId || '')) {
+    fail(`build 8: series chapter with explicit updated did not get a hash stub id, got: ${chId}`)
+  } else {
+    const stub = path.join(site, 'public', chId.replace('http://example.com/', ''), 'index.html')
+    if (!fs.existsSync(stub)) fail(`build 8: chapter stub page missing on disk: ${stub}`)
+  }
+  if (eighth.some(id => /\/S8SERIES\/$/.test(id) || id.includes('S8_SERIES'))) {
+    fail('build 8: series index.md leaked into the feed')
+  }
+
   if (!process.exitCode) console.log('SMOKE OK: feed entry ids stable across CI mtimes; new memo synced')
 }

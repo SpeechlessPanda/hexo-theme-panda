@@ -33,19 +33,25 @@ function contentStamp (post) {
   return crypto.createHash('sha1').update(String(post.raw || '')).digest('hex').slice(0, 10)
 }
 
-// Ensure new posts carry `updated: false` so the re-push switch is visible.
+// Ensure new posts carry the two Panda switches, visible and off:
+//   updated: false  -> flip to a real date to re-push the post in the feed
+//   sticky: false   -> set true (or a number) to pin atop the post stream
 // Inserted right after the `date:` line; posts without a date (e.g. series
-// index.md, which is not a feed entry) are left alone. Returns null when no
-// change is needed (already has the key, or no front-matter/date).
-function ensureUpdatedField (content) {
+// index.md, which is not a feed entry) are left alone. Missing keys are added
+// independently. Returns null when no change is needed (both present, or no
+// front-matter/date).
+function ensurePostDefaults (content) {
   const s = String(content || '')
   const fm = FM_RE.exec(s)
   if (!fm) return null
-  if (UPDATED_LINE_RE.test(fm[1])) return null
   if (!DATE_LINE_RE.test(fm[1])) return null
+  const lines = []
+  if (!UPDATED_LINE_RE.test(fm[1])) lines.push('updated: false')
+  if (!/^sticky\s*:/m.test(fm[1])) lines.push('sticky: false')
+  if (!lines.length) return null
   const head = s.slice(0, fm[0].length)
   const tail = s.slice(fm[0].length)
-  return head.replace(DATE_LINE_RE, m => `${m}\nupdated: false`) + tail
+  return head.replace(DATE_LINE_RE, m => `${m}\n${lines.join('\n')}`) + tail
 }
 
-module.exports = { explicitUpdated, contentStamp, ensureUpdatedField }
+module.exports = { explicitUpdated, contentStamp, ensurePostDefaults }
