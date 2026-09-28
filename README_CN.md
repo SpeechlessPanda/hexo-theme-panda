@@ -318,11 +318,11 @@ feed:
   path: atom.xml
   post_limit: 20
   excerpt_limit: 140
-  update_notify_hours: 24  # 旧文更新超过 24h 换新 id 重新推送
+  update_notify_hours: 24  # 仅当 front-matter 显式写了 updated: 且距 date: 超过 24h 才换新 id 重推
   include_memos: true
 ```
 
-条目身份标识全部放在 URL 路径里（不用 query/fragment），兼容所有阅读器；碎碎念条目链接指向独立页，旧文更新条目指向自动生成的跳转 stub 页。系列章节是普通文章，会出现在 feed 里；系列 `index.md` 不是文章、不进 feed。文章流上系列卡片的时间取最新一章，所以新章节也会把卡片顶上去。
+条目身份标识全部放在 URL 路径里（不用 query/fragment），兼容所有阅读器；碎碎念条目链接指向独立页，旧文更新条目指向自动生成的跳转 stub 页。条目 id 由文件**内容**派生，绝不依赖文件 mtime（CI 上 mtime 就是 checkout 时间）：任何无关改动（比如加一条碎碎念）后重新构建都不会把旧文重新顶出来。只有当你在文章 front-matter 里设置 `updated:` 且距 `date:` 超过 `update_notify_hours` 小时才会重推；stub id 是内容哈希，之后的每次修改恰好再通知一次。碎碎念日期支持 `YYYY-MM-DD HH:mm`（也接受 ISO `T` 分隔或仅日期）；日期无法解析的碎碎念会被跳过并在构建时警告。系列章节是普通文章，会出现在 feed 里；系列 `index.md` 不是文章、不进 feed。文章流上系列卡片的时间取最新一章，所以新章节也会把卡片顶上去。
 
 ### OG 分享图
 

@@ -311,11 +311,11 @@ feed:
   path: atom.xml
   post_limit: 20
   excerpt_limit: 140
-  update_notify_hours: 24  # re-push posts updated more than 24h after publish
+  update_notify_hours: 24  # re-push posts with explicit front-matter `updated:` >24h after `date:`
   include_memos: true
 ```
 
-Entry identity lives entirely in the URL path (never query/fragment), which every reader preserves; memo entries link to their standalone pages and update entries to auto-generated redirect stubs. Series chapters are ordinary posts in the feed; series `index.md` is not a post and never appears. A series card on the post stream is dated by its latest chapter, so a new chapter also moves the card.
+Entry identity lives entirely in the URL path (never query/fragment), which every reader preserves; memo entries link to their standalone pages and update entries to auto-generated redirect stubs. Entry ids derive from file **content**, never from file mtime (which is just checkout time on CI): rebuilding after any unrelated change — e.g. adding a memo — never re-pushes old posts. A post is only re-pushed when you set `updated:` in its front-matter more than `update_notify_hours` after `date:`; the stub id is a content hash, so any later edit notifies exactly once more. Memo dates accept `YYYY-MM-DD HH:mm` (also ISO `T` or date-only); a memo with an unparseable date is skipped with a build warning. Series chapters are ordinary posts in the feed; series `index.md` is not a post and never appears. A series card on the post stream is dated by its latest chapter, so a new chapter also moves the card.
 
 ### OG share images
 

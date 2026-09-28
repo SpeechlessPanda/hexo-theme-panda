@@ -1182,7 +1182,8 @@ feed:
   path: atom.xml
   post_limit: 20
   excerpt_limit: 140
-  # Posts updated within N hours get a fresh guid so readers are notified
+  # Re-push a post only when it has an explicit front-matter `updated:` more
+  # than N hours after `date:` (mtime is ignored: it is checkout time on CI)
   update_notify_hours: 24
   include_memos: true
 

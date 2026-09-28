@@ -63,11 +63,12 @@ function stripHtml (html) {
   return String(html || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()
 }
 
-// Parse "2026-08-23 23:30" (seconds optional) in the site timezone
+// Parse "2026-08-23 23:30" (seconds optional, "T" separator and date-only also
+// accepted) in the site timezone
 function parseMemoDate (hexo, str) {
   const t = String(str == null ? '' : str).trim()
   if (!t) return null
-  const m = moment.tz(t, ['YYYY-MM-DD HH:mm:ss', 'YYYY-MM-DD HH:mm'], siteTimezone(hexo))
+  const m = moment.tz(t, ['YYYY-MM-DD HH:mm:ss', 'YYYY-MM-DD HH:mm', 'YYYY-MM-DDTHH:mm:ss', 'YYYY-MM-DDTHH:mm', 'YYYY-MM-DD'], siteTimezone(hexo))
   return m.isValid() ? m.toDate() : null
 }
 

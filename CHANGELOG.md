@@ -2,6 +2,18 @@
 
 All notable changes to [hexo-theme-panda](https://github.com/SpeechlessPanda/hexo-theme-panda) are documented here.
 
+## [Unreleased]
+
+### Fixed
+
+- RSS false re-push on CI: post update-notification ids derived from `post.updated`, which under Hexo's default `updated_option: mtime` is the file mtime — checkout time on CI (GitHub Actions, Netlify, ...). Any rebuild (e.g. adding a memo) re-pushed every old post with a fresh `<post>/u/<timestamp>/` id; readers surfaced the newest one, i.e. "adding a 碎碎念 re-pushes the latest blog post". Re-push now requires an explicit front-matter `updated:` (mtime is ignored), and the stub id is a content hash of the raw file instead of a timestamp: same content → same id on every machine, any edit → exactly one fresh notification. Sites that relied on mtime-based re-push should add `updated:` to the post's front-matter when revising it. Upgrading reverts mtime-stubbed posts to their permalink id once (a one-time, bounded reader notification).
+- Memos with dates in ISO `T` form (`2026-08-12T08:15`) or date-only were silently dropped from the feed (`parseMemoDate` accepted only `YYYY-MM-DD HH:mm[:ss]`). Both forms now parse, and a memo that still fails is skipped with a build warning naming the bad value instead of vanishing silently.
+
+### Tests
+
+- New `test/_smoke_feed.js`: three-phase CI simulation (fresh-checkout mtimes per build, `db.json` deleted) asserts post/memo entry ids stay stable across builds, a newly added memo appears, ISO-`T` memo dates enter the feed, and an explicit `updated:` post gets a hash stub id plus an on-disk stub page. Red before the fix (`post id unstable across CI builds`), green after. Full suite `node --test test/*.test.js` 33/33; real site (`D:/project/blog`, Hexo 8.1.2) rebuilt against the working tree: all 33 memo entries intact, all post ids stable permalinks, zero mtime stubs; installed 1.1.5 package restored afterwards.
+
+
 ## [1.1.5] - 2026-09-23
 
 ### Fixed

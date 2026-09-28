@@ -8,8 +8,8 @@
 // all distinguishing info goes into the URL **path** — never query or fragment,
 // which some readers normalize away. Those URLs must really resolve:
 //   - each memo gets a standalone page (scripts/panda/memos.js)
-//   - each meaningful post update gets a stub page <post>/u/<timestamp>/
-//     (meta refresh back to the post)
+//   - each meaningful post update (explicit front-matter `updated:`) gets a
+//     stub page <post>/u/<content-hash>/ (meta refresh back to the post)
 'use strict'
 
 const { escapeXml, cdata, stripHtml, parseMemoDate, memoSlugs } = require('./lib/memo-utils')
@@ -19,9 +19,22 @@ function feedConfig () {
   return (hexo.theme.config && hexo.theme.config.feed) || {}
 }
 
-// Date -> compact stamp "20260804-131600" (post update stub paths)
-function compactStamp (date) {
-  return date.toISOString().slice(0, 19).replace(/-/g, '').replace(/:/g, '').replace('T', '-')
+const crypto = require('crypto')
+
+// Only front-matter `updated` counts as an update signal. Hexo's default
+// updated_option: mtime fills post.updated from the file mtime, which is
+// checkout time on CI (GitHub Actions, Netlify, ...) — rebuilding after ANY
+// change (e.g. adding a memo) would re-push every old post with a fresh id.
+function explicitUpdated (post) {
+  const fm = /^---[ \t]*\r?\n([\s\S]*?)\r?\n---/.exec(String(post.raw || ''))
+  return fm ? /^updated\s*:/m.test(fm[1]) : false
+}
+
+// Stub identity derives from the file bytes (front-matter included), never
+// from time: same content -> same id on any machine; any edit (body, tags,
+// or bumping `updated:`) -> fresh id -> readers re-push exactly once.
+function contentStamp (post) {
+  return crypto.createHash('sha1').update(String(post.raw || '')).digest('hex').slice(0, 10)
 }
 
 function postSummary (post, excerptLimit) {
@@ -53,8 +66,8 @@ function buildPostEntry (post, authorXml, cfg, __) {
   const notifyMs = (cfg.update_notify_hours == null ? 24 : cfg.update_notify_hours) * 3600 * 1000
   // Update long after publish -> fresh id/link via stub page (readers can't collapse it);
   // otherwise keep the stable permalink identity to avoid false notifications
-  const meaningfulUpdate = (updated - published) > notifyMs
-  const updateUrl = meaningfulUpdate ? `${post.permalink}u/${compactStamp(updated)}/` : null
+  const meaningfulUpdate = explicitUpdated(post) && (updated - published) > notifyMs
+  const updateUrl = meaningfulUpdate ? `${post.permalink}u/${contentStamp(post)}/` : null
   const id = updateUrl || post.permalink
   const categories = [
     ...(post.categories ? post.categories.toArray() : []),
@@ -65,7 +78,7 @@ function buildPostEntry (post, authorXml, cfg, __) {
   return {
     published,
     updated,
-    stubRoute: updateUrl ? { path: `${post.path}u/${compactStamp(updated)}/index.html`, data: updateStubHtml(post, __) } : null,
+    stubRoute: updateUrl ? { path: `${post.path}u/${contentStamp(post)}/index.html`, data: updateStubHtml(post, __) } : null,
     xml: `<entry>${authorXml}${categories}<content type="html">${cdata(content)}</content>` +
       `<id>${escapeXml(id)}</id><link href="${escapeXml(id)}"/>` +
       `<published>${published.toISOString()}</published>` +
@@ -126,6 +139,7 @@ hexo.extend.generator.register('panda-atom-feed', function (locals) {
       memos.forEach((item, i) => {
         const entry = buildMemoEntry(item, slugs[i], memosUrl, config.author, cfg, memosTitle)
         if (entry) entries.push(entry)
+        else hexo.log.warn(`[panda-feed] skipping memo with unparseable date: ${JSON.stringify(item.date)} (expected "YYYY-MM-DD HH:mm")`)
       })
     }
   }
