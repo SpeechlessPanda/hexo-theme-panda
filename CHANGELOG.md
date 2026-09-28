@@ -2,7 +2,7 @@
 
 All notable changes to [hexo-theme-panda](https://github.com/SpeechlessPanda/hexo-theme-panda) are documented here.
 
-## [Unreleased]
+## [1.1.6] - 2026-09-28
 
 ### Added
 
@@ -19,6 +19,19 @@ All notable changes to [hexo-theme-panda](https://github.com/SpeechlessPanda/hex
 
 - New `test/_smoke_feed.js`: three-phase CI simulation (fresh-checkout mtimes per build, `db.json` deleted) asserts post/memo entry ids stay stable across builds, a newly added memo appears, ISO-`T` memo dates enter the feed, and an explicit `updated:` post gets a hash stub id plus an on-disk stub page. Red before the fix (`post id unstable across CI builds`), green after. Full suite `node --test test/*.test.js` 33/33; real site (`D:/project/blog`, Hexo 8.1.2) rebuilt against the working tree: all 33 memo entries intact, all post ids stable permalinks, zero mtime stubs; installed 1.1.5 package restored afterwards.
 - Sample memo: smoke phase 5 asserts it appears in the feed, on the `/memos/` timeline page and as a standalone page when the data file is absent. The first locals-based injection attempt went red here — Hexo rebuilds `locals.data` from the Data model on every generate — the shipped implementation injects at the Data-model seam (`generateBefore`/`generateAfter`).
+
+### Release audit
+
+| Check | Result |
+|-------|--------|
+| Dependency / security | No dependency change. New code is local-only: front-matter regex parsing, sha1 of raw file bytes (Node built-in `crypto`), one Data-model insert/remove per generate, one `hexo.on('new')` file rewrite. No network surface. |
+| Tests | `node --test test/*.test.js` **46/46** (12 new post-updated cases). Smokes green: feed (8 phases: CI-mtime stability, new memo, ISO-`T` date, explicit-updated stub, sample memo, repeated-revision, no-change stability, series chapter), series, nav band, hideToggle, blog header. |
+| Packaging | New files live under `scripts/` (already in npm `files`). Version bump is load-bearing: the local `?v=` reads `package.json`, so 1.1.6 is also the cache-bust. |
+| Runtime smoke | Real site (`D:/project/blog`, Hexo 8.1.2) via `pnpm patch`: clean rebuild 136 files, `verify-feed` 53 entries unique link/id, 33 memo path ids, zero mtime stubs; `hexo new` and `hexo new --series` chapters both scaffold `updated: false` + `sticky: false`, series `index.md` untouched. |
+| Performance | One sha1 over each post's raw bytes per build (≤20 posts by `post_limit` for the id, regex on front-matter head only); one model insert/remove per generate. No render-path or runtime JS change. |
+| Docs | README EN/CN (feed identity, scaffold keys, sample memo, memo date formats), `_config.yml` comments, this changelog. |
+| Content / assets | Sample memo is plain text, no new fonts/CDN/images. |
+| Deferred | npm publish is manual (`npm publish` after the GitHub release). Edited memos still don't resurface in the feed (no `updated` concept in `shuoshuo.yml`). Update-stub pages of superseded hashes 404 on CI builds (pre-existing, same as timestamp stubs). |
 
 
 ## [1.1.5] - 2026-09-23
@@ -171,6 +184,7 @@ All notable changes to [hexo-theme-panda](https://github.com/SpeechlessPanda/hex
 
 Initial public release. Fork of hexo-theme-butterfly 5.7.0 with memos, Atom feed, OG images, home-as-about, and gradient visuals.
 
+[1.1.6]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.5...1.1.6
 [1.1.5]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.4...1.1.5
 [1.1.4]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.3...1.1.4
 [1.1.3]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.2...1.1.3
