@@ -238,5 +238,32 @@ type: shuoshuo
     fail('build 5: sample memo standalone page missing')
   }
 
+  // Phase 6: edit the SAME post again (bump `updated:` + body) -> exactly one
+  // more fresh id; repeated revisions keep re-pushing
+  write('source/_posts/old-post.md', `---
+title: OLD_POST
+date: 2026-08-01 12:00:00
+updated: 2026-08-21 09:00:00
+---
+old body revised again
+`)
+  run('6')
+  const sixth = ids('6')
+  const postId6 = sixth.find(id => id.includes('/old-post/'))
+  if (!/\/old-post\/u\/[0-9a-f]{10}\/$/.test(postId6 || '')) {
+    fail(`build 6: second revision lost the stub id form, got: ${postId6}`)
+  }
+  if (postId4 && postId6 === postId4) {
+    fail('build 6: second revision kept the old id — reader would not be notified again')
+  }
+
+  // Phase 7: rebuild with no changes -> id stops moving (no duplicate pushes)
+  run('7')
+  const seventh = ids('7')
+  const postId7 = seventh.find(id => id.includes('/old-post/'))
+  if (postId6 && postId7 !== postId6) {
+    fail(`build 7: id moved without any edit:\n  build6: ${postId6}\n  build7: ${postId7}`)
+  }
+
   if (!process.exitCode) console.log('SMOKE OK: feed entry ids stable across CI mtimes; new memo synced')
 }

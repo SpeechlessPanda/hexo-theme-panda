@@ -19,23 +19,7 @@ function feedConfig () {
   return (hexo.theme.config && hexo.theme.config.feed) || {}
 }
 
-const crypto = require('crypto')
-
-// Only front-matter `updated` counts as an update signal. Hexo's default
-// updated_option: mtime fills post.updated from the file mtime, which is
-// checkout time on CI (GitHub Actions, Netlify, ...) — rebuilding after ANY
-// change (e.g. adding a memo) would re-push every old post with a fresh id.
-function explicitUpdated (post) {
-  const fm = /^---[ \t]*\r?\n([\s\S]*?)\r?\n---/.exec(String(post.raw || ''))
-  return fm ? /^updated\s*:/m.test(fm[1]) : false
-}
-
-// Stub identity derives from the file bytes (front-matter included), never
-// from time: same content -> same id on any machine; any edit (body, tags,
-// or bumping `updated:`) -> fresh id -> readers re-push exactly once.
-function contentStamp (post) {
-  return crypto.createHash('sha1').update(String(post.raw || '')).digest('hex').slice(0, 10)
-}
+const { explicitUpdated, contentStamp } = require('./lib/post-updated')
 
 function postSummary (post, excerptLimit) {
   if (post.description) return post.description
