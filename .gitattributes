@@ -1,0 +1,33 @@
+# 统一行尾符，避免 Windows(core.autocrlf=true)检出为 CRLF、CI 为 LF。
+#
+# 背景：本仓库原先没有 .gitattributes，依赖全局 autocrlf=true。实测工作区
+# 219个源文件全部被检出为 CRLF，而索引中为 LF，二者恒定不一致。三个文件
+# 因 autocrlf 对"末行缺少换行符"的情况处理不一致，还产生了混合行尾符
+# (w/mixed)：source/js/utils.js(365 CRLF + 2 LF)、source/css/index.styl
+# (14 CRLF 且末行无换行)、layout/includes/third-party/chat/index.pug。
+# 这类文件会被浏览器/CSS 处理器直接消费，属实正确性风险。
+#
+# 另注：bun.lock 已在 .gitignore 中，此处保持忽略以免误提交锁文件。
+
+* text=auto eol=lf
+
+# 主题核心：模板 / 脚本 / 样式 / 配置
+layout/**/*.pug    text eol=lf
+layout/**/*.styl   text eol=lf
+scripts/**/*.js    text eol=lf
+source/**/*.js     text eol=lf
+source/**/*.styl   text eol=lf
+source/**/*.css    text eol=lf
+languages/*.yml    text eol=lf
+test/**/*.js       text eol=lf
+_config.yml        text eol=lf
+plugins.yml        text eol=lf
+
+# 二进制资源：明确标记为 binary，git 不做行尾符转换也不做文本 diff
+source/img/*.jpg   binary
+source/img/*.png   binary
+source/img/*.gif   binary
+source/img/*.ico   binary
+source/img/*.jpeg  binary
+source/img/*.webp  binary
+source/img/*.svg   text eol=lf
