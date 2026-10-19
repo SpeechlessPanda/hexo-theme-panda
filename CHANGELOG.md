@@ -2,6 +2,31 @@
 
 All notable changes to [hexo-theme-panda](https://github.com/SpeechlessPanda/hexo-theme-panda) are documented here.
 
+## [1.1.7] - 2026-10-19
+
+### Fixed
+
+- `updated:` front-matter written with YAML quotes was read as a real revision date. `explicitUpdated()` compared the raw scalar against `false|null|~`, so `updated: "false"`, `updated: 'null'`, `updated: "~"` and `updated: ""` all counted as an explicit revision — every subscriber got an "old post revised" notification for a post that was never revised. Values are now unquoted (one layer, then trimmed) before the falsey check; quoted real dates still count.
+- Duplicate front-matter keys when a space precedes the colon. YAML allows `sticky : true`, but the presence checks in `ensurePostDefaults()` required the colon to hug the key name, so a second `sticky: false` was appended beside the existing one. YAML resolves duplicate keys with last-one-wins, silently discarding the author's own value. Presence detection now lives in `HAS_UPDATED_RE` / `HAS_STICKY_RE` and accepts both spellings.
+- Repository line endings. The project had no `.gitattributes`, so a Windows checkout with `core.autocrlf=true` produced CRLF for all 219 source files against LF in the index. Three files ended up with *mixed* endings (`w/mixed`), because autocrlf treats a missing final newline differently — `source/js/utils.js` (365 CRLF + 2 LF), `source/css/index.styl` (14 CRLF and no trailing newline) and `layout/includes/third-party/chat/index.pug` (5 CRLF + 4 LF). These are consumed directly by the browser and the Stylus pipeline, so this was a real correctness risk, not just diff noise. Added `.gitattributes` pinning LF for templates/scripts/styles/config, marked `source/img` bitmaps `binary`, normalised the three files and gave `index.styl` its missing trailing newline. Verified via a fresh clone: zero CR bytes.
+
+### Tests
+
+- `test/post-updated.test.js` was reporting 2 failures and 7 cancellations while every assertion actually passed. The parent tests were declared as `t => {...}` and never awaited their subtests; `t.test()` returns a Promise, so the parent returned synchronously and was judged complete, cancelling every subtest that had not drained. The symptom — first subtest passes, the rest report `test did not finish before its parent and was cancelled` — reads like a code defect and is not. Parents are now `async` with each subtest awaited. Confirmed beforehand that the module under test was correct by executing every assertion standalone. The other four files use `describe`/`it` (synchronous in `node:test`) and were unaffected; left untouched.
+- Suite: **49/49** (was 37 pass / 2 fail / 7 cancelled), plus 4 new regression cases covering quoted falsey `updated` values, quoted real dates, and space-before-colon keys.
+
+### Release audit
+
+| Check | Result |
+|-------|--------|
+| Dependency / security | No dependency change. New code: one string helper (`unquoteYamlScalar`) and two regex constants. No network surface. |
+| Tests | `node --test test/*.test.js` **49/49**, 0 fail, 0 cancelled. |
+| Packaging | Version bump is load-bearing: local asset URLs read `package.json`, so 1.1.7 is also the cache-bust. `.gitattributes` is not published (not in npm `files`). |
+| Runtime smoke | Real site (`D:/project/blog`, Hexo 8.1.2) rebuilt against the working tree: 30 files generated, `verify-feed` 58 entries with unique `link`/`id`, 38 memo path-style ids. |
+| Content / assets | No user-visible feature change; the two fixes only affect posts that use quoted or space-before-colon front-matter spellings. |
+| Deferred | npm publish is manual (`npm publish` after this GitHub release). Edited memos still don't resurface in the feed (no `updated` concept in `shuoshuo.yml`). |
+
+
 ## [1.1.6] - 2026-09-28
 
 ### Added
