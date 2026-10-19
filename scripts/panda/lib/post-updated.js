@@ -13,18 +13,42 @@ const crypto = require('crypto')
 const FM_RE = /^---[ \t]*\r?\n([\s\S]*?)\r?\n---/
 const UPDATED_LINE_RE = /^updated\s*:\s*(.*?)\s*$/m
 const DATE_LINE_RE = /^date\s*:.*$/m
+// Presence checks must accept every spelling YAML allows for a top-level key,
+// including a space before the colon (`sticky : true`) and none after it
+// (`sticky:true`). Requiring the colon to hug the key name made ensurePostDefaults
+// append a second `sticky: false` beside an existing `sticky : true`; YAML then
+// silently resolves the duplicate key and the author's own value is discarded.
+const HAS_UPDATED_RE = /^updated\s*:/m
+const HAS_STICKY_RE = /^sticky\s*:/m
 
 // Front-matter `updated` counts only when it is a real value. `updated: false`
 // (the scaffold default), `updated:`, `updated: null` and `updated: ~` all mean
 // "never revised" — and Hexo itself treats them as absent (mtime fallback), so
 // honoring them here would re-open the mtime leak.
+//
+// Quoted spellings are stripped first: YAML allows `updated: "false"`,
+// `updated: 'null'`, `updated: "~"` and `updated: ""`, all of which parse to
+// the same "never revised" meaning. Without stripping, a quoted falsey value
+// would be read as a real revision date and every subscriber would be re-pushed
+// an "old post revised" notification for a post that was never revised.
 function explicitUpdated (post) {
   const fm = FM_RE.exec(String(post.raw || ''))
   if (!fm) return false
   const line = UPDATED_LINE_RE.exec(fm[1])
   if (!line) return false
-  const value = line[1].replace(/\s+#.*$/, '')
+  const value = unquoteYamlScalar(line[1].replace(/\s+#.*$/, ''))
   return value !== '' && !/^(false|null|~)$/.test(value)
+}
+
+// Strip one layer of matching YAML quotes and trim inner whitespace, so that
+// `"false"`, `'false'`, `""`, `"  "` all collapse to their bare meaning.
+function unquoteYamlScalar (raw) {
+  const value = String(raw).trim()
+  const quote = value[0]
+  if ((quote === '"' || quote === "'") && value.length > 1 && value[value.length - 1] === quote) {
+    return value.slice(1, -1).trim()
+  }
+  return value
 }
 
 // Stub identity derives from the file bytes (front-matter included): editing
@@ -46,8 +70,8 @@ function ensurePostDefaults (content) {
   if (!fm) return null
   if (!DATE_LINE_RE.test(fm[1])) return null
   const lines = []
-  if (!UPDATED_LINE_RE.test(fm[1])) lines.push('updated: false')
-  if (!/^sticky\s*:/m.test(fm[1])) lines.push('sticky: false')
+  if (!HAS_UPDATED_RE.test(fm[1])) lines.push('updated: false')
+  if (!HAS_STICKY_RE.test(fm[1])) lines.push('sticky: false')
   if (!lines.length) return null
   const head = s.slice(0, fm[0].length)
   const tail = s.slice(fm[0].length)
