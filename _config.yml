@@ -1185,7 +1185,8 @@ feed:
   post_limit: 20
   excerpt_limit: 140
   # Re-push a post only when it has an explicit front-matter `updated:` more
-  # than N hours after `date:` (mtime is ignored: it is checkout time on CI)
+  # than N hours after `date:` (mtime is ignored: it is checkout time on CI).
+  # `false` / `null` / `~` / empty — bare or quoted — all mean "never revised".
   update_notify_hours: 24
   include_memos: true
 

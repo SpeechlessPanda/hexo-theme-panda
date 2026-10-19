@@ -51,6 +51,47 @@ test('explicitUpdated', async t => {
   await t.test('quoted real date still counts', () => {
     assert.equal(explicitUpdated(post('---\ndate: 2026-08-01\nupdated: "2026-08-20 12:00:00"\n---\n')), true)
   })
+
+  // 组合场景：空格冒号 + 引号假值同时出现。两条修复路径必须同时生效——
+  // 存在性检测认出 `updated :` 已经有了（不重复插入），取值路径又剥掉引号
+  // 认出它是假值（不当作修订）。任一路径单独失效都会漏判。
+  await t.test('space-before-colon combined with quoted falsey values', () => {
+    for (const v of ['"false"', "'null'", '""', '"~"']) {
+      assert.equal(
+        explicitUpdated(post(`---\ndate: 2026-08-01\nupdated : ${v}\n---\n`)),
+        false,
+        `updated : ${v}`
+      )
+    }
+    // 组合下的真实修订日期
+    assert.equal(
+      explicitUpdated(post('---\ndate: 2026-08-01\nupdated : "2026-08-20 12:00:00"\n---\n')),
+      true
+    )
+    // 组合下 ensurePostDefaults 不应再插 updated（已存在带空格的写法）
+    assert.equal(
+      ensurePostDefaults('---\ndate: 2026-09-28\nupdated : "false"\n---\n'),
+      '---\ndate: 2026-09-28\nsticky: false\nupdated : "false"\n---\n'
+    )
+  })
+
+  // YAML 语义边界：引号内的 # 是有效字符而非注释；引号外的才是注释。
+  // 代码顺序为「先剥注释、再解引号」，因此两种写法都应正确判定。
+  await t.test('hash inside vs outside quotes', () => {
+    // 引号外 → 注释，值是 2026-01-01 → 真实修订
+    assert.equal(explicitUpdated(post('---\ndate: X\nupdated: 2026-01-01 # 修订\n---\n')), true)
+    // 引号外注释 + 引号假值 → 假值
+    assert.equal(explicitUpdated(post('---\ndate: X\nupdated: "false" # 保持\n---\n')), false)
+    assert.equal(explicitUpdated(post('---\ndate: X\nupdated: "" # 说明\n---\n')), false)
+    // 引号内含 # → # 是值的一部分，整体仍是非空串 → 真实修订
+    assert.equal(explicitUpdated(post('---\ndate: X\nupdated: "2026-01-01 #note"\n---\n')), true)
+  })
+
+  // 畸形 YAML（引号未闭合）不应抛异常，按字面处理即可。
+  await t.test('malformed quotes do not throw', () => {
+    assert.equal(explicitUpdated(post('---\ndate: X\nupdated: "未闭合\n---\n')), true)
+    assert.equal(explicitUpdated(post('---\ndate: X\nupdated: \'单引号"\n---\n')), true)
+  })
 })
 
 test('contentStamp', async t => {
