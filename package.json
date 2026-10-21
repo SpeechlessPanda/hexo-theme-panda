@@ -17,7 +17,7 @@
     "CHANGELOG.md"
   ],
   "engines": {
-    "node": ">=18",
+    "node": ">=22",
     "hexo": ">=5.3.0"
   },
   "scripts": {
