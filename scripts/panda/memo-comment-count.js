@@ -1,9 +1,15 @@
 // Panda theme — memo comment counts via GitHub GraphQL (Giscus)
 // Forked from SpeechlessPanda/blog-s-code scripts/memo-comment-count.js (Apache-2.0).
 //
-// At build time, query comment counts of Giscus discussions and write them into
-// the memos page's shuoshuo-data JSON. The frontend uses them to auto-expand
-// comment areas that already have comments.
+// At build time, query Giscus discussions and write a count into the memos
+// page's shuoshuo-data JSON. The frontend auto-expands a memo when that count
+// is greater than zero.
+//
+// Giscus shows two kinds of activity on one discussion: a posted comment
+// (comments.totalCount) and an emoji left on the discussion itself
+// (reactions.totalCount — the row of emoji under the comment box). An
+// emoji-only discussion has comments.totalCount === 0, so counting comments
+// alone leaves its memo collapsed. A memo expands when either count is > 0.
 //
 // Requires: `comments.use: Giscus` + `giscus.repo`, and env GH_DISCUSSION_TOKEN
 // (a GitHub token with discussions read access). Without the token the filter
@@ -17,12 +23,30 @@ const GISCUS_QUERY = `query($owner:String!,$name:String!,$categoryId:ID,$after:S
   repository(owner:$owner,name:$name){
     discussions(first:100,after:$after,categoryId:$categoryId,orderBy:{field:UPDATED_AT,direction:DESC}){
       pageInfo{hasNextPage,endCursor}
-      nodes{title comments{totalCount}}
+      nodes{title comments{totalCount} reactions{totalCount}}
     }
   }
 }`
 
-hexo.extend.filter.register('after_generate', async function () {
+// Activity that should open the comment area: a written comment, or an emoji
+// reaction on the discussion. Missing fields count as zero, never as activity.
+function discussionActivity (node) {
+  if (!node) return 0
+  const comments = node.comments && node.comments.totalCount || 0
+  const reactions = node.reactions && node.reactions.totalCount || 0
+  return comments + reactions
+}
+
+// title -> activity count. A later page must not wipe an earlier count with 0.
+function indexDiscussionActivity (nodes, titleToCount) {
+  for (const node of nodes || []) {
+    if (!node || !node.title) continue
+    titleToCount[node.title] = discussionActivity(node)
+  }
+  return titleToCount
+}
+
+if (typeof hexo !== 'undefined') hexo.extend.filter.register('after_generate', async function () {
   const cfg = memosConfig(hexo)
   if (!memosEnabled(hexo) || cfg.comment_count === false) return
 
@@ -75,7 +99,7 @@ hexo.extend.filter.register('after_generate', async function () {
       const json = await res.json()
       const discussions = json && json.data && json.data.repository && json.data.repository.discussions
       const nodes = (discussions && discussions.nodes) || []
-      nodes.forEach(n => { titleToCount[n.title] = n.comments.totalCount })
+      indexDiscussionActivity(nodes, titleToCount)
       hasNextPage = !!(discussions && discussions.pageInfo && discussions.pageInfo.hasNextPage)
       after = discussions && discussions.pageInfo && discussions.pageInfo.endCursor
       if (!nodes.length) break
@@ -95,3 +119,5 @@ hexo.extend.filter.register('after_generate', async function () {
   const withComments = data.filter(d => d.commentCount > 0).length
   hexo.log.info('[panda] %d/%d memo(s) have comments, auto-expanded', withComments, data.length)
 })
+
+module.exports = { GISCUS_QUERY, discussionActivity, indexDiscussionActivity }

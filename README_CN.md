@@ -259,7 +259,7 @@ memos:
   latest_card: true        # 文章流顶部「最新碎碎念」卡片
   standalone_pages: true   # 每条生成 /memos/<时间戳>/ 独立页（深链）
   search_injection: true   # 注入本地搜索（需 search.use: local_search）
-  comment_count: true      # 构建时查 Giscus 评论数，有评论的自动展开
+  comment_count: true      # 构建时查 Giscus：有评论或表情 reaction 的碎碎念自动展开
 ```
 
 数据文件缺失或为空时，主题会内置一条示例碎碎念（"Hello, it's my blog!"），在时间线页、文章流最新卡片和 feed 里都能看到，新站开箱即可看到完整效果。你写下第一条真正的碎碎念后它立刻从所有位置消失，且不会写入你的 `db.json`。

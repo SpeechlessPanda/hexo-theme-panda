@@ -2,6 +2,16 @@
 
 All notable changes to [hexo-theme-panda](https://github.com/SpeechlessPanda/hexo-theme-panda) are documented here.
 
+## [1.1.9] - 2026-11-01
+
+### Fixed
+
+- Memo comment areas stayed collapsed after a refresh when the only activity on that memo's Giscus discussion was an emoji reaction. Build-time counting read `comments.totalCount` and ignored `reactions.totalCount`, so an emoji-only discussion was stored as `commentCount: 0` and the page treated it as having no comments. The count is now comments plus discussion reactions: a written comment still expands, an emoji-only discussion expands the same way, and a discussion with neither stays collapsed. The page still expands only when `commentCount > 0`.
+
+### Tests
+
+- `test/memo-comment-count.test.js`: written comment, emoji-only, both, neither, missing fields, and title indexing.
+
 ## [1.1.7] - 2026-10-19
 
 ### Fixed
@@ -209,6 +219,8 @@ All notable changes to [hexo-theme-panda](https://github.com/SpeechlessPanda/hex
 
 Initial public release. Fork of hexo-theme-butterfly 5.7.0 with memos, Atom feed, OG images, home-as-about, and gradient visuals.
 
+[1.1.9]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.7...1.1.9
+[1.1.7]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.6...1.1.7
 [1.1.6]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.5...1.1.6
 [1.1.5]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.4...1.1.5
 [1.1.4]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.3...1.1.4

@@ -1167,8 +1167,8 @@ memos:
   standalone_pages: true
   # Inject memos into the local search index (requires search.use: local_search)
   search_injection: true
-  # Build-time Giscus comment counts -> auto-expand commented memos
-  # (needs GH_DISCUSSION_TOKEN env at build time; silently skipped without it)
+  # Build-time Giscus activity -> auto-expand memos that have a comment or a
+  # discussion emoji reaction (needs GH_DISCUSSION_TOKEN; skipped without it)
   comment_count: true
 
 # Blog series (folder under source/_posts + index.md)

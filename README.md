@@ -253,7 +253,7 @@ memos:
   latest_card: true        # "latest memo" card on the post stream
   standalone_pages: true   # one deep-linkable page per memo
   search_injection: true   # inject into local search (needs search.use: local_search)
-  comment_count: true      # build-time Giscus counts -> auto-expand commented memos
+  comment_count: true      # build-time Giscus activity (comment or emoji reaction) -> auto-expand
 ```
 
 While the data file is missing or empty, the theme shows one built-in sample memo ("Hello, it's my blog!") on the timeline, the latest-memo card and the feed, so a fresh site demonstrates the format end to end. It disappears everywhere the moment you write your first real entry, and it is never persisted into your `db.json`.
