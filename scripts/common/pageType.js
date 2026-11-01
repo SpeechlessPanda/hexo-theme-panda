@@ -6,6 +6,14 @@ function isRelocatedIndex (indexGeneratorPath) {
   return n.length > 0
 }
 
+// Public URL of the post listing. Root and empty stay '/', so a site whose
+// posts live at the front page keeps its existing home link.
+function postListingPath (indexGeneratorPath) {
+  if (!isRelocatedIndex(indexGeneratorPath)) return '/'
+  const n = String(indexGeneratorPath).replace(/\\/g, '/').replace(/^\/+|\/+$/g, '')
+  return '/' + n + '/'
+}
+
 function getPageType (page, isHome, indexGeneratorPath) {
   const { layout, tag, category, type, archive } = page || {}
   if (layout) return layout
@@ -21,4 +29,4 @@ function getPageType (page, isHome, indexGeneratorPath) {
   return 'post'
 }
 
-module.exports = { getPageType, isRelocatedIndex }
+module.exports = { getPageType, isRelocatedIndex, postListingPath }

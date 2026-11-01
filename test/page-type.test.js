@@ -2,7 +2,7 @@
 
 const { describe, it } = require('node:test')
 const assert = require('node:assert/strict')
-const { getPageType, isRelocatedIndex } = require('../scripts/common/pageType')
+const { getPageType, isRelocatedIndex, postListingPath } = require('../scripts/common/pageType')
 
 describe('isRelocatedIndex', () => {
   it('treats empty and slash as the front-page listing', () => {
@@ -16,6 +16,22 @@ describe('isRelocatedIndex', () => {
     assert.equal(isRelocatedIndex('/blog'), true)
     assert.equal(isRelocatedIndex('blog'), true)
     assert.equal(isRelocatedIndex('/blog/'), true)
+  })
+})
+
+describe('postListingPath', () => {
+  it('keeps the front page when the post listing is not relocated', () => {
+    assert.equal(postListingPath(undefined), '/')
+    assert.equal(postListingPath(null), '/')
+    assert.equal(postListingPath(''), '/')
+    assert.equal(postListingPath('/'), '/')
+  })
+
+  it('normalizes a relocated listing to one trailing slash', () => {
+    assert.equal(postListingPath('/blog'), '/blog/')
+    assert.equal(postListingPath('blog'), '/blog/')
+    assert.equal(postListingPath('/blog/'), '/blog/')
+    assert.equal(postListingPath('\\blog\\'), '/blog/')
   })
 })
 

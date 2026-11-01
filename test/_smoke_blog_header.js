@@ -123,6 +123,8 @@ hexo.init().then(() => hexo.call('generate', {})).then(() => {
   const blog = fs.readFileSync(path.join(pub, 'blog', 'index.html'), 'utf8')
   const about = fs.readFileSync(path.join(pub, 'about', 'index.html'), 'utf8')
   const links = fs.readFileSync(path.join(pub, 'link', 'index.html'), 'utf8')
+  const post = fs.readFileSync(path.join(pub, 'hello', 'index.html'), 'utf8')
+  const postH = headerChunk(post)
 
   const homeH = headerChunk(home)
   const blogH = headerChunk(blog)
@@ -145,6 +147,14 @@ hexo.init().then(() => hexo.call('generate', {})).then(() => {
   }
   if (!linksH.includes('not-home-page') || linksH.includes('full_page') || linksH.includes('id="subtitle"')) {
     fail('links header is not inner-page')
+  }
+
+  if (!homeH.includes('class="nav-site-title" href="/"')) fail('home site title should stay on front page')
+  if (!blogH.includes('class="nav-site-title" href="/"')) fail('blog listing site title should stay on front page')
+  if (!postH.includes('class="nav-site-title" href="/blog/"')) fail('post site title should open the blog listing')
+  if (!postH.includes('class="nav-page-title" href="/blog/"')) fail('post page title should open the blog listing')
+  if (postH.includes('class="nav-site-title" href="/"') || postH.includes('class="nav-page-title" href="/"')) {
+    fail('post title still opens the front page')
   }
 }).then(() => {
   if (process.exitCode) return

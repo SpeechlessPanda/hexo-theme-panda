@@ -1,12 +1,12 @@
 nav#nav
   span#blog-info
-    a.nav-site-title(href=url_for('/'))
+    a.nav-site-title(href=url_for(globalPageType === 'post' ? postListingPath() : '/'))
       if theme.nav.logo
         img.site-icon(src=url_for(theme.nav.logo) alt='Logo')
       if theme.nav.display_title
         span.site-name=config.title
     if globalPageType === 'post' && theme.nav.display_post_title
-      a.nav-page-title(href=url_for('/'))
+      a.nav-page-title(href=url_for(postListingPath()))
         span.site-name=(page.title || config.title)
         span.site-name
           i.fa-solid.fa-circle-arrow-left
