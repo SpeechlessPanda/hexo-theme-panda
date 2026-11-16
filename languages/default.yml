@@ -143,3 +143,6 @@ blog_series:
 
 tag:
   hide_toggle_collapse: Collapse
+
+anchor:
+  permalink: Permalink to this heading

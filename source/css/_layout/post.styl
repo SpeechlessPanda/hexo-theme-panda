@@ -109,27 +109,46 @@ beautify()
     line-height: 1em
     addBorderRadius(3)
 
+  // --------------------------------------
+  // Heading anchors
+  // --------------------------------------
+  // The build gives every heading a stable `id` and an `a.headerlink`
+  // permalink (scripts/filters/post_anchor.js). Fragment targets reserve the
+  // fixed nav height here, so a plain `#slug` link lands below the nav even
+  // with JS disabled; source/js/anchor.js only refines the offset at runtime.
+  // Every heading carries an id, so `[id]` covers headings, `{% span %}` ids
+  // used as manual anchors, and tab/hide-toggle ids alike.
+  [id]
+    scroll-margin-top: var(--panda-anchor-offset, 70px)
+
+  a.headerlink
+    margin-left: .35em
+    color: $theme-link-color
+    font-weight: normal
+    text-decoration: none
+    opacity: .25
+    transition: opacity .2s ease-in-out
+
+    &:hover
+      text-decoration: none
+      opacity: 1
+
+  :is(h1, h2, h3, h4, h5, h6):hover > a.headerlink,
+  a.headerlink:focus-visible
+    opacity: 1
+
   if hexo-config('anchor.click_to_scroll')
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    h6
-      width: fit-content
+    :is(h1, h2, h3, h4, h5, h6)
+      cursor: pointer
 
-      a:not(.headerlink)
-        position: relative
-        z-index: 10
+  // Touch screens have no hover: keep the permalink tappable without a hover.
+  @media (hover: none)
+    a.headerlink
+      opacity: .5
 
-      a.headerlink
-        position: absolute
-        top: 0
-        right: 0
-        bottom: 0
-        left: 0
-        width: 100%
-        height: 100%
+  @media print
+    a.headerlink
+      display: none
 
   ol,
   ul

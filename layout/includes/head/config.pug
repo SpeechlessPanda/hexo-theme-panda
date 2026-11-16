@@ -117,6 +117,10 @@ script.
     isPhotoFigcaption: !{theme.photofigcaption},
     islazyloadPlugin: !{theme.lazyload.enable && !theme.lazyload.native},
     isAnchor: !{theme.anchor.auto_update || false},
+    anchor: {
+      copyLink: !{theme.anchor.copy_link !== false},
+      clickToScroll: !{theme.anchor.click_to_scroll === true}
+    },
     percent: {
       toc: !{theme.toc.scroll_percent},
       rightside: !{theme.rightside_scroll_percent},

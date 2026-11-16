@@ -36,6 +36,7 @@
 | 链接新标签 | 正文/碎碎念链接统一新标签页打开 | 开 |
 | 代码高亮扩展 | 额外注册 fish、typst 语法高亮 | 内置 |
 | `{% hideToggle %}` 底部收起 | 展开后底部出现收起条，点一下滚回该块标题 | 开 |
+| 页内锚点 | 每个 `h1-h6` 自动生成稳定唯一 `id` 与可点击 `#` 永久链接；中文标题可作 slug，重复标题加序号，深链落在固定导航下方，复制 `#` 得到完整 URL | 开 |
 
 Butterfly 原有的全部能力（PJAX、深色模式、多种评论、搜索、字数统计、看板娘等）原样保留，配置方式完全兼容 Butterfly 文档。
 
@@ -387,6 +388,26 @@ gradient:
 - `background` 是颜色或原生 CSS 渐变时没有"最上方那条带"可言，导航栏保持原来的渐变样式。
 - 随机数组背景会在运行时把导航栏同步到 `#web_bg` 真正选中的那张图（PJAX 切换同样同步）。
 - iOS Safari 仍然处理不好锁在视口上的 60px 图片带；这类设备上去掉图片层、保留遮罩和模糊。
+
+### 页内锚点
+
+构建期（`after_post_render`）给每篇文章、每个页面的 `h1-h6` 补 `id` 和 `a.headerlink` 永久链接：
+
+- `id` 优先沿用已有值（已发布的深链不失效），重复的按文档顺序加 `-2`/`-3`；缺失的由标题文本生成（`hexo-util` slugize，保留中文），无文本时退回 `section-N`。渲染器按单次渲染分配 id，同一标题同时出现在 `{% hideToggle %}`/`{% tabs %}` 与正文中会撞车，这一步统一修正。
+- 渲染器留下的空 `<a class="markdownIt-Anchor"></a>` 占位锚点被删除（0×0、不可见，还会给 TOC 文本留下前导空格）；带可见符号的自定义锚点保留，`href` 指向最终 `id`。
+- 无 JS 也能用：纯 `<a href="#id">` 加 CSS `scroll-margin-top`，深链落在固定导航下方。`source/js/anchor.js` 只补浏览器做不到的部分——目标在收起的 `<details>`、未展开的 hide-block/hide-inline 或未激活的 tab 里时先展开再对齐；字体/懒加载图片造成的布局漂移在 1.2s 窗口内重新对齐，用户一动手就停。
+- 点击 `#` 复制完整绝对 URL；`href` 不是纯锚点的链接保持原样。
+
+```yaml
+# _config.panda.yml
+anchor:
+  enable: true           # 生成 id 与 `#` 永久链接（默认开）
+  copy_link: true        # 点击 `#` 复制完整 URL（默认开）
+  click_to_scroll: false # 点击标题任意位置等同点 `#`（默认关，会破坏正文选中）
+  auto_update: false     # 滚动时把 URL 更新为当前标题 id
+```
+
+**验证**：`node --test test/*.test.js` 含 `heading-anchor.test.js` 单测；`node test/_smoke_anchor.js` 在临时站点里真实构建并断言生成的 HTML/CSS/JS（标题 id 唯一、每个永久链接命中 id、TOC 无死链、中文标签、`?v=` 缓存戳）。
 
 ### 其他
 

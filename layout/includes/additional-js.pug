@@ -7,6 +7,10 @@ div
   if theme.link_target_blank
     script(src=url_for('/js/fix-link-target.js') data-pjax)
 
+  //- Panda: reveal collapsed targets and copy heading permalinks
+  if theme.anchor.enable !== false
+    script(src=url_for(theme.asset.anchor) data-pjax)
+
   if theme.translate.enable
     script(src=url_for(theme.asset.translate))
 

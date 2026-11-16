@@ -2,6 +2,24 @@
 
 All notable changes to [hexo-theme-panda](https://github.com/SpeechlessPanda/hexo-theme-panda) are documented here.
 
+## [Unreleased]
+
+### Added
+
+- Heading anchors are now a theme feature instead of per-site code. An `after_post_render` filter (`scripts/filters/post_anchor.js` + `scripts/panda/lib/anchor.js`) gives every `h1-h6` in posts and pages a stable, document-unique `id` and an `a.headerlink` permalink. Existing ids are preserved so published deep links keep working; duplicates get `-2`/`-3` in document order; missing ids are slugized from the heading text (CJK preserved) and fall back to `section-N`. This also fixes real collisions: a markdown renderer assigns ids per render call, so the same heading inside a `{% hideToggle %}`/`{% tabs %}` block and in the body received the same id and the second one was unreachable from the TOC and from any permalink.
+- `source/js/anchor.js`: reveals a fragment target that sits inside a closed `<details>`, an unopened hide-block/hide-inline or an inactive tab before alignment (the browser otherwise sets the hash and never scrolls), re-aligns for layout drift from webfonts/lazy images inside a 1.2s window that stops on first reader input, and copies the absolute URL when `#` is clicked. Every heading target reserves the fixed nav height via CSS `scroll-margin-top` (`--panda-anchor-offset`, refined at runtime from the real nav height), so deep links work with JS disabled.
+- Config: `anchor.enable` (default `true`), `anchor.copy_link` (default `true`). `anchor.click_to_scroll` now works as documented — clicking anywhere on a heading copies its permalink and jumps to it.
+- `scripts/filters/post_anchor.js` drops the renderer's empty `<a class="markdownIt-Anchor"></a>` placeholder (0×0, invisible, and it leaked a leading space into TOC text) and keeps a renderer anchor that carries a visible custom symbol, pointed at the final id.
+
+### Removed
+
+- Dead `anchor.click_to_scroll` CSS. Its selector (`a.headerlink`) never matched under `hexo-renderer-markdown-it-plus` (which emits `markdownIt-Anchor`) and the block only ever moved the renderer's empty anchor over the heading.
+
+### Tests
+
+- `test/heading-anchor.test.js`: slug/permalink generation, CJK slugs, duplicate suffixing, the renderer-collision regression (a generated id must never steal an existing id declared later), id preservation, empty-anchor removal, custom-symbol retention, label escaping, idempotence, non-string/no-heading input.
+- `test/_smoke_anchor.js`: real Hexo build in a throwaway site; asserts unique heading ids, every permalink and TOC link resolving, CJK label, `scroll-margin-top` in the compiled CSS, and `js/anchor.js?v=<version>`.
+
 ## [1.1.9] - 2026-11-01
 
 ### Fixed

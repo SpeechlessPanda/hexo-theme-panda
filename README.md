@@ -36,6 +36,7 @@
 | Link target blank | Article/memo links open in a new tab | on |
 | Extra highlighting | fish & typst grammars registered out of the box | built-in |
 | `{% hideToggle %}` collapse | Expanded blocks get a bottom collapse bar that scrolls back to the header | on |
+| Heading anchors | Every `h1-h6` gets a stable, document-unique `id` and a clickable `#` permalink; CJK slugs, `-2`/`-3` dedupe, deep links land below the fixed nav, copying `#` yields the full URL | on |
 
 Everything Butterfly offers (PJAX, dark mode, comment systems, search, word count, etc.) is kept intact and configured exactly the Butterfly way.
 
@@ -380,6 +381,26 @@ Edge cases:
 - A color or a raw CSS gradient in `background` has no "top band", so the nav keeps the normal gradient bar.
 - A random-array `background` keeps the nav on the image `#web_bg` actually picked (synced at runtime, PJAX included).
 - iOS Safari still mishandles a viewport-locked image in the 60px bar. There the theme drops the image layer and keeps the scrim + blur.
+
+### Heading anchors
+
+The build (`after_post_render`) adds an `id` and an `a.headerlink` permalink to every `h1-h6` in posts and pages:
+
+- Existing ids win (published deep links keep working); duplicates get `-2`/`-3` in document order; missing ones are slugized from the heading text with CJK preserved and fall back to `section-N`. Markdown renderers assign ids per render call, so the same heading inside a `{% hideToggle %}`/`{% tabs %}` block and in the body used to collide — this pass fixes that once for the whole document.
+- The renderer's empty `<a class="markdownIt-Anchor"></a>` placeholder is dropped (0×0, invisible, and it leaked a leading space into TOC text); a renderer anchor with a visible custom symbol is kept and pointed at the final `id`.
+- No-JS works: a plain `<a href="#id">` plus CSS `scroll-margin-top` puts the target below the fixed nav. `source/js/anchor.js` only covers what the browser cannot: a target inside a closed `<details>`, an unopened hide-block/hide-inline or an inactive tab is revealed first, and layout drift from webfonts/lazy images is re-aligned within a 1.2s window that stops as soon as the reader touches anything.
+- Clicking `#` copies the full absolute URL; links whose `href` is not a pure fragment are left alone.
+
+```yaml
+# _config.panda.yml
+anchor:
+  enable: true           # ids + `#` permalinks (default on)
+  copy_link: true        # clicking `#` copies the full URL (default on)
+  click_to_scroll: false # clicking anywhere on a heading acts like `#` (default off: it breaks text selection)
+  auto_update: false     # keep the URL in sync with the heading in view
+```
+
+**Verification**: `node --test test/*.test.js` includes the `heading-anchor.test.js` unit tests; `node test/_smoke_anchor.js` builds a real throwaway site and asserts the generated HTML/CSS/JS (unique heading ids, every permalink resolves, no dead TOC links, CJK label, `?v=` cache-bust).
 
 ### Misc
 

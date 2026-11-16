@@ -143,3 +143,6 @@ blog_series:
 
 tag:
   hide_toggle_collapse: 收起
+
+anchor:
+  permalink: 標題永久連結

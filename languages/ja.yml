@@ -143,3 +143,6 @@ blog_series:
 
 tag:
   hide_toggle_collapse: 閉じる
+
+anchor:
+  permalink: この見出しへのパーマリンク

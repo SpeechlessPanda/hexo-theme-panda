@@ -143,3 +143,6 @@ blog_series:
 
 tag:
   hide_toggle_collapse: 접기
+
+anchor:
+  permalink: 이 제목의 고유 링크

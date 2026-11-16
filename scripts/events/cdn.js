@@ -33,6 +33,11 @@ hexo.extend.filter.register('before_generate', () => {
       file: 'js/tw_cn.js',
       version
     },
+    anchor: {
+      name: 'hexo-theme-panda',
+      file: 'js/anchor.js',
+      version
+    },
     local_search: {
       name: 'hexo-theme-panda',
       file: 'js/search/local-search.js',

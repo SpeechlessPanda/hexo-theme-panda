@@ -234,8 +234,10 @@ module.exports = {
   },
   rightside_config_animation: true,
   anchor: {
-    auto_update: false,
-    click_to_scroll: false
+    enable: true,
+    copy_link: true,
+    click_to_scroll: false,
+    auto_update: false
   },
   photofigcaption: false,
   copy: {

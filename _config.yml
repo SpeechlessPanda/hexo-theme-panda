@@ -419,10 +419,14 @@ rightside_config_animation: true
 # --------------------------------------
 
 anchor:
+  # Add a stable id and a clickable `#` permalink to every heading
+  enable: true
+  # Clicking the `#` copies the absolute permalink
+  copy_link: true
+  # Clicking anywhere on a heading copies its permalink and jumps to it
+  click_to_scroll: false
   # When you scroll, the URL will update according to header id.
   auto_update: false
-  # Click the headline to scroll and update the anchor
-  click_to_scroll: false
 
 photofigcaption: false
 
