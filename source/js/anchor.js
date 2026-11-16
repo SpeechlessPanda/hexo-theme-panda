@@ -137,7 +137,16 @@
     document.documentElement.style.setProperty('--panda-anchor-offset', `${height > 0 ? height + 10 : 70}px`)
   }
 
-  const anchorConfig = () => (window.GLOBAL_CONFIG && window.GLOBAL_CONFIG.anchor) || {}
+  // `GLOBAL_CONFIG` is declared with `const` in an earlier inline classic
+  // script (head/config.pug), so it is a script-scope lexical binding, not a
+  // `window` property. Read the bare identifier like the rest of the theme
+  // does; `typeof` guards the case where the tag failed to render.
+  const globalConfig = () => (typeof GLOBAL_CONFIG === 'undefined' ? null : GLOBAL_CONFIG)
+
+  const anchorConfig = () => {
+    const config = globalConfig()
+    return (config && config.anchor) || {}
+  }
 
   const copyPermalink = async link => {
     if (anchorConfig().copyLink === false) return
@@ -167,8 +176,9 @@
       } catch (_) {}
     }
 
-    if (done && window.btf && window.GLOBAL_CONFIG && window.GLOBAL_CONFIG.Snackbar !== undefined) {
-      const message = window.GLOBAL_CONFIG.copy && window.GLOBAL_CONFIG.copy.success
+    const config = globalConfig()
+    if (done && window.btf && config && config.Snackbar !== undefined) {
+      const message = config.copy && config.copy.success
       message && window.btf.snackbarShow(message)
     }
   }
