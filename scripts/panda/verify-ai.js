@@ -74,14 +74,18 @@ function expectations (hexo, cfg) {
   if (cfg.ai.enable && cfg.ai.rights.enable) expected.rights = `${rootPath(cfg.ai.rights.path)}index.html`
   const homeIcon = cfg.ai.enable && cfg.ai.portal.enable && cfg.ai.portal.social_icon.enable
   if (homeIcon) {
-    // The Follow Me row renders inside `home.pug`, i.e. on the page that opted into
-    // the `home` layout — not on the about page whose content it inlines.
-    const pages = hexo.model('Page').toArray()
-    const holder = pages.find(page => page.layout === 'home')
-    const about = (hexo.theme.config.home_about || {}).source || 'about/index.md'
-    const fallback = pages.find(page => page.source === about)
-    const target = holder || fallback
-    if (target) expected.homeIcon = { page: rootPath(target.path) }
+    // The robot lives in the author card, which renders in the aside on the home
+    // page. Any page using the `home` layout reuses that card, so check whichever
+    // page the site actually serves at the root.
+    const asideHome = (hexo.theme.config.aside || {}).display || {}
+    if (asideHome.home !== false) {
+      const pages = hexo.model('Page').toArray()
+      const holder = pages.find(page => page.layout === 'home')
+      const about = (hexo.theme.config.home_about || {}).source || 'about/index.md'
+      const fallback = pages.find(page => page.source === about)
+      const target = holder || fallback
+      expected.homeIcon = { page: target ? rootPath(target.path) : 'index.html' }
+    }
   }
 
   if (!cfg.ai.enable || !cfg.ai.markdown.enable) return expected

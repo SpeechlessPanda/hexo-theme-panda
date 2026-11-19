@@ -20,6 +20,7 @@ const { renderSitemap } = require('./lib/sitemap')
 const { renderLlmsTxt, buildLlmsModel, contentEntries } = require('./lib/llms-txt')
 const { splitFrontMatter, frontMatterValue, renderMirror } = require('./lib/markdown-mirror')
 const { readAiData, mergeAiData } = require('./lib/ai-data')
+const { providerIsExplicit } = require('./lib/explicit-config')
 
 const THEME_VERSION = require('../../package.json').version
 
@@ -435,10 +436,45 @@ function buildLlms (hexo, locals, routes) {
 // sitemap.xml
 // ---------------------------------------------------------------------------
 
+/**
+ * A second generator already claims this file. Whether that is fatal depends on
+ * who asked for `panda`:
+ *
+ *   explicit provider: panda -> the site's own configuration collides with its
+ *     plugins; stop the build and name the plugin, because silently dropping one
+ *     of two writers is how a site loses its rules without noticing.
+ *
+ *   inherited default       -> 1.2.0 turned `panda` on for everybody, so an
+ *     existing site that upgraded must not start failing. Step aside, leave the
+ *     plugin in charge, and say so once.
+ *
+ * @returns {boolean} true when the caller must skip registering its route.
+ */
+function yieldToExternalGenerator (hexo, kind, conflicts) {
+  // Nothing registered: the theme owns the path and there is nothing to resolve.
+  // Checking intent first would throw on an empty list and print `generator ""`,
+  // which is exactly the confusing message this function exists to avoid.
+  if (!conflicts.length) return false
+  const key = `site_discovery.${kind}.provider`
+  if (providerIsExplicit(hexo, kind)) {
+    throw new Error(conflictMessage(kind, conflicts, key))
+  }
+  issueOnce(
+    hexo,
+    `conflict:${kind}`,
+    'warn',
+    `[panda] ${kind === 'robots' ? 'robots.txt' : 'sitemap.xml'}: the plugin (${conflicts.join(', ')}) ` +
+      'keeps writing this file; the theme steps aside. Remove the plugin, or set ' +
+      `${key} to "external" to silence this, or to "panda" to make the theme own it.`
+  )
+  return true
+}
+
 function buildSitemap (hexo, locals, routes) {
   const cfg = discoveryConfig(hexo)
   const sitemap = cfg.discovery.sitemap
   if (!cfg.discovery.enable || sitemap.provider !== 'panda') return
+  if (yieldToExternalGenerator(hexo, 'sitemap', detectGeneratorConflicts(hexo, 'sitemap'))) return
   const index = contentIndex(hexo, locals)
   const entries = sitemapTargets(index, hexo.theme.config).map(item => ({
     url: absoluteFor(hexo, item.path),
@@ -504,12 +540,8 @@ function buildRobots (hexo, routes) {
   const robots = cfg.discovery.robots
   if (!cfg.discovery.enable || robots.provider !== 'panda') return
 
-  // Refuse to register a second generator for the same file. Silent overwrite
-  // would either drop the user's hand-written rules or the theme's policy.
-  const conflicts = detectGeneratorConflicts(hexo, 'robots')
-  if (conflicts.length) {
-    throw new Error(conflictMessage('robots', conflicts, 'site_discovery.robots.provider'))
-  }
+  // A second generator for robots.txt wins when the site did not ask for ours.
+  if (yieldToExternalGenerator(hexo, 'robots', detectGeneratorConflicts(hexo, 'robots'))) return
 
   const sitemapUrl = robots.sitemap ? sitemapUrlFor(hexo.config.url, cfg.discovery.sitemap.path) : null
   routes.push({
@@ -673,7 +705,7 @@ hexo.on('generateBefore', () => {
   // registered: a build that silently drops one of two sitemaps is worse than a
   // build that stops with the exact plugin name.
   const sitemap = cfg.discovery.sitemap
-  if (cfg.discovery.enable && sitemap.provider === 'panda') {
+  if (cfg.discovery.enable && sitemap.provider === 'panda' && providerIsExplicit(hexo, 'sitemap')) {
     const conflicts = detectGeneratorConflicts(hexo, 'sitemap')
     if (conflicts.length) {
       throw new Error(conflictMessage('sitemap', conflicts, 'site_discovery.sitemap.provider'))

@@ -13,7 +13,6 @@ block content
         .page-title= page.title
       #article-container.container
         != aboutPage.content
-        !=partial('includes/panda/follow-row', {}, {cache: true})
   else
     include ./includes/mixins/indexPostUI.pug
     +indexPostUI

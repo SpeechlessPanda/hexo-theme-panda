@@ -457,8 +457,7 @@ ai_readable:
     featured_posts: []   # [{ source: _posts/foo.md }] or plain source strings
     social_icon:
       enable: true
-      show_on_home: true
-      show_in_author_card: true
+      show_in_author_card: true   # the robot sits after the icons, under Follow Me
       icon: fas fa-robot
       label: null        # null = localized default
       color: null        # null = same colour as the other social icons
@@ -476,8 +475,8 @@ ai_readable:
 
 | Output | Default | What you get |
 |--------|---------|--------------|
-| `robots.txt` | `external` | `panda` writes grouped rules, each intent in its own group: search crawlers allowed (`Googlebot`, `OAI-SearchBot`, `Claude-SearchBot`, `Bingbot`, `DuckDuckBot`, `Baiduspider`, `YandexBot`), user-triggered fetches allowed (`ChatGPT-User`, `Claude-User`, `Perplexity-User`), training crawlers denied (`GPTBot`, `ClaudeBot`, `Applebot-Extended`, `CCBot`, `Bytespider`, `meta-externalagent`, `Amazonbot`, `cohere-ai`, `ImagesiftBot`, `Omgili`, `TimpiBot`, `DuckAssistBot`), `Google-Extended` opt-out, and both draft signals (`__usage_ai-training` plus `Content-Usage: train-ai=n`), with an absolute `Sitemap:` line. `robots.disallow` paths are repeated in every allowed group, so a private path stays out of reach of every crawler |
-| `sitemap.xml` | `external` | `panda` writes absolute HTTPS URLs and a real `lastmod` (never the build time), with no `changefreq`/`priority`. In `external` mode the theme still marks noindex/excluded content as `sitemap: false` so the existing plugin honours the same rules. Built-in mode always drops `noindex` content; `sitemap.exclude_noindex` only governs that external-mode marking |
+| `robots.txt` | `panda` | `panda` writes grouped rules, each intent in its own group: search crawlers allowed (`Googlebot`, `OAI-SearchBot`, `Claude-SearchBot`, `Bingbot`, `DuckDuckBot`, `Baiduspider`, `YandexBot`), user-triggered fetches allowed (`ChatGPT-User`, `Claude-User`, `Perplexity-User`), training crawlers denied (`GPTBot`, `ClaudeBot`, `Applebot-Extended`, `CCBot`, `Bytespider`, `meta-externalagent`, `Amazonbot`, `cohere-ai`, `ImagesiftBot`, `Omgili`, `TimpiBot`, `DuckAssistBot`), `Google-Extended` opt-out, and both draft signals (`__usage_ai-training` plus `Content-Usage: train-ai=n`), with an absolute `Sitemap:` line. `robots.disallow` paths are repeated in every allowed group, so a private path stays out of reach of every crawler |
+| `sitemap.xml` | `panda` | `panda` writes absolute HTTPS URLs and a real `lastmod` (never the build time), with no `changefreq`/`priority`. In `external` mode the theme still marks noindex/excluded content as `sitemap: false` so the existing plugin honours the same rules. Built-in mode always drops `noindex` content; `sitemap.exclude_noindex` only governs that external-mode marking |
 | `llms.txt` | on with `ai_readable` | v2 structure: H1, blockquote summary, background, H2 sections (Featured / Articles / Series / Projects / Topics / Licensing / Resources). A series lists its chapters nested underneath instead of repeating them as top-level links, and links point at the Markdown mirror whenever one exists |
 | Markdown mirrors | on | `index.md` beside every post and series chapter, converted from the raw Markdown source, plus `<link rel="alternate" type="text/markdown">` and `<link rel="describedby">` in `<head>` |
 | `/ai/` | on | Human-facing reading guide: intro, topics, featured/recent posts, series, projects, and links to llms.txt / sitemap / feed / rights |
@@ -550,15 +549,15 @@ The command reads the generated `public/` directory (what a deploy actually ship
 
 #### FAQ
 
-**Do I need to switch my existing sitemap/robots plugins?** No. `provider: external` is the default and the theme registers nothing for those files. If you want Panda to own them, set `provider: panda` — and only after uninstalling the other plugin, or the build stops with the plugin's name.
+**I already run a sitemap/robots plugin — will upgrading break my build?** No. `panda` became the default in 1.2.0, and when the theme detects a plugin already writing that file it steps aside, leaves the plugin in charge and logs one warning. Set `provider: external` to silence the warning, or `panda` (explicitly) to make the theme own the file — an explicit `panda` next to a conflicting plugin is a build error naming the plugin.
 
 **`hexo panda verify-ai` says a mirror is missing.** A page advertises `rel="alternate"` for a mirror that was not generated. Usual causes: the post is `noindex`, matches `markdown.exclude`, or `markdown.enable` was turned off after a previous build. Run `hexo clean` first; the head link and the file are produced in the same pass, so they can only disagree across stale builds.
 
 **Why is /ai/ showing an English section title?** Section headings come from the language files. If you use a locale Panda does not ship, add `ai_readable.llms.heading_*` overrides or they fall back to English.
 
-**Can I have the robot icon only in the sidebar?** Yes: `portal.social_icon.show_on_home: false`. The author card keeps the icon, and the home Follow Me row disappears.
+**Where is the robot icon?** In the author card's social row, directly under the Follow Me button — the same place GitHub / Email / RSS have always been, so it works whether or not the sidebar is enabled on the home page. `portal.social_icon.show_in_author_card: false` removes it.
 
-**Does the theme block AI crawlers by itself?** No. `robots.txt` is only produced with `robots.provider: panda`, and even then it records a *preference*. Training crawlers that ignore robots.txt still read the site; use authentication or a CDN/WAF for enforcement.
+**Does the theme block AI crawlers by itself?** No. `robots.txt` is only produced with `robots.provider: panda` (the default), and even then it records a *preference*. Training crawlers that ignore robots.txt still read the site; use authentication or a CDN/WAF for enforcement.
 
 **Will llms.txt grow without bound?** No. `llms_txt.recent_posts` caps the article list, series are one entry each, and there is no archive dump. Raise the number if you want a longer index.
 
@@ -579,27 +578,40 @@ fish / typst code highlighting works out of the box.
 
 `{% hideToggle Title %}…{% endhideToggle %}` is Butterfly's tag. Panda adds a bottom collapse bar (i18n: en Collapse / zh-CN 收起 / zh-TW 收合 / ja 閉じる / ko 접기). Clicking it closes the block and scrolls back to the header under the fixed nav. Asset URLs carry `?v=<theme version>` so a patch like 1.1.1 busts cached `main.js` / `index.css`.
 
-## ⬆️ Upgrading 1.1.9 → 1.1.10 (AI-readable release)
+## ⬆️ Upgrading 1.1.10 → 1.2.0 (AI surfaces on by default)
 
-Every new feature is **off by default**, so an untouched site builds exactly as before. Nothing is rewritten and no existing config key changes meaning.
+1.2.0 turns the seven AI-readable surfaces **on** and writes them from your existing posts and config, so a site that upgrades gets them without editing a single key. Nothing you already configured changes meaning; the only behaviour change is that files you may not have had before now exist.
 
-| You currently use | Keep it | Or switch to Panda |
-|---|---|---|
-| `hexo-generator-robotstxt` | `site_discovery.robots.provider: external` (default) | `provider: panda` with `policy: balanced` |
-| `hexo-generator-sitemap` | `site_discovery.sitemap.provider: external` (default) — the theme marks exclusions as `sitemap: false` | `provider: panda` |
-| `hexo-generator-baidu-sitemap` | unchanged, it keeps its own file | — |
-| `hexo-generator-feed` | unchanged (Panda's own Atom feed stays separate) | — |
+**About sitemap and robots plugins.** `panda` is now the default provider. If a plugin already writes `sitemap.xml` or `robots.txt`, the theme notices it, leaves the file to the plugin and logs one warning with the plugin's name — an upgrade never fails a build. Warnings look like:
 
-**Detecting a conflict.** Setting `provider: panda` while a plugin already registered the same path fails the build with a message naming the offending generator, e.g. `hexo-generator-sitemap`. Fix it by keeping `external` for that file, or uninstall the plugin if you want Panda to own it.
-
-**Enabling the AI reading entry**
-
-```yaml
-ai_readable:
-  enable: true
+```
+[panda] sitemap.xml: the plugin (sitemap) keeps writing this file; the theme steps aside.
+        Remove the plugin, or set site_discovery.sitemap.provider to "external" to silence
+        this, or to "panda" to make the theme own it.
 ```
 
-That alone gives you `/llms.txt`, Markdown mirrors for every post, `/ai/` and `/rights/`. To also show the robot icon under the home about content, keep the defaults (`portal.social_icon.enable: true`, `show_on_home: true`). If you want it only in the author card, set `show_on_home: false`.
+| You currently use | What 1.2.0 does | To let Panda own the file |
+|---|---|---|
+| `hexo-generator-sitemap` | plugin keeps `sitemap.xml`, theme warns once | uninstall it, then set `provider: panda` explicitly (a conflict next to an explicit `panda` is a hard error) |
+| `hexo-generator-robotstxt` | plugin keeps `robots.txt`, theme warns once | same as above |
+| `hexo-generator-baidu-sitemap` | untouched, keeps `baidusitemap.xml` | — |
+| nothing | theme writes both plus llms.txt, mirrors, `/ai/`, `/rights/` | already done |
+
+**The AI reading entry** is the robot icon at the end of the author card's social row, directly under the Follow Me button. It shows up automatically; `portal.social_icon.show_in_author_card: false` hides it, `portal.social_icon.icon` / `.color` / `.label` restyle it.
+
+**Turning it back off** (the 1.1.10 footprint):
+
+```yaml
+site_discovery:
+  robots: { provider: disabled }
+  sitemap: { provider: disabled }
+ai_readable:
+  enable: false
+```
+
+**Everything stays editable.** `/ai/` and `/rights/` step aside when you already wrote a page at those paths, `source/_data/ai.yml` overrides the curated text (intro, topics, featured posts, projects), and `llms_txt.sections` / `portal.projects` add your own entries. Nothing is hard-coded to one blog.
+
+**Do the files update themselves?** Yes — every surface is regenerated from Hexo's models on each `hexo generate`, so a new or edited post updates llms.txt, its Markdown mirror, sitemap `lastmod`, the portal listing and the `<head>` alternate link in the same run. `hexo server` re-reads them on every rebuild too. There is no cache to clear and no manual step; the only stale case is a deploy that skips `hexo generate`.
 
 **Wiring verification into GitHub Actions**
 

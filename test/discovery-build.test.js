@@ -393,18 +393,18 @@ test('the AI reading entry wears the same social styling as the other icons', { 
   assert.match(html, /fas fa-robot/)
 })
 
-test('home renders a Follow Me row with the robot icon after the social icons', { skip }, () => {
+test('the author card carries the robot icon after the existing social icons', { skip }, () => {
   const html = read('index.html')
-  assert.match(html, /class="panda-follow-me"/)
-  const row = html.slice(html.indexOf('panda-follow-me__icons'))
+  assert.doesNotMatch(html, /panda-follow-me/, 'the about area does not render a second row')
+  const rowStart = html.indexOf('card-info-social-icons')
+  assert.ok(rowStart > -1, 'the author card renders the social row')
+  const row = html.slice(rowStart, html.indexOf('</div>', html.indexOf('ai-reading-icon')))
   const github = row.indexOf('fa-github')
   const mail = row.indexOf('fa-envelope')
   const robot = row.indexOf('ai-reading-icon')
   assert.ok(github > -1 && mail > -1 && robot > -1, 'row must contain every icon')
   assert.ok(github < robot && mail < robot, 'the robot icon must come after the existing icons')
-  // Order matters only if nothing follows; the robot is the last icon in the row.
-  const rowEnd = row.indexOf('</div>')
-  const tail = row.slice(robot, rowEnd === -1 ? undefined : rowEnd)
+  const tail = row.slice(robot)
   assert.ok(!/fa-(github|envelope|rss|twitter)/.test(tail), 'no social icon may follow the robot icon')
   assert.match(tail, /aria-label="[^"]+"/, 'the robot icon is announced to assistive tech')
   assert.match(row, /href="\/blog\/ai\//)
@@ -458,9 +458,10 @@ test('`hexo panda verify-ai` reports a broken output as failed', { skip }, async
   await hexo.exit()
 })
 
-test('shipped defaults add no new routes (every feature is off)', { skip }, async () => {
-  // An upgraded site that changes nothing must build exactly what it built before:
-  // no robots.txt, sitemap.xml, llms.txt, mirrors, /ai/ or /rights/.
+test('shipped defaults emit all seven surfaces without any configuration', { skip }, async () => {
+  // 1.2.0 turns the family on by default: a site with no discovery config still
+  // gets robots.txt, sitemap.xml, llms.txt, /ai/, /rights/ and Markdown mirrors,
+  // all derived from its existing posts and config.
   const Hexo = require(require.resolve('hexo', { paths: [found.nodeModules] }))
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'panda-defaults-'))
   const put = (rel, body) => {
@@ -500,7 +501,83 @@ test('shipped defaults add no new routes (every feature is off)', { skip }, asyn
     const routes = hexo.route.list()
     await hexo.exit()
     const discoveryRoutes = routes.filter(r => /(^|\/)(robots\.txt|sitemap\.xml|llms\.txt)$|^ai\/|^rights\/|\.md$/.test(r))
-    assert.deepEqual(discoveryRoutes, [], `defaults must not emit discovery routes, got ${JSON.stringify(discoveryRoutes)}`)
+    for (const expected of ['robots.txt', 'sitemap.xml', 'llms.txt', 'ai/index.html', 'rights/index.html']) {
+      assert.ok(discoveryRoutes.includes(expected), `defaults must emit ${expected}, got ${JSON.stringify(discoveryRoutes)}`)
+    }
+    assert.ok(discoveryRoutes.some(r => r.endsWith('.md')), 'defaults must emit Markdown mirrors')
+
+    // Opting out has to stay possible for a site that wants the old footprint.
+    const offDir = fs.mkdtempSync(path.join(os.tmpdir(), 'panda-defaults-off-'))
+    try {
+      for (const rel of ['source/_posts/a.md', 'source/about/index.md']) {
+        const abs = path.join(offDir, rel)
+        fs.mkdirSync(path.dirname(abs), { recursive: true })
+        fs.writeFileSync(abs, fs.readFileSync(path.join(dir, rel)))
+      }
+      fs.writeFileSync(path.join(offDir, 'package.json'), fs.readFileSync(path.join(dir, 'package.json')))
+      fs.writeFileSync(path.join(offDir, '_config.yml'), fs.readFileSync(path.join(dir, '_config.yml')))
+      fs.writeFileSync(path.join(offDir, '_config.panda.yml'), [
+        'site_discovery:', '  robots:', '    provider: disabled', '  sitemap:', '    provider: disabled',
+        'ai_readable:', '  enable: false'
+      ].join('\n'))
+      fs.symlinkSync(found.nodeModules, path.join(offDir, 'node_modules'), 'junction')
+      fs.mkdirSync(path.join(offDir, 'themes'))
+      fs.symlinkSync(themeRoot, path.join(offDir, 'themes', 'panda'), 'junction')
+
+      const offHexo = new Hexo(offDir, { silent: true })
+      await offHexo.init()
+      await offHexo.call('generate', {})
+      const offRoutes = offHexo.route.list()
+      await offHexo.exit()
+      const offDiscovery = offRoutes.filter(r => /(^|\/)(robots\.txt|sitemap\.xml|llms\.txt)$|^ai\/|^rights\/|\.md$/.test(r))
+      assert.deepEqual(offDiscovery, [], `explicit opt-out must emit nothing, got ${JSON.stringify(offDiscovery)}`)
+    } finally {
+      fs.rmSync(offDir, { recursive: true, force: true })
+    }
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test('a site with no `social:` config still gets the robot in the author card', { skip }, async () => {
+  // The card used to render its row only when `social:` was configured, which left
+  // the AI entry invisible for a site that never filled that list in — the common
+  // case for a fresh install, and precisely where the defaults are supposed to work.
+  const Hexo = require(require.resolve('hexo', { paths: [found.nodeModules] }))
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'panda-nosocial-'))
+  const put = (rel, body) => {
+    const abs = path.join(dir, rel)
+    fs.mkdirSync(path.dirname(abs), { recursive: true })
+    fs.writeFileSync(abs, body)
+  }
+  try {
+    put('package.json', JSON.stringify({
+      name: 'panda-nosocial', private: true, hexo: {}, dependencies: {
+        hexo: '*', 'hexo-generator-index': '*', 'hexo-generator-archive': '*',
+        'hexo-renderer-markdown-it-plus': '*', 'hexo-renderer-pug': '*', 'hexo-renderer-stylus': '*'
+      }
+    }, null, 2))
+    put('_config.yml', ['title: No Social', 'author: tester', 'url: https://example.com', 'root: /', 'theme: panda'].join('\n'))
+    put('source/_posts/a.md', '---\ntitle: A\ndate: 2026-01-01 00:00:00\n---\n\nA.\n')
+    fs.symlinkSync(found.nodeModules, path.join(dir, 'node_modules'), 'junction')
+    fs.mkdirSync(path.join(dir, 'themes'))
+    fs.symlinkSync(themeRoot, path.join(dir, 'themes', 'panda'), 'junction')
+
+    const hexo = new Hexo(dir, { silent: true })
+    await hexo.init()
+    await hexo.call('generate', {})
+    const stream = hexo.route.get('index.html')
+    const chunks = []
+    await new Promise((resolve, reject) => {
+      stream.on('data', c => chunks.push(Buffer.from(c)))
+      stream.on('end', resolve)
+      stream.on('error', reject)
+    })
+    const home = Buffer.concat(chunks).toString('utf8')
+    await hexo.exit()
+
+    assert.match(home, /card-info-social-icons/, 'the row renders without any social links')
+    assert.match(home, /class="social-icon ai-reading-icon"[^>]*href="\/ai\/"/, 'the robot is the only icon, pointing at the portal')
   } finally {
     fs.rmSync(dir, { recursive: true, force: true })
   }
@@ -772,9 +849,15 @@ test('a robot icon already present in `social:` is not duplicated', { skip }, as
     const home = await read('index.html')
     await hexo.exit()
 
-    const robots = [...home.matchAll(/<a class="social-icon[^"]*"[^>]*>/g)].map(m => m[0])
-    const toPortal = robots.filter(tag => /href="\/ai\/"/.test(tag))
-    assert.equal(toPortal.length, 1, `exactly one AI icon on home, got ${toPortal.length}`)
+    // The fixture hand-writes the robot into `social:` (the pre-1.1.10
+    // workaround). It renders exactly like every other social icon: once in the
+    // hero row, once in the author card. The theme must not add one of its own.
+    const generated = (home.match(/class="social-icon ai-reading-icon"/g) || []).length
+    assert.equal(generated, 0, 'a hand-written entry wins, so no generated robot is added')
+    const configured = (home.match(/<a class="social-icon"[^>]*href="\/ai\/"/g) || []).length
+    assert.ok(configured >= 1, 'the configured AI entry still renders')
+    assert.equal((home.match(/href="\/ai\/"/g) || []).length, configured,
+      'every /ai/ link comes from the configured entry, none from the theme')
   } finally {
     fs.rmSync(dir, { recursive: true, force: true })
   }
@@ -985,8 +1068,17 @@ test('a generator that already claims sitemap.xml aborts a panda-mode build', { 
   }
 })
 
-test('the home follow row is not duplicated inside the author card', { skip }, () => {
+test('the AI reading entry renders once, in the author card, under the Follow Me button', { skip }, () => {
   const html = read('index.html')
-  const icons = html.match(/ai-reading-icon/g) || []
-  assert.equal(icons.length, 1, 'one AI entry on the home page: the follow row, not both')
+  assert.equal((html.match(/ai-reading-icon/g) || []).length, 1, 'exactly one AI entry on the home page')
+  assert.doesNotMatch(html, /panda-follow-me/, 'the home about area no longer owns a social row')
+
+  const card = html.indexOf('card-info-social-icons')
+  assert.ok(card > -1, 'the author card renders the social row')
+  const button = html.indexOf('card-info-btn')
+  assert.ok(button > -1 && button < card, 'the row sits after the Follow Me button')
+  const row = html.slice(card, html.indexOf('</div>', html.indexOf('ai-reading-icon')))
+  const robot = row.indexOf('ai-reading-icon')
+  const last = Math.max(row.indexOf('fa-github'), row.indexOf('fa-envelope'), row.indexOf('fa-rss'))
+  assert.ok(last > -1 && last < robot, 'the robot is the last icon in the row')
 })

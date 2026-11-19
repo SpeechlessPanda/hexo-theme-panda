@@ -638,7 +638,7 @@ module.exports = {
   site_discovery: {
     enable: true,
     robots: {
-      provider: 'external',
+      provider: 'panda',
       path: 'robots.txt',
       policy: 'balanced',
       allow: [],
@@ -649,7 +649,7 @@ module.exports = {
       google_agent: 'omit'
     },
     sitemap: {
-      provider: 'external',
+      provider: 'panda',
       path: 'sitemap.xml',
       include_tags: true,
       include_categories: true,
@@ -659,7 +659,7 @@ module.exports = {
     }
   },
   ai_readable: {
-    enable: false,
+    enable: true,
     intro: null,
     author_bio: null,
     topics: [],
@@ -689,12 +689,10 @@ module.exports = {
       featured_posts: [],
       social_icon: {
         enable: true,
-        show_on_home: true,
         show_in_author_card: true,
         icon: 'fas fa-robot',
         label: null,
-        color: null,
-        row_title: null
+        color: null
       }
     },
     rights: {

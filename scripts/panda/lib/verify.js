@@ -240,7 +240,7 @@ function verifyHomeIcon (files, expected, results) {
   check(results, 'Home robot icon', () => {
     const html = lookup(files, expected.homeIcon.page)
     if (html == null) return `${expected.homeIcon.page} was not generated`
-    const rows = [...html.matchAll(/class="[^"]*(?:panda-follow-me__icons|card-info-social-icons)[^"]*"/g)]
+    const rows = [...html.matchAll(/class="[^"]*card-info-social-icons[^"]*"/g)]
     if (!rows.length) return 'no social icon row on the home page'
     const rowStart = rows[0].index
     const rest = html.slice(rowStart)

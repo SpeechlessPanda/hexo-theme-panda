@@ -464,8 +464,7 @@ ai_readable:
     featured_posts: []   # [{ source: _posts/foo.md }] 或直接写路径字符串
     social_icon:
       enable: true
-      show_on_home: true
-      show_in_author_card: true
+      show_in_author_card: true   # 机器人图标排在社交图标之后、Follow Me 按钮下方
       icon: fas fa-robot
       label: null        # null = 本地化默认文案
       color: null        # null = 与其他社交图标同色
@@ -483,8 +482,8 @@ ai_readable:
 
 | 产物 | 默认 | 说明 |
 |------|------|------|
-| `robots.txt` | `external` | `panda` 输出分组规则：允许搜索爬虫，禁止 `GPTBot`/`ClaudeBot` 训练抓取，`Google-Extended` 退出，`__usage_ai-training`（AIPREF 草案，不是 RFC），`Sitemap:` 使用绝对地址 |
-| `sitemap.xml` | `external` | `panda` 输出绝对 HTTPS URL，`lastmod` 只取真实更新时间（绝不用构建时间），不写 `changefreq`/`priority`。`external` 模式下主题仍会把 noindex/被排除内容标记为 `sitemap: false`，让现有插件遵循同一套规则。内置模式始终排除 `noindex` 内容；`sitemap.exclude_noindex` 只控制外部模式下的标记 |
+| `robots.txt` | `panda` | `panda` 输出分组规则：允许搜索爬虫，禁止 `GPTBot`/`ClaudeBot` 训练抓取，`Google-Extended` 退出，`__usage_ai-training`（AIPREF 草案，不是 RFC），`Sitemap:` 使用绝对地址 |
+| `sitemap.xml` | `panda` | `panda` 输出绝对 HTTPS URL，`lastmod` 只取真实更新时间（绝不用构建时间），不写 `changefreq`/`priority`。`external` 模式下主题仍会把 noindex/被排除内容标记为 `sitemap: false`，让现有插件遵循同一套规则。内置模式始终排除 `noindex` 内容；`sitemap.exclude_noindex` 只控制外部模式下的标记 |
 | `llms.txt` | 随 `ai_readable` 开启 | v2 结构：H1、引用块简介、背景说明、H2 分区（精选 / 文章 / 系列 / 项目 / 内容主题 / 许可 / 资源）。系列把章节嵌套在自己的条目下，而不是在顶层重复一遍；有 Markdown 镜像时优先给镜像链接 |
 | Markdown 镜像 | 开 | 每篇文章和系列章节旁生成 `index.md`，内容取自原始 Markdown，并在 `<head>` 输出 `<link rel="alternate" type="text/markdown">` 与 `<link rel="describedby">` |
 | `/ai/` | 开 | 面向读者的导读页：简介、主题、精选/最新文章、系列、项目，以及 llms.txt / sitemap / feed / rights 入口 |
@@ -553,7 +552,7 @@ hexo panda verify-ai
 
 **`/ai/` 上为什么出现英文分区标题？** 分区标题取自语言文件。如果你的语言不在 Panda 支持范围内，请在配置里覆盖 `ai_readable.llms.heading_*`，否则回退到英文。
 
-**只想在侧边栏显示机器人图标？** 设 `portal.social_icon.show_on_home: false`。作者卡片保留图标，首页 Follow Me 行不再出现。
+**机器人图标在哪？** 在作者卡片的社交图标行末位，紧跟 Follow Me 按钮下方——GitHub / Email / RSS 一直就在这个位置，所以首页关掉侧边栏也能看到。设 `portal.social_icon.show_in_author_card: false` 可以去掉它。
 
 **主题会自动拦住 AI 爬虫吗？** 不会。只有 `robots.provider: panda` 时才生成 `robots.txt`，而且它表达的只是*偏好*。无视 robots.txt 的训练爬虫照样能读；真正的强制手段是鉴权或 CDN/WAF。
 
@@ -576,27 +575,40 @@ fish / typst 代码高亮开箱即用，无需配置。
 
 `{% hideToggle 标题 %}…{% endhideToggle %}` 是 Butterfly 原有标签。Panda 给展开态加了底部收起条（中文「收起」/ 台湾「收合」/ 英文 Collapse）。点击后收起并滚回该块标题（避开固定导航）。静态资源 URL 带 `?v=<主题版本>`，1.1.1 这类补丁会强制刷新缓存里的 `main.js` / `index.css`。
 
-## ⬆️ 从 1.1.9 升级到 1.1.10（AI 可读版本）
+## ⬆️ 从 1.1.10 升级到 1.2.0（AI 能力默认开启）
 
-新增功能**默认全部关闭**，未改动的站点构建结果与升级前一致。没有任何既有配置项被改写或改变含义。
+1.2.0 把七项 AI 可读能力**默认打开**，内容全部从你已有的文章和配置生成，所以升级后不用改任何配置就能拿到它们。你原有配置的含义不变，唯一的行为变化是：以前不存在的文件现在会存在。
 
-| 你现在用的 | 保持原样 | 或换成 Panda 内置 |
-|---|---|---|
-| `hexo-generator-robotstxt` | `site_discovery.robots.provider: external`（默认） | `provider: panda`，`policy: balanced` |
-| `hexo-generator-sitemap` | `site_discovery.sitemap.provider: external`（默认）——主题会把被排除的页面标成 `sitemap: false` | `provider: panda` |
-| `hexo-generator-baidu-sitemap` | 不变，继续生成自己的文件 | — |
-| `hexo-generator-feed` | 不变（Panda 自带的 Atom feed 与它无关） | — |
+**关于 sitemap / robots 插件。** `panda` 现在是默认生成方式。如果已有插件在写 `sitemap.xml` 或 `robots.txt`，主题会检测到、把文件让给插件，并输出一条带插件名的警告——升级不会让构建失败：
 
-**如何发现冲突。** 在已有插件占用同一路径时把 `provider` 设为 `panda`，构建会直接失败并指出冲突的插件名，例如 `hexo-generator-sitemap`。解决办法是那个文件继续用 `external`，或者卸载插件、交给 Panda 生成。
-
-**启用 AI 阅读入口**
-
-```yaml
-ai_readable:
-  enable: true
+```
+[panda] sitemap.xml: the plugin (sitemap) keeps writing this file; the theme steps aside.
+        Remove the plugin, or set site_discovery.sitemap.provider to "external" to silence
+        this, or to "panda" to make the theme own it.
 ```
 
-这样就会生成 `/llms.txt`、每篇文章的 Markdown 镜像、`/ai/` 与 `/rights/`。若还想在首页关于内容下方显示机器人图标，保持默认即可（`portal.social_icon.enable: true`、`show_on_home: true`）。只想显示在作者卡片里，就把 `show_on_home` 设为 `false`。
+| 你当前使用 | 1.2.0 的行为 | 想让主题接管 |
+|---|---|---|
+| `hexo-generator-sitemap` | 插件继续写 `sitemap.xml`，主题警告一次 | 卸载插件，再把 `provider: panda` 显式写上（显式 `panda` 遇冲突会直接报错） |
+| `hexo-generator-robotstxt` | 插件继续写 `robots.txt`，主题警告一次 | 同上 |
+| `hexo-generator-baidu-sitemap` | 完全不受影响，继续写 `baidusitemap.xml` | — |
+| 什么都没装 | 主题写出两个文件，外加 llms.txt、Markdown 镜像、`/ai/`、`/rights/` | 已经是了 |
+
+**AI 阅读入口**是作者卡片社交图标行末位的机器人图标，就在 Follow Me 按钮下方。它默认出现；`portal.social_icon.show_in_author_card: false` 可隐藏，`portal.social_icon.icon` / `.color` / `.label` 可换图标、颜色和文字。
+
+**想关掉**（回到 1.1.10 的产物规模）：
+
+```yaml
+site_discovery:
+  robots: { provider: disabled }
+  sitemap: { provider: disabled }
+ai_readable:
+  enable: false
+```
+
+**内容都可以自定义。** 你自己在 `/ai/`、`/rights/` 写了页面时主题会自动让位；`source/_data/ai.yml` 可覆盖简介、主题、精选文章、项目；`llms_txt.sections`、`portal.projects` 可加自己的条目。默认配置里没有任何属于某个博客的个人信息。
+
+**这些文件会自动更新吗？** 会。每次 `hexo generate` 都从 Hexo 的数据模型重新生成，所以新增或修改一篇文章后，llms.txt、它的 Markdown 镜像、sitemap 的 `lastmod`、导航页列表、`<head>` 里的 alternate 链接会在同一次构建里一起更新。`hexo server` 每次重建也会重新读取，没有缓存要清，也不需要手工步骤；唯一会过期的情形是部署时跳过了 `hexo generate`。
 
 **接入 GitHub Actions 校验**
 

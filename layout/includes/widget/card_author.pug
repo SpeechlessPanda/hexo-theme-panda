@@ -19,8 +19,9 @@ if theme.aside.card_author.enable
         i(class=theme.aside.card_author.button.icon)
         span=theme.aside.card_author.button.text
 
-    //- The home about area owns the row there; rendering it here too would show
-    //- the same icons twice on one screen.
-    if !pandaHomeFollowRow() && (theme.social || (theme.ai_readable && theme.ai_readable.enable && theme.ai_readable.portal && theme.ai_readable.portal.enable && theme.ai_readable.portal.social_icon.enable))
+    //- The social row holds GitHub / Email / RSS and, when enabled, the AI reading
+    //- entry appended after them. `social` alone does not decide: a site with no
+    //- social links still gets the robot here. social.pug drops the empty row.
+    if theme.social || (theme.ai_readable && theme.ai_readable.enable && theme.ai_readable.portal && theme.ai_readable.portal.enable && theme.ai_readable.portal.social_icon && theme.ai_readable.portal.social_icon.enable && theme.ai_readable.portal.social_icon.show_in_author_card !== false)
       .card-info-social-icons
-        !=partial('includes/header/social', { slot: 'author' })
+        !=partial('includes/header/social', {}, {cache: true})

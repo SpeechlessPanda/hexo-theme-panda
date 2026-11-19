@@ -153,7 +153,6 @@ ai_readable:
   portal:
     title: AI Reading Guide
     icon_label: AI reading guide
-    follow_title: Follow Me
     featured: Featured
     recent: Recent articles
     series: Series

@@ -153,7 +153,6 @@ ai_readable:
   portal:
     title: AI 읽기 안내
     icon_label: AI 읽기 안내
-    follow_title: 팔로우
     featured: 추천 글
     recent: 최신 글
     series: 시리즈

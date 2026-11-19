@@ -183,14 +183,12 @@ function normalizePortal (cfg, errors) {
     featured_posts: normalizeFeatured(raw.featured_posts),
     social_icon: {
       enable: asBool(social.enable, true),
-      show_on_home: asBool(social.show_on_home, true),
       show_in_author_card: asBool(social.show_in_author_card, true),
       icon: asString(social.icon, 'fas fa-robot'),
       label: asString(social.label, null),
       // A CSS colour for the robot icon; null keeps the theme's icon colour so it
       // sits beside the other social icons instead of standing out.
-      color: asString(social.color, null),
-      row_title: asString(social.row_title, null)
+      color: asString(social.color, null)
     }
   }
 }
@@ -227,7 +225,7 @@ function normalizeRights (cfg, errors) {
 
 function normalizeRobots (cfg, errors) {
   const raw = asObject(cfg)
-  const provider = asString(raw.provider, 'external').toLowerCase()
+  const provider = asString(raw.provider, 'panda').toLowerCase()
   if (!ROBOTS_PROVIDERS.includes(provider)) {
     errors.push(`site_discovery.robots.provider must be one of ${ROBOTS_PROVIDERS.join(', ')} (got ${JSON.stringify(raw.provider)})`)
   }
@@ -244,7 +242,7 @@ function normalizeRobots (cfg, errors) {
     errors.push(`site_discovery.robots.usage_ai_training must be one of ${TRAINING_PREFERENCES.join(', ')} (got ${JSON.stringify(raw.usage_ai_training)})`)
   }
   return {
-    provider: ROBOTS_PROVIDERS.includes(provider) ? provider : 'external',
+    provider: ROBOTS_PROVIDERS.includes(provider) ? provider : 'panda',
     path,
     policy: ROBOTS_POLICIES.includes(policy) ? policy : 'balanced',
     sitemap: asBool(raw.sitemap, true),
@@ -259,7 +257,7 @@ function normalizeRobots (cfg, errors) {
 
 function normalizeSitemap (cfg, errors) {
   const raw = asObject(cfg)
-  const provider = asString(raw.provider, 'external').toLowerCase()
+  const provider = asString(raw.provider, 'panda').toLowerCase()
   if (!SITEMAP_PROVIDERS.includes(provider)) {
     errors.push(`site_discovery.sitemap.provider must be one of ${SITEMAP_PROVIDERS.join(', ')} (got ${JSON.stringify(raw.provider)})`)
   }
@@ -268,7 +266,7 @@ function normalizeSitemap (cfg, errors) {
     errors.push(`site_discovery.sitemap.path should end with .xml (got ${JSON.stringify(raw.path)})`)
   }
   return {
-    provider: SITEMAP_PROVIDERS.includes(provider) ? provider : 'external',
+    provider: SITEMAP_PROVIDERS.includes(provider) ? provider : 'panda',
     path,
     include_tags: asBool(raw.include_tags, true),
     include_categories: asBool(raw.include_categories, true),
@@ -280,7 +278,9 @@ function normalizeSitemap (cfg, errors) {
 
 function normalizeAiReadable (cfg, errors) {
   const raw = asObject(cfg)
-  const enabled = asBool(raw.enable, false)
+  // On by default since 1.2.0: every output is derived from the site's own posts
+  // and config, so enabling costs the user nothing to write.
+  const enabled = asBool(raw.enable, true)
   return {
     enable: enabled,
     intro: asString(raw.intro, null),

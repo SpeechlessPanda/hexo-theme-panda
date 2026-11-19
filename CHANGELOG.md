@@ -4,6 +4,25 @@ All notable changes to [hexo-theme-panda](https://github.com/SpeechlessPanda/hex
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-20
+
+AI-readable release with the surfaces **on by default**. A site that upgrades gets `robots.txt`, `sitemap.xml`, `llms.txt`, Markdown mirrors, `/ai/` and `/rights/` without configuring anything, all derived from its own posts and config. Also restores the social icon row to the author card, under the Follow Me button.
+
+### Changed
+
+- `ai_readable.enable` now defaults to `true`, and `site_discovery.robots.provider` / `sitemap.provider` default to `panda`. The 1.1.10 release shipped all of them off; the outputs need no user input, so requiring configuration only hid them.
+- The AI reading entry moved back into the author card's social row, directly under the Follow Me button (`layout/includes/widget/card_author.pug`). 1.1.10 put a second row at the bottom of the home about content, which pushed the icons thousands of pixels down the page and left the card's row empty. `layout/includes/panda/follow-row.pug` and `scripts/helpers/home_follow.js` are gone; `layout/includes/header/social.pug` keeps a `slot` argument so the decorative hero row still omits the robot. `portal.social_icon.show_on_home` and `portal.social_icon.row_title` were removed with the row they configured.
+- A generator conflict is no longer always fatal. `scripts/panda/lib/explicit-config.js` reads `_config.panda.yml` itself (Hexo merges that file into `theme.config` before any filter runs, so the object cannot tell user values from defaults): an explicit `provider: panda` next to a plugin keeps the loud, named error, while an inherited default steps aside and warns once. An upgrade therefore never breaks a build that already runs `hexo-generator-sitemap` or `hexo-generator-robotstxt`.
+- `hexo panda verify-ai` checks the robot icon in the author card, on the page the site actually serves at its root, instead of the old home-only row.
+
+### Removed
+
+- `portal.social_icon.show_on_home`, `portal.social_icon.row_title`, and the `ai_readable.portal.follow_title` translation key (all only configured the removed home row).
+
+### Docs
+
+- `README.md` / `README_CN.md`: defaults updated, the 1.1.9 → 1.1.10 migration section replaced with 1.1.10 → 1.2.0, including the plugin-conflict policy, how to opt back out, and an explicit answer on automatic regeneration.
+
 ## [1.1.10] - 2026-11-19
 
 AI-readable release: optional `robots.txt` / `sitemap.xml` generators, `llms.txt`, Markdown mirrors, an `/ai/` reading guide and a `/rights/` policy page, plus `hexo panda verify-ai`. Every feature is off by default.

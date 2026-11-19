@@ -39,18 +39,48 @@ function post (source, extra = {}) {
   }
 }
 
+describe('explicit provider intent', () => {
+  const { parseProviders } = require('../scripts/panda/lib/explicit-config')
+
+  it('reads a block mapping', () => {
+    const got = parseProviders('site_discovery:\n  robots:\n    provider: panda\n  sitemap:\n    provider: external\n')
+    assert.deepEqual(got, { robots: 'panda', sitemap: 'external' })
+  })
+
+  it('reads a flow mapping', () => {
+    assert.deepEqual(parseProviders('site_discovery:\n  robots: { provider: panda }\n'), { robots: 'panda', sitemap: null })
+  })
+
+  it('reports nothing when only unrelated keys are set', () => {
+    assert.deepEqual(parseProviders('site_discovery:\n  robots:\n    policy: balanced\n'), { robots: null, sitemap: null })
+  })
+
+  it('ignores commented-out configuration', () => {
+    assert.deepEqual(parseProviders('# site_discovery:\n#   robots:\n#     provider: panda\n'), { robots: null, sitemap: null })
+  })
+
+  it('keeps a provider that follows a nested list', () => {
+    const text = 'site_discovery:\n  robots:\n    custom_groups:\n      - user_agents: [A]\n    provider: disabled\n'
+    assert.equal(parseProviders(text).robots, 'disabled')
+  })
+})
+
 describe('config normalization', () => {
-  it('turns everything off by default except llms/markdown/portal/rights under ai_readable', () => {
+  it('generates every surface by default so an empty config still gets all seven', () => {
     const cfg = normalizeDiscoveryConfig({})
-    assert.equal(cfg.ai.enable, false, 'ai_readable must be opt-in')
-    assert.equal(cfg.discovery.robots.provider, 'external')
-    assert.equal(cfg.discovery.sitemap.provider, 'external')
+    assert.equal(cfg.ai.enable, true, 'ai_readable is on by default since 1.2.0')
+    assert.equal(cfg.discovery.robots.provider, 'panda')
+    assert.equal(cfg.discovery.sitemap.provider, 'panda')
+    assert.equal(cfg.ai.llms_txt.enable, true)
+    assert.equal(cfg.ai.markdown.enable, true)
+    assert.equal(cfg.ai.portal.enable, true)
+    assert.equal(cfg.ai.rights.enable, true)
     assert.deepEqual(cfg.errors, [])
   })
 
   it('reports an invalid provider with the exact key and keeps a safe default', () => {
     const cfg = normalizeDiscoveryConfig({ site_discovery: { robots: { provider: 'nginx' } } })
-    assert.equal(cfg.discovery.robots.provider, 'external')
+    assert.equal(cfg.discovery.robots.provider, 'panda')
     assert.ok(cfg.errors.some(e => e.includes('site_discovery.robots.provider')))
   })
 
@@ -93,8 +123,7 @@ describe('config normalization', () => {
       'markdown.enable', 'markdown.exclude', 'markdown.include_pages', 'markdown.include_posts', 'markdown.include_series', 'markdown.path_style',
       'portal.enable', 'portal.featured_posts', 'portal.path', 'portal.projects', 'portal.respect_existing_pages',
       'portal.social_icon.color', 'portal.social_icon.enable', 'portal.social_icon.icon',
-      'portal.social_icon.label', 'portal.social_icon.row_title', 'portal.social_icon.show_in_author_card',
-      'portal.social_icon.show_on_home',
+      'portal.social_icon.label', 'portal.social_icon.show_in_author_card',
       'rights.ai_training', 'rights.ai_use', 'rights.contact', 'rights.enable', 'rights.extra',
       'rights.license', 'rights.license_url', 'rights.path', 'rights.respect_existing_pages'
     ].sort())
@@ -363,11 +392,19 @@ describe('shipped config files', () => {
     assert.deepEqual(diff(fromYml, defaults.ai_readable, 'ai_readable'), [])
   })
 
-  it('ships every feature off by default', () => {
+  it('ships every surface on by default and still allows opting out', () => {
     const defaults = require('../scripts/common/default_config')
-    assert.equal(defaults.ai_readable.enable, false)
-    assert.equal(defaults.site_discovery.robots.provider, 'external')
-    assert.equal(defaults.site_discovery.sitemap.provider, 'external')
+    assert.equal(defaults.ai_readable.enable, true)
+    assert.equal(defaults.site_discovery.robots.provider, 'panda')
+    assert.equal(defaults.site_discovery.sitemap.provider, 'panda')
+
+    const off = normalizeDiscoveryConfig({
+      ai_readable: { enable: false },
+      site_discovery: { robots: { provider: 'disabled' }, sitemap: { provider: 'disabled' } }
+    })
+    assert.equal(off.ai.enable, false)
+    assert.equal(off.discovery.robots.provider, 'disabled')
+    assert.equal(off.discovery.sitemap.provider, 'disabled')
   })
 })
 

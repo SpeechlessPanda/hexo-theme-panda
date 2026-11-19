@@ -1233,10 +1233,15 @@ site_discovery:
   enable: true
 
   robots:
-    # panda    : the built-in generator below writes robots.txt
+    # panda    : the built-in generator below writes robots.txt (default)
     # external : another plugin (hexo-generator-robotstxt ...) writes it
     # disabled : no robots.txt is produced by the theme
-    provider: external
+    #
+    # Upgraded from 1.1.x with a robots plugin installed? The theme notices the
+    # plugin, leaves robots.txt to it and logs one warning. Write "external" here
+    # to silence that, or "panda" to make the theme own the file (the build then
+    # stops and names the plugin you have to remove).
+    provider: panda
     path: robots.txt
     # balanced   : allow search, allow user-triggered agents, deny training
     # permissive : single wildcard group, no AI-specific rules
@@ -1262,10 +1267,14 @@ site_discovery:
     google_agent: omit
 
   sitemap:
+    # panda    : the built-in generator writes sitemap.xml (default)
     # external : keep using hexo-generator-sitemap (theme only marks exclusions)
-    # panda    : the built-in generator writes sitemap.xml
     # disabled : no sitemap is produced by the theme
-    provider: external
+    #
+    # Same conflict rule as robots.txt: an already-installed sitemap plugin keeps
+    # the file after a 1.1.x upgrade, and "panda" written here explicitly makes a
+    # conflict a build error instead of a warning.
+    provider: panda
     path: sitemap.xml
     include_tags: true
     include_categories: true
@@ -1281,8 +1290,12 @@ site_discovery:
 # AI-readable content
 # --------------------------------------
 ai_readable:
-  # Master switch: llms.txt, Markdown mirrors, /ai/ portal, /rights/ page
-  enable: false
+  # Master switch: llms.txt, Markdown mirrors, /ai/ portal, /rights/ page.
+  # On by default since 1.2.0: the outputs are generated from your existing posts
+  # and config, so there is nothing to write before enabling. Set false to turn
+  # the whole family off (a page you already own at one of these paths always
+  # wins — the theme steps aside instead of overwriting it).
+  enable: true
   # Short one-sentence summary used by llms.txt and the portal (null = site description)
   intro: null
   # Author introduction for llms.txt / portal (null = derived from config.author)
@@ -1333,15 +1346,12 @@ ai_readable:
     featured_posts: []
     social_icon:
       enable: true
-      show_on_home: true
       show_in_author_card: true
       icon: fas fa-robot
       # null = localized default ("AI reading guide" / "AI 阅读入口" ...)
       label: null
       # CSS colour for the robot icon (null = same as the other social icons)
       color: null
-      # Heading shown above the home Follow Me row (null = localized default)
-      row_title: null
 
   rights:
     enable: true

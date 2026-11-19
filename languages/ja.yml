@@ -153,7 +153,6 @@ ai_readable:
   portal:
     title: AI リーディングガイド
     icon_label: AI リーディングガイド
-    follow_title: フォロー
     featured: 注目記事
     recent: 最新記事
     series: シリーズ
