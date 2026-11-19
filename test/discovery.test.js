@@ -39,6 +39,24 @@ function post (source, extra = {}) {
   }
 }
 
+describe('removed config keys', () => {
+  it('reports `show_on_home` instead of silently ignoring it', () => {
+    const cfg = normalizeDiscoveryConfig({ ai_readable: { portal: { social_icon: { show_on_home: true } } } })
+    assert.ok(cfg.errors.some(e => e.includes('portal.social_icon.show_on_home') && e.includes('removed in 1.2.0')))
+    assert.ok(cfg.errors.some(e => e.includes('show_in_author_card')), 'the message names the replacement')
+  })
+
+  it('reports `row_title` and points at the label instead', () => {
+    const cfg = normalizeDiscoveryConfig({ ai_readable: { portal: { social_icon: { row_title: 'Follow' } } } })
+    assert.ok(cfg.errors.some(e => e.includes('portal.social_icon.row_title') && e.includes('portal.social_icon.label')))
+  })
+
+  it('stays quiet for the keys that replaced them', () => {
+    const cfg = normalizeDiscoveryConfig({ ai_readable: { portal: { social_icon: { show_in_author_card: false, label: 'AI' } } } })
+    assert.deepEqual(cfg.errors, [])
+  })
+})
+
 describe('explicit provider intent', () => {
   const { parseProviders } = require('../scripts/panda/lib/explicit-config')
 

@@ -167,9 +167,29 @@ function normalizeLlms (cfg) {
   }
 }
 
+// Keys 1.2.0 removed because the feature they configured is gone. Silently
+// ignoring them is the worst outcome: the site owner believes the setting still
+// does something. Report the key and what replaced it instead.
+const REMOVED_AI_KEYS = {
+  'portal.social_icon.show_on_home': 'the robot icon now always lives in the author card; use portal.social_icon.show_in_author_card',
+  'portal.social_icon.row_title': 'the home Follow Me row was removed in 1.2.0; the label comes from portal.social_icon.label'
+}
+
+function reportRemovedKeys (portalCfg, errors) {
+  const portal = asObject(portalCfg)
+  const social = asObject(portal.social_icon)
+  if (social.show_on_home !== undefined) {
+    errors.push(`ai_readable.portal.social_icon.show_on_home was removed in 1.2.0 and is ignored (${REMOVED_AI_KEYS['portal.social_icon.show_on_home']})`)
+  }
+  if (social.row_title !== undefined) {
+    errors.push(`ai_readable.portal.social_icon.row_title was removed in 1.2.0 and is ignored (${REMOVED_AI_KEYS['portal.social_icon.row_title']})`)
+  }
+}
+
 function normalizePortal (cfg, errors) {
   const raw = asObject(cfg)
   const social = asObject(raw.social_icon)
+  reportRemovedKeys(raw, errors)
   const path = normalizePagePath(raw.path, '/ai/')
   return {
     enable: asBool(raw.enable, true),
