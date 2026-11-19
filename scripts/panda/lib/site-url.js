@@ -139,9 +139,20 @@ function mirrorRoutePath (routePath, pathStyle) {
   if (!p) return null
   if (/\.md$/i.test(p)) return null // never mirror a mirror
   const isIndex = /(^|\/)index\.html?$/i.test(p) || p.endsWith('/')
+  const isIndexFile = /(^|\/)index\.html?$/i.test(p)
   const isHtml = /\.html?$/i.test(p) || p.endsWith('/')
   if (!isIndex && !isHtml) return null
-  if (pathStyle === 'suffix') return `${p}.md`
+  // `suffix` appends `.md` to the HTML *file name*. A directory-form route
+  // (`post/2026/01/01/a/`, which is what Hexo models carry) has no file name, so
+  // appending straight to it produced `a/.md` — an empty name that 404s and makes
+  // every `<link rel="alternate">` point at nothing.
+  if (pathStyle === 'suffix') {
+    // Already a file name: append once.
+    if (isIndexFile) return `${p}.md`
+    // Directory form: name the file that the URL actually serves.
+    if (isIndex) return `${p.endsWith('/') ? p : `${p}/`}index.html.md`
+    return `${p}.md`
+  }
   if (isIndex) {
     const dir = p.replace(/index\.html?$/i, '')
     return `${dir.endsWith('/') ? dir : `${dir}/`}index.md`

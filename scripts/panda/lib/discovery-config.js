@@ -10,6 +10,7 @@ const SITEMAP_PROVIDERS = ['external', 'panda', 'disabled']
 const ROBOTS_POLICIES = ['balanced', 'permissive', 'custom']
 const PATH_STYLES = ['index', 'suffix']
 const TRAINING_PREFERENCES = ['deny', 'allow', 'omit']
+const GOOGLE_AGENT_MODES = ['omit', 'allow', 'disallow']
 
 function isPlainObject (value) {
   return value != null && typeof value === 'object' && !Array.isArray(value)
@@ -19,8 +20,27 @@ function asObject (value) {
   return isPlainObject(value) ? value : {}
 }
 
+// A quoted `"false"` is still a YAML string, and reading it as `true` (the naive
+// `typeof === 'boolean' ? value : fallback`) silently inverts the owner's intent:
+// they believe the feature is off while it stays on. Accept the two words that
+// have an unambiguous meaning and treat anything else as "not a boolean".
 function asBool (value, fallback) {
-  return typeof value === 'boolean' ? value : fallback
+  if (typeof value === 'boolean') return value
+  if (typeof value === 'string') {
+    const text = value.trim().toLowerCase()
+    if (text === 'true') return true
+    if (text === 'false') return false
+  }
+  return fallback
+}
+
+/** Report a quoted boolean so the owner sees it in the build log. */
+function flagQuotedBool (value, key, errors) {
+  if (typeof value !== 'string') return
+  const text = value.trim().toLowerCase()
+  if (text === 'true' || text === 'false') {
+    errors.push(`${key} is the string ${JSON.stringify(value)}; write it without quotes so YAML reads it as a boolean`)
+  }
 }
 
 function asString (value, fallback) {
@@ -145,9 +165,12 @@ function normalizeMarkdown (cfg, errors) {
   }
 }
 
-function normalizeLlms (cfg) {
+function normalizeLlms (cfg, errors) {
   const raw = asObject(cfg)
   const recent = asInt(raw.recent_posts, 10, 0)
+  if (raw.recent_posts != null && typeof raw.recent_posts === 'number' && recent !== Math.trunc(raw.recent_posts)) {
+    errors.push(`ai_readable.llms_txt.recent_posts must be a whole number >= 0 (got ${JSON.stringify(raw.recent_posts)})`)
+  }
   if (raw.recent_posts != null && typeof raw.recent_posts !== 'number') {
     errors.push('ai_readable.llms_txt.recent_posts must be a number')
   }
@@ -257,6 +280,10 @@ function normalizeRobots (cfg, errors) {
   if (!/\.txt$/i.test(path)) {
     errors.push(`site_discovery.robots.path should end with .txt (got ${JSON.stringify(raw.path)})`)
   }
+  const googleAgent = asString(raw.google_agent, 'omit').toLowerCase()
+  if (!GOOGLE_AGENT_MODES.includes(googleAgent)) {
+    errors.push(`site_discovery.robots.google_agent must be one of ${GOOGLE_AGENT_MODES.join(', ')} (got ${JSON.stringify(raw.google_agent)})`)
+  }
   const training = asString(raw.usage_ai_training, 'deny').toLowerCase()
   if (!TRAINING_PREFERENCES.includes(training)) {
     errors.push(`site_discovery.robots.usage_ai_training must be one of ${TRAINING_PREFERENCES.join(', ')} (got ${JSON.stringify(raw.usage_ai_training)})`)
@@ -271,7 +298,7 @@ function normalizeRobots (cfg, errors) {
     // `custom_groups` is the documented name; `groups` is accepted for tolerance.
     groups: normalizeGroups(raw.custom_groups || raw.groups),
     usage_ai_training: TRAINING_PREFERENCES.includes(training) ? training : 'deny',
-    google_agent: asString(raw.google_agent, 'omit').toLowerCase()
+    google_agent: GOOGLE_AGENT_MODES.includes(googleAgent) ? googleAgent : 'omit'
   }
 }
 
@@ -318,9 +345,31 @@ function normalizeAiReadable (cfg, errors) {
  * documented defaults and are reported in `errors` so the caller can decide
  * between a warning (cosmetic) and a build failure (feature would silently lie).
  */
+// Every documented boolean key, so a quoted `"true"`/`"false"` is reported once
+// instead of depending on whether each normalizer happens to look at it.
+const BOOLEAN_KEYS = [
+  'enable', 'include_posts', 'include_series', 'include_pages', 'series', 'topics',
+  'license', 'resources', 'respect_existing_pages', 'show_in_author_card',
+  'sitemap', 'include_tags', 'include_categories', 'exclude_noindex'
+]
+
+function reportQuotedBooleans (block, errors, prefix) {
+  const walk = (node, path) => {
+    if (!node || typeof node !== 'object' || Array.isArray(node)) return
+    for (const [key, value] of Object.entries(node)) {
+      const keyPath = path ? `${path}.${key}` : key
+      if (BOOLEAN_KEYS.includes(key)) flagQuotedBool(value, `${prefix}${keyPath}`, errors)
+      else if (value && typeof value === 'object' && !Array.isArray(value)) walk(value, keyPath)
+    }
+  }
+  walk(block, '')
+}
+
 function normalizeDiscoveryConfig (themeConfig) {
   const theme = asObject(themeConfig)
   const errors = []
+  reportQuotedBooleans(theme.site_discovery, errors, 'site_discovery.')
+  reportQuotedBooleans(theme.ai_readable, errors, 'ai_readable.')
   const siteDiscovery = asObject(theme.site_discovery)
   const discoveryEnabled = asBool(siteDiscovery.enable, true)
   const robots = normalizeRobots(siteDiscovery.robots, errors)

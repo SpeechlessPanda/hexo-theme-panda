@@ -39,6 +39,50 @@ function post (source, extra = {}) {
   }
 }
 
+describe('suffix mirror paths', () => {
+  const { mirrorRoutePath } = require('../scripts/panda/lib/site-url')
+
+  it('names the served file for a directory route', () => {
+    // Hexo models carry `post/2026/01/01/a/`; appending `.md` straight to that
+    // produced `a/.md` — an empty file name behind every alternate link.
+    assert.equal(mirrorRoutePath('2026/01/01/a/', 'suffix'), '2026/01/01/a/index.html.md')
+    assert.equal(mirrorRoutePath('about/', 'suffix'), 'about/index.html.md')
+  })
+
+  it('never doubles the index file', () => {
+    assert.equal(mirrorRoutePath('2026/01/01/a/index.html', 'suffix'), '2026/01/01/a/index.html.md')
+    assert.equal(mirrorRoutePath('index.html', 'suffix'), 'index.html.md')
+  })
+
+  it('leaves the default index style untouched', () => {
+    assert.equal(mirrorRoutePath('2026/01/01/a/', 'index'), '2026/01/01/a/index.md')
+    assert.equal(mirrorRoutePath('2026/01/01/a/index.html', 'index'), '2026/01/01/a/index.md')
+  })
+})
+
+describe('values that would silently invert intent', () => {
+  it('reads a quoted "false" as false instead of falling back to true', () => {
+    const cfg = normalizeDiscoveryConfig({ site_discovery: { sitemap: { include_tags: 'false' } } })
+    assert.equal(cfg.discovery.sitemap.include_tags, false)
+  })
+
+  it('reports every quoted boolean with its exact key', () => {
+    const cfg = normalizeDiscoveryConfig({ ai_readable: { markdown: { include_pages: 'false' } } })
+    assert.ok(cfg.errors.some(e => e.includes('ai_readable.markdown.include_pages') && e.includes('without quotes')))
+  })
+
+  it('reports an unknown google_agent mode', () => {
+    const cfg = normalizeDiscoveryConfig({ site_discovery: { robots: { google_agent: 'maybe' } } })
+    assert.equal(cfg.discovery.robots.google_agent, 'omit')
+    assert.ok(cfg.errors.some(e => e.includes('site_discovery.robots.google_agent')))
+  })
+
+  it('reports a negative recent_posts instead of clamping in silence', () => {
+    const cfg = normalizeDiscoveryConfig({ ai_readable: { llms_txt: { recent_posts: -5 } } })
+    assert.ok(cfg.errors.some(e => e.includes('ai_readable.llms_txt.recent_posts')))
+  })
+})
+
 describe('removed config keys', () => {
   it('reports `show_on_home` instead of silently ignoring it', () => {
     const cfg = normalizeDiscoveryConfig({ ai_readable: { portal: { social_icon: { show_on_home: true } } } })

@@ -77,15 +77,16 @@ function expectations (hexo, cfg) {
     // The robot lives in the author card, which renders in the aside on the home
     // page. Any page using the `home` layout reuses that card, so check whichever
     // page the site actually serves at the root.
-    const asideHome = (hexo.theme.config.aside || {}).display || {}
-    if (asideHome.home !== false) {
-      const pages = hexo.model('Page').toArray()
-      const holder = pages.find(page => page.layout === 'home')
-      const about = (hexo.theme.config.home_about || {}).source || 'about/index.md'
-      const fallback = pages.find(page => page.source === about)
-      const target = holder || fallback
-      expected.homeIcon = { page: target ? rootPath(target.path) : 'index.html' }
-    }
+    // Always check it: `aside.display.home` only hides the sidebar on listings, and
+    // the author card renders on the home page regardless (Panda keeps the aside
+    // unless the reader collapses it). Skipping the check on that flag reported
+    // "8 checks passed" for a page the site owner could see the icon on anyway.
+    const pages = hexo.model('Page').toArray()
+    const holder = pages.find(page => page.layout === 'home')
+    const about = (hexo.theme.config.home_about || {}).source || 'about/index.md'
+    const fallback = pages.find(page => page.source === about)
+    const target = holder || fallback
+    expected.homeIcon = { page: target ? rootPath(target.path) : 'index.html' }
   }
 
   if (!cfg.ai.enable || !cfg.ai.markdown.enable) return expected
