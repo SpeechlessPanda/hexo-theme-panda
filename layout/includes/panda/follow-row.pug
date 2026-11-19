@@ -1,0 +1,14 @@
+//- Panda theme — compact "Follow Me" row for the home about area (Apache-2.0).
+//- The home page renders a page's content through `home.pug`, and the aside can be
+//- off there. Putting the social row in the about area is what makes the AI
+//- reading entry reachable without forcing the sidebar on.
+//-
+//- Renders nothing when neither the robot icon nor any social link is configured:
+//- an empty bar would just be noise under the about text.
+- const followCfg = (theme.ai_readable && theme.ai_readable.portal && theme.ai_readable.portal.social_icon) || {}
+
+if pandaHomeFollowRow()
+  .panda-follow-me
+    span.panda-follow-me__label= followCfg.row_title || _p('ai_readable.portal.follow_title')
+    .card-info-social-icons.panda-follow-me__icons
+      !=partial('includes/header/social', { slot: 'home' })

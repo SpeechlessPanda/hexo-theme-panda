@@ -1221,3 +1221,135 @@ gradient:
 
 # Open article/memo links in a new tab
 link_target_blank: true
+
+
+# --------------------------------------
+# Site Discovery (robots.txt / sitemap.xml)
+# --------------------------------------
+# All new capabilities are OFF by default so upgrading changes nothing.
+# See README "AI-readable & site discovery" for the full reference.
+site_discovery:
+  # Enable or disable both discovery generators
+  enable: true
+
+  robots:
+    # panda    : the built-in generator below writes robots.txt
+    # external : another plugin (hexo-generator-robotstxt ...) writes it
+    # disabled : no robots.txt is produced by the theme
+    provider: external
+    path: robots.txt
+    # balanced   : allow search, allow user-triggered agents, deny training
+    # permissive : single wildcard group, no AI-specific rules
+    # custom     : only the groups in custom_groups
+    policy: balanced
+    # Absolute path rules added to the site-wide group
+    allow: []
+    disallow: []
+    # Extra groups appended verbatim:
+    #   - user_agents: [SomeBot]
+    #     allow: ['/']
+    #     disallow: ['/private/']
+    #     content_usage: ['train-ai=n']   # AIPREF attach (Internet-Draft)
+    #     note: Shown as a comment above the group
+    custom_groups: []
+    # Write a Sitemap: line with the absolute sitemap URL
+    sitemap: true
+    # deny | allow | omit — emits a `User-agent: __usage_ai-training` group
+    # (draft-kelley-aipref-training-preference-signal, an Internet-Draft, not an RFC)
+    usage_ai_training: deny
+    # omit | allow | disallow — Google-Agent is user-triggered; robots.txt does not
+    # govern it. A CDN/WAF allowlist is the real control.
+    google_agent: omit
+
+  sitemap:
+    # external : keep using hexo-generator-sitemap (theme only marks exclusions)
+    # panda    : the built-in generator writes sitemap.xml
+    # disabled : no sitemap is produced by the theme
+    provider: external
+    path: sitemap.xml
+    include_tags: true
+    include_categories: true
+    include_pages: true
+    # Built-in (`panda`) mode always drops `noindex` content. This switch only
+    # controls `external` mode: it marks those entries `sitemap: false` for the
+    # plugin you already run (hexo-generator-sitemap honours that flag).
+    exclude_noindex: true
+    # Glob patterns: posts/pages matching these are never listed
+    exclude: []
+
+# --------------------------------------
+# AI-readable content
+# --------------------------------------
+ai_readable:
+  # Master switch: llms.txt, Markdown mirrors, /ai/ portal, /rights/ page
+  enable: false
+  # Short one-sentence summary used by llms.txt and the portal (null = site description)
+  intro: null
+  # Author introduction for llms.txt / portal (null = derived from config.author)
+  author_bio: null
+  # Main content directions, e.g. [hexo, linux, rust]
+  topics: []
+  # Optional: `source/_data/ai.yml` may supply curated text instead of (or on top of)
+  # this config — site/tagline/description, about, topics with one-line notes,
+  # featured posts, projects and notes. It merges over these values, so a blog keeps
+  # its personal curation in its own repo while the theme default stays empty.
+
+  llms_txt:
+    enable: true
+    path: llms.txt
+    # How many recent posts to list (0 = none)
+    recent_posts: 10
+    # Include one entry per blog series
+    series: true
+    # Include sitemap / feed / archive / portal / rights links
+    resources: true
+    # Additional H2 sections: [{ title: 'Talks', links: [{ name: ..., url: ..., description: ... }] }]
+    sections: []
+
+  markdown:
+    enable: true
+    include_posts: true
+    include_series: true
+    include_pages: false
+    # index (…/post/index.md) or suffix (…/post/index.html.md)
+    path_style: index
+    # Globs relative to source/: excluded from mirrors, llms.txt and the portal
+    exclude: []
+
+  portal:
+    enable: true
+    path: /ai/
+    # A page you wrote at this path is your content, so it wins and the theme steps
+    # aside (it logs which file it left alone). false = force the generated page,
+    # which then fails the build if a page still claims the path.
+    respect_existing_pages: true
+    # Manual projects: [{ name, url, description, order }]
+    projects: []
+    # Featured posts: [{ source: _posts/foo.md }] or plain source strings
+    featured_posts: []
+    social_icon:
+      enable: true
+      show_on_home: true
+      show_in_author_card: true
+      icon: fas fa-robot
+      # null = localized default ("AI reading guide" / "AI 阅读入口" ...)
+      label: null
+      # CSS colour for the robot icon (null = same as the other social icons)
+      color: null
+      # Heading shown above the home Follow Me row (null = localized default)
+      row_title: null
+
+  rights:
+    enable: true
+    path: /rights/
+    # Same rule as the portal: never overwrite a page you wrote there.
+    respect_existing_pages: true
+    # inherit = use theme.post_copyright, or set your own
+    license: inherit
+    license_url: inherit
+    contact: null
+    # deny | allow | omit — a preference, separate from the license above
+    ai_training: deny
+    ai_use: allow-search
+    # Extra Markdown appended to the policy page
+    extra: null

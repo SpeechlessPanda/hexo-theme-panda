@@ -146,3 +146,71 @@ tag:
 
 anchor:
   permalink: 이 제목의 고유 링크
+
+# AI 읽기
+ai_readable:
+  untitled: 제목 없음
+  portal:
+    title: AI 읽기 안내
+    icon_label: AI 읽기 안내
+    follow_title: 팔로우
+    featured: 추천 글
+    recent: 최신 글
+    series: 시리즈
+    projects: 프로젝트
+    resources: 기계 판독 리소스
+    markdown_link_title: 이 페이지의 Markdown 버전 읽기
+    resource_llms_note: LLM 콘텐츠 색인
+    resource_sitemap_note: 검색 엔진 색인
+    resource_feed_note: 글과 메모 피드
+    resource_rights_note: 라이선스와 AI 사용 정책
+  llms:
+    heading_featured: 추천 글
+    heading_articles: 글
+    heading_series: 시리즈
+    heading_projects: 프로젝트
+    heading_resources: 리소스
+    heading_topics: 주제
+    heading_license: 라이선스 및 AI 사용 정책
+    license_line: 라이선스
+    ai_use_line: AI 사용
+    ai_training_line: AI 학습 희망 사항
+    rights_line: 전체 안내
+    summary_fallback: 공개 글, 시리즈, 리소스.
+    author_fallback: '%s 이(가) 운영합니다.'
+    topics_label: 주요 주제
+    markdown_note: 아래 각 페이지에는 같은 주소에 `/index.md`를 붙인 Markdown 버전이 있습니다. 이 링크를 쓰면 에이전트가 HTML을 해석하지 않고 본문을 읽을 수 있습니다.
+    resource_sitemap: 색인 가능한 모든 페이지
+    resource_feed: 최신 글과 메모
+    resource_archive: 아카이브
+    resource_archive_desc: 모든 글의 시간순 목록
+    resource_portal: 기계 판독 리소스에 대한 사람용 안내
+    resource_rights: 라이선스, 출처 표시, AI 사용 선호
+  rights:
+    title: 저작권 및 사용 정책
+    ownership: 저작권 귀속
+    ownership_text: 각 글의 저작권은 해당 글의 저자에게 있습니다.
+    ownership_site: 사이트 콘텐츠와 디자인.
+    license: 라이선스
+    license_text_prefix: '별도 표시가 없는 한 글은 다음 라이선스를 따릅니다:'
+    license_text_suffix: .
+    license_inherited: 이 값은 테마의 `post_copyright` 설정을 상속합니다.
+    license_attribution: 출처 표시가 필요하며 원문 링크를 함께 남겨 주세요.
+    license_noncommercial: 상업적 사용에는 저자의 허가가 필요합니다.
+    license_sharealike: 2차 저작물도 같은 라이선스를 유지해야 합니다.
+    license_none: 사이트 전체 라이선스가 설정되지 않았습니다. 모든 권리 보유로 간주하고 저자에게 문의하세요.
+    commercial: 상업적 사용
+    commercial_text: 상업적 사용, 번역, 재배포 전에 저자에게 서면 허가를 요청하세요.
+    contact_label: 연락처
+    third_party: 제3자 콘텐츠
+    third_party_text: 이미지, 인용, 삽입 콘텐츠의 권리는 각 권리자에게 있을 수 있습니다. 개별 글에 예외가 명시되어 있으면 그 내용이 우선합니다.
+    ai_preference: AI 읽기, 검색, 학습
+    ai_training_deny: 저자는 이 콘텐츠가 생성 AI 모델 학습에 사용되지 않기를 요청합니다. robots.txt의 공급자별 규칙도 같은 선호를 나타냅니다.
+    ai_training_allow: 저자는 이 콘텐츠를 AI 모델 학습에 사용하는 것을 허용합니다.
+    ai_training_omit: 저자는 AI 모델 학습에 대한 선호를 밝히지 않았습니다.
+    ai_use_text: 사람의 열람, 검색, 인용, 요약과 사용자를 대신하는 에이전트의 같은 행위를 환영합니다. 출처와 원문 링크를 함께 남겨 주세요.
+    ai_disclaimer: 위 내용은 사용 선호이며 라이선스도 기술적 통제도 아닙니다. robots.txt는 비공개 데이터를 보호하지 못하고, 규칙을 따르지 않는 크롤러를 막을 수 없습니다.
+    llms_link: 기계 판독 콘텐츠 색인은 llms.txt를 참고하세요.
+    contact: 연락처
+    contact_fallback: 소개 페이지에 안내된 연락처를 이용해 주세요.
+    portal_link: AI 읽기 안내로 돌아가기

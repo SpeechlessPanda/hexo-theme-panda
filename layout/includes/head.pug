@@ -38,6 +38,9 @@ include ./head/structured_data.pug
 !=favicon_tag(theme.favicon || config.favicon)
 link(rel="canonical" href=urlNoIndex(null,config.pretty_urls.trailing_index,config.pretty_urls.trailing_html))
 
+//- Panda: Markdown mirror + llms.txt discovery links (ai_readable.enable)
+include ./head/discovery.pug
+
 //- 預解析
 !=partial('includes/head/preconnect', {}, {cache: true})
 

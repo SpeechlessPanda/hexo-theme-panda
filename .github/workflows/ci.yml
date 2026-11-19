@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: unit · node ${{ matrix.node }} · hexo ${{ matrix.hexo }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # `package.json` declares node >= 22 and hexo >= 5.3.0; test both ends of the
+        # declared support range instead of only the newest release.
+        node: ['22', '24']
+        hexo: ['5.3.0', 'latest']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install test toolchain
+        # The theme itself has no runtime dependencies. The tests build throwaway
+        # sites that need the renderers, and the discovery fixture declares the index,
+        # archive and taxonomy generators, so install those too — Hexo only loads
+        # plugins a site's package.json lists.
+        run: |
+          npm install --no-save \
+            hexo@${{ matrix.hexo }} \
+            hexo-renderer-pug hexo-renderer-stylus hexo-renderer-markdown-it-plus \
+            hexo-generator-index hexo-generator-archive hexo-generator-category hexo-generator-tag
+
+      - name: Unit tests
+        run: npm test
+
+  build:
+    name: build + verify-ai · hexo ${{ matrix.hexo }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The integration test must pass on the oldest supported Hexo as well as the
+        # newest, because `extend.highlight` (6.0+) and similar APIs differ.
+        hexo: ['5.3.0', 'latest']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build real sites and run verify-ai
+        # The integration test creates its own throwaway sites. It skips when
+        # hexo/renderers are missing, so install them explicitly.
+        run: |
+          npm install --no-save \
+            hexo@${{ matrix.hexo }} \
+            hexo-renderer-pug hexo-renderer-stylus hexo-renderer-markdown-it-plus \
+            hexo-generator-index hexo-generator-archive hexo-generator-category hexo-generator-tag
+          node --test test/discovery-build.test.js

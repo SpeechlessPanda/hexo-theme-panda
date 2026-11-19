@@ -11,7 +11,7 @@
   <a href="https://www.npmjs.com/package/hexo-theme-panda"><img src="https://img.shields.io/npm/v/hexo-theme-panda?style=for-the-badge" alt="npm" /></a>
   <a href="https://www.npmjs.com/package/hexo-theme-panda"><img src="https://img.shields.io/npm/dm/hexo-theme-panda?style=for-the-badge" alt="npm downloads" /></a>
   <a href="https://hexo.io"><img src="https://img.shields.io/badge/Hexo-%3E%3D%205.3.0-0E83CD?style=for-the-badge&amp;logo=hexo&amp;logoColor=white" alt="Hexo" /></a>
-  <a href="https://nodejs.org"><img src="https://img.shields.io/badge/Node.js-%3E%3D%2018-339933?style=for-the-badge&amp;logo=nodedotjs&amp;logoColor=white" alt="Node.js" /></a>
+  <a href="https://nodejs.org"><img src="https://img.shields.io/badge/Node.js-%3E%3D%2022-339933?style=for-the-badge&amp;logo=nodedotjs&amp;logoColor=white" alt="Node.js" /></a>
   <a href="https://speechlesspanda.github.io"><img src="https://img.shields.io/badge/Demo-live-success?style=for-the-badge" alt="Demo" /></a>
 </p>
 
@@ -36,7 +36,8 @@
 | 链接新标签 | 正文/碎碎念链接统一新标签页打开 | 开 |
 | 代码高亮扩展 | 额外注册 fish、typst 语法高亮 | 内置 |
 | `{% hideToggle %}` 底部收起 | 展开后底部出现收起条，点一下滚回该块标题 | 开 |
-| 页内锚点 | 每个 `h1-h6` 自动生成稳定唯一 `id` 与可点击 `#` 永久链接；中文标题可作 slug，重复标题加序号，深链落在固定导航下方，复制 `#` 得到完整 URL | 开 |
+| 页内锚点 | 每个 `h1-h6` 自动生成稳定唯一 `id` 与可点击 `#` 永久链接；中文标题可作 slug，重复标题加序号，深链落在固定导航下方，复制 `#` 得到完整 URL | 开 || AI 可读与内容发现 | 可选内置 `robots.txt` / `sitemap.xml` 生成器、`llms.txt`、Markdown 镜像、`/ai/` 导读页与 `/rights/` 政策页，并提供 `hexo panda verify-ai` 校验命令 | 关 |
+
 
 Butterfly 原有的全部能力（PJAX、深色模式、多种评论、搜索、字数统计、看板娘等）原样保留，配置方式完全兼容 Butterfly 文档。
 
@@ -190,8 +191,8 @@ flowchart LR
 
 ## ✅ 环境要求
 
-- [Hexo](https://hexo.io/) **≥ 5.3.0**（演示站跑的是 8.x）
-- Node.js **≥ 18**
+- [Hexo](https://hexo.io/) **≥ 5.3.0**（演示站跑的是 8.x）。构建测试与 CI 同时覆盖 5.3.0 与 8.x。
+- Node.js **≥ 22**
 - 渲染器：`hexo-renderer-pug`、`hexo-renderer-stylus`（站点里没有的话需要装）
 
 按需额外安装：
@@ -409,6 +410,143 @@ anchor:
 
 **验证**：`node --test test/*.test.js` 含 `heading-anchor.test.js` 单测；`node test/_smoke_anchor.js` 在临时站点里真实构建并断言生成的 HTML/CSS/JS（标题 id 唯一、每个永久链接命中 id、TOC 无死链、中文标签、`?v=` 缓存戳）。
 
+### AI 可读体系与内容发现
+
+默认全部关闭，逐项开启。下面每一项都在 `hexo generate` 时生成，构建期不访问网络，也不调用任何 AI API。
+
+```yaml
+# _config.panda.yml
+site_discovery:
+  enable: true
+  robots:
+    provider: external   # external | panda | disabled
+    policy: balanced     # balanced | permissive | custom
+  sitemap:
+    provider: external   # external | panda | disabled
+
+ai_readable:
+  enable: true           # 以下所有功能的总开关
+  intro: null            # llms.txt 的一句话简介（null = 站点 description）
+  author_bio: null       # null = 由 config.author 推导
+  topics: [hexo, linux]
+  llms_txt:
+    enable: true
+    path: llms.txt
+    recent_posts: 10     # 0 = 不列文章
+  markdown:
+    enable: true
+    include_posts: true
+    include_series: true
+    include_pages: false
+    path_style: index    # index -> /post/index.md，suffix -> /post/index.html.md
+    exclude: []          # glob，例如 ['_posts/draft/**']
+  portal:
+    enable: true
+    path: /ai/
+    projects: []         # [{ name, url, description, order }]
+    featured_posts: []   # [{ source: _posts/foo.md }] 或直接写路径字符串
+    social_icon:
+      enable: true
+      show_on_home: true
+      show_in_author_card: true
+      icon: fas fa-robot
+      label: null        # null = 本地化默认文案
+      color: null        # null = 与其他社交图标同色
+  rights:
+    enable: true
+    path: /rights/
+    license: inherit     # inherit = 沿用 theme.post_copyright
+    license_url: inherit
+    contact: null
+    ai_training: deny    # deny | allow | omit —— 使用偏好，不是许可协议
+    ai_use: allow-search
+    extra: null          # 追加到政策页的 Markdown
+```
+
+| 产物 | 默认 | 说明 |
+|------|------|------|
+| `robots.txt` | `external` | `panda` 输出分组规则：允许搜索爬虫，禁止 `GPTBot`/`ClaudeBot` 训练抓取，`Google-Extended` 退出，`__usage_ai-training`（AIPREF 草案，不是 RFC），`Sitemap:` 使用绝对地址 |
+| `sitemap.xml` | `external` | `panda` 输出绝对 HTTPS URL，`lastmod` 只取真实更新时间（绝不用构建时间），不写 `changefreq`/`priority`。`external` 模式下主题仍会把 noindex/被排除内容标记为 `sitemap: false`，让现有插件遵循同一套规则。内置模式始终排除 `noindex` 内容；`sitemap.exclude_noindex` 只控制外部模式下的标记 |
+| `llms.txt` | 随 `ai_readable` 开启 | v2 结构：H1、引用块简介、背景说明、H2 分区（精选 / 文章 / 系列 / 项目 / 资源），有 Markdown 镜像时优先给镜像链接 |
+| Markdown 镜像 | 开 | 每篇文章和系列章节旁生成 `index.md`，内容取自原始 Markdown，并在 `<head>` 输出 `<link rel="alternate" type="text/markdown">` 与 `<link rel="describedby">` |
+| `/ai/` | 开 | 面向读者的导读页：简介、主题、精选/最新文章、系列、项目，以及 llms.txt / sitemap / feed / rights 入口 |
+| `/rights/` | 开 | 版权归属、许可协议、商业使用、AI 使用偏好、联系方式——复用 `post_copyright` |
+
+**用 `source/_data/ai.yml` 来策展。** 上面的输出也可以读一份可选数据文件，这样个人内容留在博客仓库里，主题默认值保持为空：
+
+```yaml
+# source/_data/ai.yml
+site:
+  tagline: 作为 llms.txt 引用块的一行简介
+  description: 更长的"关于本站"说明
+  organization: 内容组织方式（文章 / 系列 / 碎碎念）
+about:
+  name: 你的名字
+  description: 公开的作者介绍
+  contact: mailto:you@example.com
+topics:                     # 标签名 → 这个标签在讲什么
+  - { name: hexo, description: 静态站点笔记 }
+featured:                   # 优先于 ai_readable.portal.featured_posts
+  - { source: _posts/hello.md, summary: 这篇为什么值得先读 }
+projects:                   # 优先于 ai_readable.portal.projects
+  - { name: my-theme, url: https://github.com/you/it, description: ... }
+latest_count: 5
+```
+
+合并规则：文本字段缺失时回退到配置；`topics`/`featured`/`projects` 非空时替换配置中的列表（策展是编辑决定，追加会导致同一篇文章被链接两次）。`source:` 匹配不到已发布文章时会给出警告而不是静默消失；系列章节同样可以被精选。
+
+**你自己写的页面优先。** 如果你在 `ai_readable.portal.path` 或 `ai_readable.rights.path` 放了页面，那是你的内容，主题会原样保留并记录它让位给了哪个文件，sitemap 照常收录。把 `respect_existing_pages` 设为 `false` 才会强制使用生成页，此时若仍有页面占用该路径，构建会直接失败。
+
+**生成器冲突会终止构建。** 选择 `provider: panda` 而另有插件已占用同名 `robots.txt` 或 `sitemap.xml` 时，构建会停下并指出冲突插件名，不会让两个插件争抢同一个路径。
+
+**Front Matter 开关**
+
+```yaml
+noindex: true        # 退出 sitemap、llms.txt、镜像和导航页
+robots: noindex      # 同上，兼容已有写法
+sitemap: false       # 只退出 sitemap.xml
+ai_readable: false   # 退出 llms.txt、镜像和导航页，仍留在 sitemap
+markdown: false      # 只不生成 Markdown 镜像
+```
+
+**首页机器人图标。** `layout/home.pug` 渲染的是关于页，此时侧边栏可能整块关闭。紧凑的 **Follow Me** 行放在关于内容下方，在原有社交图标之后追加 AI 入口；同一页面的作者卡片会省略自己的 AI 图标，因此同一个图标不会出现两次。内页仍由作者卡片承载该图标。
+
+**校验构建产物**
+
+```bash
+hexo generate
+hexo panda verify-ai
+```
+
+该命令检查构建产物 `public/` 目录（部署真正上传的内容），共九项：robots 分组与绝对 Sitemap 地址；llms.txt 结构及每个镜像链接是否可解析；sitemap 中的 URL 是否都对应已生成页面且不含被排除内容；镜像覆盖率以及是否残留 Front Matter、HTML 或 Hexo 标签；`alternate`/`describedby` 是否正确；导航页与政策页；首页图标的位置、顺序、`aria-label` 与 `title`；以及被排除内容是否泄露到任何产物。失败时返回非零退出码，可直接接入 CI：
+
+```yaml
+# .github/workflows/deploy.yml
+- run: npm ci
+- run: hexo clean && hexo generate
+- run: npx hexo panda verify-ai
+```
+
+#### 常见问题
+
+**需要换掉现在的 sitemap/robots 插件吗？** 不需要。默认 `provider: external`，主题完全不注册这两个文件。想让 Panda 接管就设 `provider: panda` —— 但要先卸载另一个插件，否则构建会直接停下并指出插件名。
+
+**`hexo panda verify-ai` 报镜像缺失怎么办？** 说明某个页面声明了 `rel="alternate"` 但对应镜像没有生成。常见原因：文章被标了 `noindex`、命中 `markdown.exclude`，或上一次构建后关掉了 `markdown.enable`。先执行 `hexo clean`：head 链接和镜像文件在同一次生成中产出，只有残留旧产物时才会不一致。
+
+**`/ai/` 上为什么出现英文分区标题？** 分区标题取自语言文件。如果你的语言不在 Panda 支持范围内，请在配置里覆盖 `ai_readable.llms.heading_*`，否则回退到英文。
+
+**只想在侧边栏显示机器人图标？** 设 `portal.social_icon.show_on_home: false`。作者卡片保留图标，首页 Follow Me 行不再出现。
+
+**主题会自动拦住 AI 爬虫吗？** 不会。只有 `robots.provider: panda` 时才生成 `robots.txt`，而且它表达的只是*偏好*。无视 robots.txt 的训练爬虫照样能读；真正的强制手段是鉴权或 CDN/WAF。
+
+**llms.txt 会不会越写越长？** 不会。`llms_txt.recent_posts` 限制文章条数，系列每个只占一行，也不会导出整个归档。需要更长的索引就调大这个数字。
+
+**构建时会调用 AI 服务吗？** 绝不。所有内容都来自 Hexo 的数据模型和你自己的 Markdown 源文件；没有可靠摘要时只使用标题、描述和 Front Matter。
+
+**能单独排除某篇文章吗？** `noindex: true`（全部产物）、`sitemap: false`（仅 sitemap）、`ai_readable: false`（llms.txt/镜像/导航页，仍留在 sitemap）、`markdown: false`（仅镜像）。
+
+**已知限制。** `robots.txt` 只是抓取偏好，不是访问控制，也不是隐私保护：它拦不住蓄意的爬虫。`Google-Extended` 是产品控制令牌，只影响 Gemini 的训练与 Grounding，不影响 Google 搜索收录与排名。`ChatGPT-User` 和 `Google-Agent` 由用户触发，其访问由 CDN/WAF 决定，robots 规则管不到。`/rights/` 上的 AI 使用偏好是意图声明，与许可协议是两回事——CC BY-NC-SA 4.0 本身并不解决训练授权问题。只有公开、已发布、未标记 `noindex` 的内容会进入索引，草稿永远不会。
+
 ### 其他
 
 ```yaml
@@ -419,6 +557,68 @@ link_target_blank: true   # 正文/碎碎念链接新标签页打开（默认开
 fish / typst 代码高亮开箱即用，无需配置。
 
 `{% hideToggle 标题 %}…{% endhideToggle %}` 是 Butterfly 原有标签。Panda 给展开态加了底部收起条（中文「收起」/ 台湾「收合」/ 英文 Collapse）。点击后收起并滚回该块标题（避开固定导航）。静态资源 URL 带 `?v=<主题版本>`，1.1.1 这类补丁会强制刷新缓存里的 `main.js` / `index.css`。
+
+## ⬆️ 从 1.1.9 升级到 1.1.10（AI 可读版本）
+
+新增功能**默认全部关闭**，未改动的站点构建结果与升级前一致。没有任何既有配置项被改写或改变含义。
+
+| 你现在用的 | 保持原样 | 或换成 Panda 内置 |
+|---|---|---|
+| `hexo-generator-robotstxt` | `site_discovery.robots.provider: external`（默认） | `provider: panda`，`policy: balanced` |
+| `hexo-generator-sitemap` | `site_discovery.sitemap.provider: external`（默认）——主题会把被排除的页面标成 `sitemap: false` | `provider: panda` |
+| `hexo-generator-baidu-sitemap` | 不变，继续生成自己的文件 | — |
+| `hexo-generator-feed` | 不变（Panda 自带的 Atom feed 与它无关） | — |
+
+**如何发现冲突。** 在已有插件占用同一路径时把 `provider` 设为 `panda`，构建会直接失败并指出冲突的插件名，例如 `hexo-generator-sitemap`。解决办法是那个文件继续用 `external`，或者卸载插件、交给 Panda 生成。
+
+**启用 AI 阅读入口**
+
+```yaml
+ai_readable:
+  enable: true
+```
+
+这样就会生成 `/llms.txt`、每篇文章的 Markdown 镜像、`/ai/` 与 `/rights/`。若还想在首页关于内容下方显示机器人图标，保持默认即可（`portal.social_icon.enable: true`、`show_on_home: true`）。只想显示在作者卡片里，就把 `show_on_home` 设为 `false`。
+
+**接入 GitHub Actions 校验**
+
+```yaml
+- run: npm ci
+- run: hexo clean && hexo generate
+- run: npx hexo panda verify-ai
+```
+
+**个人博客推荐配置**
+
+```yaml
+# _config.panda.yml
+site_discovery:
+  robots:
+    provider: panda
+    policy: balanced
+  sitemap:
+    provider: panda
+    include_tags: false       # 标签页对搜索引擎价值不大
+    include_categories: true
+
+ai_readable:
+  enable: true
+  intro: 一个写 Hexo、Linux 和工程实践的个人博客
+  topics: [hexo, linux, rust]
+  llms_txt:
+    recent_posts: 15
+  portal:
+    path: /ai/
+    projects:
+      - name: hexo-theme-panda
+        url: https://github.com/SpeechlessPanda/hexo-theme-panda
+        description: 本博客使用的主题
+    featured_posts:
+      - source: _posts/开始写博客.md
+  rights:
+    ai_training: deny
+    contact: mailto:you@example.com
+```
 
 ## 🔄 从 Butterfly 迁移
 

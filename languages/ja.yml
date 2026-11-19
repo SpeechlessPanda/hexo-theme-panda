@@ -146,3 +146,71 @@ tag:
 
 anchor:
   permalink: この見出しへのパーマリンク
+
+# AI 読書
+ai_readable:
+  untitled: 無題
+  portal:
+    title: AI リーディングガイド
+    icon_label: AI リーディングガイド
+    follow_title: フォロー
+    featured: 注目記事
+    recent: 最新記事
+    series: シリーズ
+    projects: プロジェクト
+    resources: 機械可読リソース
+    markdown_link_title: このページの Markdown 版を読む
+    resource_llms_note: LLM コンテンツ索引
+    resource_sitemap_note: 検索エンジン索引
+    resource_feed_note: 記事とつぶやきのフィード
+    resource_rights_note: ライセンスと AI 利用方針
+  llms:
+    heading_featured: 注目記事
+    heading_articles: 記事
+    heading_series: シリーズ
+    heading_projects: プロジェクト
+    heading_resources: リソース
+    heading_topics: トピック
+    heading_license: ライセンスと AI 利用ポリシー
+    license_line: ライセンス
+    ai_use_line: AI 利用
+    ai_training_line: AI 学習に関する希望
+    rights_line: 詳細
+    summary_fallback: 公開記事・シリーズ・リソース。
+    author_fallback: '%s が運営しています。'
+    topics_label: 主なテーマ
+    markdown_note: ここに挙げた各ページには、同じ URL に `/index.md` を付けた Markdown 版があります。以下のリンクは Agent が HTML を解析せずに本文を読めるようになっています。
+    resource_sitemap: インデックス可能な全ページ
+    resource_feed: 最新記事とメモ
+    resource_archive: アーカイブ
+    resource_archive_desc: 全記事の時系列一覧
+    resource_portal: 機械可読リソースの人間向け案内
+    resource_rights: ライセンス・出典表示・AI 利用方針
+  rights:
+    title: 著作権と利用ポリシー
+    ownership: 著作権の帰属
+    ownership_text: 各記事の著作権はその著者に帰属します。
+    ownership_site: サイトの内容とデザイン。
+    license: ライセンス
+    license_text_prefix: '特に明記がない限り、記事は次のライセンスで提供されます:'
+    license_text_suffix: 。
+    license_inherited: この値はテーマの `post_copyright` 設定を継承しています。
+    license_attribution: 出典表示が必要です。元記事へのリンクを添えてください。
+    license_noncommercial: 商用利用には著者の許諾が必要です。
+    license_sharealike: 二次的著作物も同じライセンスを継承する必要があります。
+    license_none: サイト全体のライセンスは未設定です。全権利留保とみなし、著者に確認してください。
+    commercial: 商用利用
+    commercial_text: 商用利用・翻訳・再配布の前に、著者へ書面での許諾を求めてください。
+    contact_label: 連絡先
+    third_party: 第三者コンテンツ
+    third_party_text: 画像・引用・埋め込みコンテンツの権利は各権利者に帰属する場合があります。個別記事に例外の記載がある場合は、そちらが優先されます。
+    ai_preference: AI による読書・検索・学習
+    ai_training_deny: 著者はこの内容を生成 AI モデルの学習に使用しないことを希望しています。robots.txt のベンダー別ルールも同じ意向を示します。
+    ai_training_allow: 著者はこの内容を AI モデルの学習に使用することを許可しています。
+    ai_training_omit: 著者は AI モデルの学習について意向を示していません。
+    ai_use_text: 人による閲覧・検索・引用・要約、および利用者のために動作する Agent による同様の行為は歓迎します。出典と元記事へのリンクを添えてください。
+    ai_disclaimer: これは利用意向であり、ライセンスでも技術的な制御でもありません。robots.txt は非公開データを保護できず、従わないクローラーを止められません。
+    llms_link: 機械可読コンテンツの索引は llms.txt を参照してください。
+    contact: 連絡先
+    contact_fallback: 概要ページに記載の連絡手段をご利用ください。
+    portal_link: AI リーディングガイドに戻る

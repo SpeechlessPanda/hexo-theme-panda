@@ -1,0 +1,90 @@
+//- Panda theme — AI reading portal (Apache-2.0).
+//- A normal HTML page for humans: what this site publishes, where the machine-readable
+//- resources live, and how to read the content without an HTML parser. Content is
+//- extracted from the build (articles, series, resources); only projects, featured
+//- posts and the intro text come from config.
+extends includes/layout.pug
+
+mixin portalLink(item)
+  li.ai-portal-item
+    a.ai-portal-item__title(href=item.url)= item.title || item.name
+    if item.date
+      time.ai-portal-item__date(datetime=item.date)= item.date
+    if item.description
+      p.ai-portal-item__desc= item.description
+    if item.markdown
+      a.ai-portal-item__md(href=item.markdown title=_p('ai_readable.portal.markdown_link_title')) Markdown
+
+block content
+  #page.ai-portal
+    if top_img === false && page.title
+      .page-title= page.title
+
+    #article-container.container
+      section.ai-portal-hero
+        h1.ai-portal-hero__title= page.title
+        if page.intro
+          p.ai-portal-hero__intro= page.intro
+        if page.authorBio
+          p.ai-portal-hero__bio= page.authorBio
+        if page.topics && page.topics.length
+          ul.ai-portal-topics
+            each topic in page.topics
+              //- Curated data supplies `{name, description}`; plain config strings
+              //- still work, so accept both shapes.
+              - const topicName = typeof topic === 'string' ? topic : topic.name
+              - const topicNote = typeof topic === 'string' ? null : topic.description
+              li
+                span.ai-portal-topic__name= topicName
+                if topicNote
+                  span.ai-portal-topic__note= topicNote
+
+      if page.featured && page.featured.length
+        section.ai-portal-section
+          h2= _p('ai_readable.portal.featured')
+          ul.ai-portal-list
+            each item in page.featured
+              +portalLink(item)
+
+      if page.recent && page.recent.length
+        section.ai-portal-section
+          h2= _p('ai_readable.portal.recent')
+          ul.ai-portal-list
+            each item in page.recent
+              +portalLink(item)
+
+      if page.series && page.series.length
+        section.ai-portal-section
+          h2= _p('ai_readable.portal.series')
+          each item in page.series
+            .ai-portal-series
+              a.ai-portal-series__title(href=item.url)= item.title
+              if item.description
+                p.ai-portal-series__desc= item.description
+              if item.members && item.members.length
+                ol.ai-portal-series__members
+                  each member in item.members
+                    li
+                      a(href=member.url)= member.title
+                      if member.markdown
+                        a.ai-portal-item__md(href=member.markdown title=_p('ai_readable.portal.markdown_link_title')) Markdown
+
+      if page.projects && page.projects.length
+        section.ai-portal-section
+          h2= _p('ai_readable.portal.projects')
+          ul.ai-portal-list
+            each project in page.projects
+              li.ai-portal-item
+                a.ai-portal-item__title(href=project.url)= project.name
+                if project.description
+                  p.ai-portal-item__desc= project.description
+
+      if page.resources && page.resources.length
+        section.ai-portal-section
+          h2= _p('ai_readable.portal.resources')
+          ul.ai-portal-list.ai-portal-resources
+            each resource in page.resources
+              li.ai-portal-item
+                a.ai-portal-item__title(href=resource.url)= resource.label
+                if resource.note
+                  p.ai-portal-item__desc= resource.note

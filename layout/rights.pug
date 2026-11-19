@@ -1,0 +1,82 @@
+//- Panda theme — copyright and content-usage policy page (Apache-2.0).
+//- Licensing comes from `post_copyright` unless `ai_readable.rights` overrides it;
+//- the AI preference section is deliberately separate from the license, because a
+//- Creative Commons license and a "no training" preference answer different questions.
+extends includes/layout.pug
+
+block content
+  #page.rights-page
+    if top_img === false && page.title
+      .page-title= page.title
+
+    #article-container.container
+      section.rights-hero
+        h1.rights-hero__title= page.title
+        p.rights-hero__site= page.siteTitle
+
+      section.rights-section
+        h2= _p('ai_readable.rights.ownership')
+        p
+          = _p('ai_readable.rights.ownership_text', page.author || page.siteTitle)
+          | &#32;
+          = _p('ai_readable.rights.ownership_site', page.siteTitle)
+
+      section.rights-section
+        h2= _p('ai_readable.rights.license')
+        if page.license
+          p
+            if page.licenseUrl
+              | #{_p('ai_readable.rights.license_text_prefix')}
+              a(href=page.licenseUrl rel='license noopener' target='_blank')= page.license
+              | #{_p('ai_readable.rights.license_text_suffix')}
+            else
+              = _p('ai_readable.rights.license_text_prefix') + page.license + _p('ai_readable.rights.license_text_suffix')
+          if page.inherited
+            p.rights-note= _p('ai_readable.rights.license_inherited')
+          ul
+            li= _p('ai_readable.rights.license_attribution')
+            li= _p('ai_readable.rights.license_noncommercial')
+            li= _p('ai_readable.rights.license_sharealike')
+        else
+          p= _p('ai_readable.rights.license_none')
+
+      section.rights-section
+        h2= _p('ai_readable.rights.commercial')
+        p= _p('ai_readable.rights.commercial_text')
+        if page.contact
+          p
+            | #{_p('ai_readable.rights.contact_label')}:&#32;
+            a(href=page.contact)= page.contact
+
+      section.rights-section
+        h2= _p('ai_readable.rights.third_party')
+        p= _p('ai_readable.rights.third_party_text')
+
+      section.rights-section
+        h2= _p('ai_readable.rights.ai_preference')
+        if page.aiTraining === 'deny'
+          p= _p('ai_readable.rights.ai_training_deny')
+        else if page.aiTraining === 'allow'
+          p= _p('ai_readable.rights.ai_training_allow')
+        else
+          p= _p('ai_readable.rights.ai_training_omit')
+        p= _p('ai_readable.rights.ai_use_text')
+        p.rights-note= _p('ai_readable.rights.ai_disclaimer')
+        if page.llmsUrl
+          p
+            a(href=page.llmsUrl)= _p('ai_readable.rights.llms_link')
+
+      if page.extra
+        section.rights-section
+          != page.extra
+
+      section.rights-section
+        h2= _p('ai_readable.rights.contact')
+        if page.contact
+          p
+            a(href=page.contact)= page.contact
+        else
+          p= _p('ai_readable.rights.contact_fallback')
+        if page.portalUrl
+          p
+            a(href=page.portalUrl)= _p('ai_readable.rights.portal_link')

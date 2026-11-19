@@ -44,7 +44,7 @@ header#page-header(class=`${headerClassName + isFixedClass}` style=bg_img)
             span#subtitle
         if theme.social
           #site_social_icons
-            !=partial('includes/header/social', {}, {cache: true})
+            !=partial('includes/header/social', { slot: 'hero' })
       #scroll-down
         i.fas.fa-angle-down.scroll-down-effects
     else

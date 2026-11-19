@@ -1,0 +1,9 @@
+//- Panda theme — machine-readable discovery links (Apache-2.0).
+//- v2 of the llms.txt proposal asks pages to advertise two relations:
+//-   rel="alternate" type="text/markdown" → this page's Markdown mirror
+//-   rel="describedby"                    → the llms.txt that covers the site
+//- Both are skipped when the corresponding output is disabled, and the alternate is
+//- skipped when this page has no mirror, so no dangling link is ever emitted.
+if ai_discovery_enabled()
+  each item in ai_discovery_links()
+    link(rel=item.rel type=item.type href=item.href title=item.title)

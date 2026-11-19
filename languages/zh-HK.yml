@@ -146,3 +146,71 @@ tag:
 
 anchor:
   permalink: 標題永久連結
+
+# AI 閱讀
+ai_readable:
+  untitled: 無標題
+  portal:
+    title: AI 閱讀導覽
+    icon_label: AI 閱讀入口
+    follow_title: 追蹤我
+    featured: 精選文章
+    recent: 最新文章
+    series: 博客系列
+    projects: 項目
+    resources: 機器可讀資源
+    markdown_link_title: 閱讀本頁的 Markdown 版本
+    resource_llms_note: LLM 內容索引
+    resource_sitemap_note: 搜尋引擎索引
+    resource_feed_note: 文章與碎碎念訂閱
+    resource_rights_note: 授權與 AI 使用政策
+  llms:
+    heading_featured: 精選文章
+    heading_articles: 文章
+    heading_series: 網誌系列
+    heading_projects: 專案
+    heading_resources: 資源
+    heading_topics: 內容主題
+    heading_license: 授權與 AI 使用偏好
+    license_line: 授權
+    ai_use_line: AI 使用
+    ai_training_line: AI 訓練偏好
+    rights_line: 完整說明
+    summary_fallback: 公開文章、系列與資源。
+    author_fallback: 由 %s 維護。
+    topics_label: 主要內容方向
+    markdown_note: 下列每個頁面都在相同位址提供 Markdown 版本（結尾附加 `/index.md`）。這些連結讓 Agent 直接讀到乾淨文字，不必解析 HTML。
+    resource_sitemap: 所有可索引頁面
+    resource_feed: 最新文章與碎碎念
+    resource_archive: 歸檔
+    resource_archive_desc: 依時間排列的全部文章
+    resource_portal: 給人類閱讀的機器可讀資源說明
+    resource_rights: 授權、署名與 AI 使用偏好
+  rights:
+    title: 版權與內容使用政策
+    ownership: 版權歸屬
+    ownership_text: 每篇文章的版權歸其作者所有。
+    ownership_site: 站點內容與設計。
+    license: 許可協議
+    license_text_prefix: 除特別聲明外，文章採用
+    license_text_suffix: 許可協議。
+    license_inherited: 此授權繼承自主題的 `post_copyright` 設定。
+    license_attribution: 轉載需要署名，並連結回原文。
+    license_noncommercial: 商業使用需取得作者授權。
+    license_sharealike: 演繹作品需沿用相同許可協議。
+    license_none: 站點未設定統一許可協議，請視為保留所有權利，並聯絡作者。
+    commercial: 商業使用
+    commercial_text: 商業使用、翻譯或再發布，請先聯絡作者取得書面許可。
+    contact_label: 聯絡方式
+    third_party: 第三方內容
+    third_party_text: 圖片、引文與嵌入內容可能屬於各自的版權方。若某篇文章另行聲明了例外，以該聲明為準。
+    ai_preference: AI 閱讀、檢索與訓練
+    ai_training_deny: 作者不希望本站內容被用於訓練生成式 AI 模型。robots.txt 中的服務商專用規則表達了相同的偏好。
+    ai_training_allow: 作者允許將本站內容用於 AI 模型訓練。
+    ai_training_omit: 作者未就 AI 模型訓練表達偏好。
+    ai_use_text: 歡迎人類讀者、以及代表讀者的 Agent 閱讀、檢索、引用和摘要已發布文章，請註明出處並附上原文連結。
+    ai_disclaimer: 以上是使用偏好，不是許可協議，也不是技術性存取控制。robots.txt 不能保護隱私資料，也無法阻止不遵守規則的擷取者。
+    llms_link: 機器可讀內容索引見 llms.txt。
+    contact: 聯絡作者
+    contact_fallback: 請使用關於頁面中提供的聯絡管道。
+    portal_link: 返回 AI 閱讀導覽

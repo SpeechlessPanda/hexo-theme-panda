@@ -635,6 +635,78 @@ module.exports = {
     width: 1200,
     height: 630
   },
+  site_discovery: {
+    enable: true,
+    robots: {
+      provider: 'external',
+      path: 'robots.txt',
+      policy: 'balanced',
+      allow: [],
+      disallow: [],
+      custom_groups: [],
+      sitemap: true,
+      usage_ai_training: 'deny',
+      google_agent: 'omit'
+    },
+    sitemap: {
+      provider: 'external',
+      path: 'sitemap.xml',
+      include_tags: true,
+      include_categories: true,
+      include_pages: true,
+      exclude_noindex: true,
+      exclude: []
+    }
+  },
+  ai_readable: {
+    enable: false,
+    intro: null,
+    author_bio: null,
+    topics: [],
+    llms_txt: {
+      enable: true,
+      path: 'llms.txt',
+      recent_posts: 10,
+      series: true,
+      resources: true,
+      sections: []
+    },
+    markdown: {
+      enable: true,
+      include_posts: true,
+      include_series: true,
+      include_pages: false,
+      path_style: 'index',
+      exclude: []
+    },
+    portal: {
+      enable: true,
+      path: '/ai/',
+      respect_existing_pages: true,
+      projects: [],
+      featured_posts: [],
+      social_icon: {
+        enable: true,
+        show_on_home: true,
+        show_in_author_card: true,
+        icon: 'fas fa-robot',
+        label: null,
+        color: null,
+        row_title: null
+      }
+    },
+    rights: {
+      enable: true,
+      path: '/rights/',
+      respect_existing_pages: true,
+      license: 'inherit',
+      license_url: 'inherit',
+      contact: null,
+      ai_training: 'deny',
+      ai_use: 'allow-search',
+      extra: null
+    }
+  },
   gradient: {
     enable: true,
     header_light: 'linear-gradient(135deg, #4facfe 0%, #6ec6ff 25%, #a18cd1 55%, #fbc2eb 75%, #ffd2a8 100%)',

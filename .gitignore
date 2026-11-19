@@ -5,3 +5,4 @@ dist/
 Thumbs.db
 docs/superpowers/
 bun.lock
+hexo-theme-panda-*.tgz

@@ -147,3 +147,71 @@ tag:
 
 anchor:
   permalink: 标题永久链接
+
+# AI 阅读
+ai_readable:
+  untitled: 无标题
+  portal:
+    title: AI 阅读导航
+    icon_label: AI 阅读入口
+    follow_title: 关注我
+    featured: 精选文章
+    recent: 最新文章
+    series: 博客系列
+    projects: 项目
+    resources: 机器可读资源
+    markdown_link_title: 阅读本页的 Markdown 版本
+    resource_llms_note: LLM 内容索引
+    resource_sitemap_note: 搜索引擎索引
+    resource_feed_note: 文章与碎碎念订阅
+    resource_rights_note: 许可与 AI 使用政策
+  llms:
+    heading_featured: 精选文章
+    heading_articles: 文章
+    heading_series: 博客系列
+    heading_projects: 项目
+    heading_resources: 资源
+    heading_topics: 内容主题
+    heading_license: 许可与 AI 使用偏好
+    license_line: 许可
+    ai_use_line: AI 使用
+    ai_training_line: AI 训练偏好
+    rights_line: 完整说明
+    summary_fallback: 公开文章、系列与资源。
+    author_fallback: '由 %s 维护。'
+    topics_label: 主要内容方向
+    markdown_note: 下列每个页面都在同一地址提供 Markdown 版本（末尾追加 `/index.md`）。这些链接让 Agent 直接读到干净文本，而不必解析 HTML。
+    resource_sitemap: 所有可索引页面
+    resource_feed: 最新文章与碎碎念
+    resource_archive: 归档
+    resource_archive_desc: 按时间排列的全部文章
+    resource_portal: 面向人类的机器可读资源说明
+    resource_rights: 许可、署名与 AI 使用偏好
+  rights:
+    title: 版权与内容使用政策
+    ownership: 版权归属
+    ownership_text: 每篇文章的版权归其作者所有。
+    ownership_site: 站点内容与设计。
+    license: 许可协议
+    license_text_prefix: 除特别声明外，文章采用
+    license_text_suffix: 许可协议。
+    license_inherited: 此许可继承自主题的 `post_copyright` 配置。
+    license_attribution: 转载需要署名，并链接回原文。
+    license_noncommercial: 商业使用需取得作者授权。
+    license_sharealike: 演绎作品需沿用相同许可协议。
+    license_none: 站点未配置统一许可协议，请视为保留所有权利，并联系作者。
+    commercial: 商业使用
+    commercial_text: 商业使用、翻译或再发布，请先联系作者取得书面许可。
+    contact_label: 联系方式
+    third_party: 第三方内容
+    third_party_text: 图片、引文与嵌入内容可能属于各自的版权方。若某篇文章单独声明了例外，以该声明为准。
+    ai_preference: AI 阅读、检索与训练
+    ai_training_deny: 作者不希望本站内容被用于训练生成式 AI 模型。robots.txt 中的服务商专用规则表达了同样的偏好。
+    ai_training_allow: 作者允许将本站内容用于 AI 模型训练。
+    ai_training_omit: 作者未就 AI 模型训练表达偏好。
+    ai_use_text: 欢迎人类读者、以及代表读者的 Agent 阅读、检索、引用和总结已发布文章，请注明出处并附上原文链接。
+    ai_disclaimer: 以上是使用偏好，不是许可协议，也不是技术性访问控制。robots.txt 不能保护隐私数据，也无法阻止不遵守规则的抓取者。
+    llms_link: 机器可读内容索引见 llms.txt。
+    contact: 联系作者
+    contact_fallback: 请使用关于页面中提供的联系渠道。
+    portal_link: 返回 AI 阅读导航

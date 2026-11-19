@@ -91,9 +91,13 @@ try {
 }
 
 hexo.extend.filter.register('after_init', () => {
-  const orig = hexo.extend.highlight.query('highlight.js')
+  // `extend.highlight` was added in Hexo 6.0; the theme still declares support for
+  // 5.3.0, where the registry does not exist and the filter must simply not run.
+  const registry = hexo.extend.highlight
+  if (!registry || typeof registry.query !== 'function') return
+  const orig = registry.query('highlight.js')
   if (!orig) return
-  hexo.extend.highlight.register('highlight.js', function (code, options) {
+  registry.register('highlight.js', function (code, options) {
     const requested = String(options.lang || '').toLowerCase()
     const html = orig.call(this, code, options)
     if (EXTRA_LANGS.includes(requested) && html.includes('class="highlight plaintext"')) {

@@ -19,6 +19,8 @@ if theme.aside.card_author.enable
         i(class=theme.aside.card_author.button.icon)
         span=theme.aside.card_author.button.text
 
-    if(theme.social)
+    //- The home about area owns the row there; rendering it here too would show
+    //- the same icons twice on one screen.
+    if !pandaHomeFollowRow() && (theme.social || (theme.ai_readable && theme.ai_readable.enable && theme.ai_readable.portal && theme.ai_readable.portal.enable && theme.ai_readable.portal.social_icon.enable))
       .card-info-social-icons
-        !=partial('includes/header/social', {}, {cache: true})
+        !=partial('includes/header/social', { slot: 'author' })

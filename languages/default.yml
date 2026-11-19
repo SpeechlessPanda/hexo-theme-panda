@@ -146,3 +146,71 @@ tag:
 
 anchor:
   permalink: Permalink to this heading
+
+# AI reading
+ai_readable:
+  untitled: Untitled
+  portal:
+    title: AI Reading Guide
+    icon_label: AI reading guide
+    follow_title: Follow Me
+    featured: Featured
+    recent: Recent articles
+    series: Series
+    projects: Projects
+    resources: Machine-readable resources
+    markdown_link_title: Read the Markdown version of this page
+    resource_llms_note: LLM content index
+    resource_sitemap_note: Search engine index
+    resource_feed_note: Posts and memos feed
+    resource_rights_note: Licensing and AI usage
+  llms:
+    heading_featured: Featured sections
+    heading_articles: Articles
+    heading_series: Series
+    heading_projects: Projects
+    heading_resources: Resources
+    heading_topics: Topics
+    heading_license: Licensing and AI usage
+    license_line: License
+    ai_use_line: AI use
+    ai_training_line: AI training preference
+    rights_line: Full policy
+    summary_fallback: Public articles, series and resources.
+    author_fallback: 'Maintained by %s.'
+    topics_label: Main topics
+    markdown_note: Each page listed here also has a Markdown version at the same URL with `/index.md` appended. Those links are used below so agents read clean text instead of HTML.
+    resource_sitemap: Every indexable page
+    resource_feed: Latest articles and memos
+    resource_archive: Archives
+    resource_archive_desc: Chronological index of every article
+    resource_portal: Human-readable guide to the machine-readable resources
+    resource_rights: Licensing, attribution and AI usage preferences
+  rights:
+    title: Copyright & Usage Policy
+    ownership: Ownership
+    ownership_text: The author of each article retains copyright over it.
+    ownership_site: Site content and design.
+    license: License
+    license_text_prefix: Unless stated otherwise, articles are licensed under
+    license_text_suffix: .
+    license_inherited: This value is inherited from the theme's `post_copyright` setting.
+    license_attribution: Attribution is required; link back to the original article.
+    license_noncommercial: Commercial use requires the author's permission.
+    license_sharealike: Derivative works must keep the same license.
+    license_none: No site-wide license is configured; assume all rights reserved and ask the author.
+    commercial: Commercial use
+    commercial_text: For commercial use, translation, or republication, contact the author for written permission first.
+    contact_label: Contact
+    third_party: Third-party content
+    third_party_text: Images, quotations and embedded material may belong to their own rights holders. Where an individual article states an exception, that statement wins over this page.
+    ai_preference: AI reading, retrieval and training
+    ai_training_deny: The author asks that this content not be used to train generative AI models. Vendor-specific rules in robots.txt carry the same preference.
+    ai_training_allow: The author allows use of this content for AI model training.
+    ai_training_omit: The author has not stated a preference about AI model training.
+    ai_use_text: Reading, retrieving, quoting and summarising published articles - by people or by agents acting for them - is welcome, with attribution and a link.
+    ai_disclaimer: These are preferences, not a license and not a technical control. robots.txt does not protect private data and cannot stop a determined crawler.
+    llms_link: See llms.txt for the index of machine-readable content.
+    contact: Contact
+    contact_fallback: Use the contact channel listed on the about page.
+    portal_link: Back to the AI reading guide

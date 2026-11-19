@@ -11,7 +11,7 @@
   <a href="https://www.npmjs.com/package/hexo-theme-panda"><img src="https://img.shields.io/npm/v/hexo-theme-panda?style=for-the-badge" alt="npm" /></a>
   <a href="https://www.npmjs.com/package/hexo-theme-panda"><img src="https://img.shields.io/npm/dm/hexo-theme-panda?style=for-the-badge" alt="npm downloads" /></a>
   <a href="https://hexo.io"><img src="https://img.shields.io/badge/Hexo-%3E%3D%205.3.0-0E83CD?style=for-the-badge&amp;logo=hexo&amp;logoColor=white" alt="Hexo" /></a>
-  <a href="https://nodejs.org"><img src="https://img.shields.io/badge/Node.js-%3E%3D%2018-339933?style=for-the-badge&amp;logo=nodedotjs&amp;logoColor=white" alt="Node.js" /></a>
+  <a href="https://nodejs.org"><img src="https://img.shields.io/badge/Node.js-%3E%3D%2022-339933?style=for-the-badge&amp;logo=nodedotjs&amp;logoColor=white" alt="Node.js" /></a>
   <a href="https://speechlesspanda.github.io"><img src="https://img.shields.io/badge/Demo-live-success?style=for-the-badge" alt="Demo" /></a>
 </p>
 
@@ -36,7 +36,8 @@
 | Link target blank | Article/memo links open in a new tab | on |
 | Extra highlighting | fish & typst grammars registered out of the box | built-in |
 | `{% hideToggle %}` collapse | Expanded blocks get a bottom collapse bar that scrolls back to the header | on |
-| Heading anchors | Every `h1-h6` gets a stable, document-unique `id` and a clickable `#` permalink; CJK slugs, `-2`/`-3` dedupe, deep links land below the fixed nav, copying `#` yields the full URL | on |
+| Heading anchors | Every `h1-h6` gets a stable, document-unique `id` and a clickable `#` permalink; CJK slugs, `-2`/`-3` dedupe, deep links land below the fixed nav, copying `#` yields the full URL | on || AI-readable & discovery | Optional `robots.txt` / `sitemap.xml` generators, `llms.txt`, Markdown mirrors, an `/ai/` reading guide and a `/rights/` policy page, plus `hexo panda verify-ai` | off |
+
 
 Everything Butterfly offers (PJAX, dark mode, comment systems, search, word count, etc.) is kept intact and configured exactly the Butterfly way.
 
@@ -182,8 +183,8 @@ flowchart LR
 
 ## ✅ Requirements
 
-- [Hexo](https://hexo.io/) **≥ 5.3.0** (8.x works; this is what the demo runs)
-- Node.js **≥ 18**
+- [Hexo](https://hexo.io/) **≥ 5.3.0** (8.x works; this is what the demo runs). 5.3.0 and 8.x are both covered by the build tests and by CI.
+- Node.js **≥ 22**
 - Renderers: `hexo-renderer-pug` and `hexo-renderer-stylus` (install them if your site does not already have them)
 
 Optional extras, only if you turn the matching feature on:
@@ -402,6 +403,153 @@ anchor:
 
 **Verification**: `node --test test/*.test.js` includes the `heading-anchor.test.js` unit tests; `node test/_smoke_anchor.js` builds a real throwaway site and asserts the generated HTML/CSS/JS (unique heading ids, every permalink resolves, no dead TOC links, CJK label, `?v=` cache-bust).
 
+### AI-readable & content discovery
+
+Off by default, opt-in per feature. Every output below is produced during `hexo generate`; nothing calls the network or an AI API at build time.
+
+```yaml
+# _config.panda.yml
+site_discovery:
+  enable: true
+  robots:
+    provider: external   # external | panda | disabled
+    policy: balanced     # balanced | permissive | custom
+  sitemap:
+    provider: external   # external | panda | disabled
+
+ai_readable:
+  enable: true           # master switch for everything below
+  intro: null            # one sentence for llms.txt (null = site description)
+  author_bio: null       # null = derived from config.author
+  topics: [hexo, linux]
+  llms_txt:
+    enable: true
+    path: llms.txt
+    recent_posts: 10     # 0 = no article list
+  markdown:
+    enable: true
+    include_posts: true
+    include_series: true
+    include_pages: false
+    path_style: index    # index -> /post/index.md, suffix -> /post/index.html.md
+    exclude: []          # globs, e.g. ['_posts/draft/**']
+  portal:
+    enable: true
+    path: /ai/
+    projects: []         # [{ name, url, description, order }]
+    featured_posts: []   # [{ source: _posts/foo.md }] or plain source strings
+    social_icon:
+      enable: true
+      show_on_home: true
+      show_in_author_card: true
+      icon: fas fa-robot
+      label: null        # null = localized default
+      color: null        # null = same colour as the other social icons
+  rights:
+    enable: true
+    path: /rights/
+    license: inherit     # inherit = theme.post_copyright
+    license_url: inherit
+    contact: null
+    ai_training: deny    # deny | allow | omit — a preference, not a license
+    ai_use: allow-search
+    extra: null          # extra Markdown appended to the page
+```
+
+| Output | Default | What you get |
+|--------|---------|--------------|
+| `robots.txt` | `external` | `panda` writes grouped rules, each intent in its own group: search crawlers allowed (`Googlebot`, `OAI-SearchBot`, `Claude-SearchBot`, `Bingbot`, `DuckDuckBot`, `Baiduspider`, `YandexBot`), user-triggered fetches allowed (`ChatGPT-User`, `Claude-User`, `Perplexity-User`), training crawlers denied (`GPTBot`, `ClaudeBot`, `Applebot-Extended`, `CCBot`, `Bytespider`, `meta-externalagent`, `Amazonbot`, `cohere-ai`, `ImagesiftBot`, `Omgili`, `TimpiBot`, `DuckAssistBot`), `Google-Extended` opt-out, and both draft signals (`__usage_ai-training` plus `Content-Usage: train-ai=n`), with an absolute `Sitemap:` line. `robots.disallow` paths are repeated in every allowed group, so a private path stays out of reach of every crawler |
+| `sitemap.xml` | `external` | `panda` writes absolute HTTPS URLs and a real `lastmod` (never the build time), with no `changefreq`/`priority`. In `external` mode the theme still marks noindex/excluded content as `sitemap: false` so the existing plugin honours the same rules. Built-in mode always drops `noindex` content; `sitemap.exclude_noindex` only governs that external-mode marking |
+| `llms.txt` | on with `ai_readable` | v2 structure: H1, blockquote summary, background, H2 sections (Featured / Articles / Series / Projects / Resources); links point at the Markdown mirror whenever one exists |
+| Markdown mirrors | on | `index.md` beside every post and series chapter, converted from the raw Markdown source, plus `<link rel="alternate" type="text/markdown">` and `<link rel="describedby">` in `<head>` |
+| `/ai/` | on | Human-facing reading guide: intro, topics, featured/recent posts, series, projects, and links to llms.txt / sitemap / feed / rights |
+| `/rights/` | on | Copyright, license, commercial use, AI usage preference and contact — reusing `post_copyright` |
+
+**Curating from `source/_data/ai.yml`.** Everything above also reads an optional data
+file, so your personal curation stays in your blog repo and the theme default stays
+empty:
+
+```yaml
+# source/_data/ai.yml
+site:
+  tagline: One line shown as the llms.txt blockquote
+  description: The longer "about this site" paragraph
+  organization: How content is organised (articles / series / memos)
+about:
+  name: Your name
+  description: Your public bio
+  contact: mailto:you@example.com
+topics:                     # tag name → what that tag is about
+  - { name: hexo, description: Static-site notes }
+featured:                   # wins over ai_readable.portal.featured_posts
+  - { source: _posts/hello.md, summary: Why this one matters }
+projects:                   # wins over ai_readable.portal.projects
+  - { name: my-theme, url: https://github.com/you/it, description: ... }
+latest_count: 5
+```
+
+The file merges over the config: text fields fall back to config, while non-empty
+`topics`/`featured`/`projects` lists replace the config lists (a curated list is an
+editorial decision, so appending would double-link posts). A `source:` that matches no
+published post logs a warning instead of silently vanishing; chapters of a series can
+be featured too.
+
+**Your own pages win.** A page you wrote at `ai_readable.portal.path` or
+`ai_readable.rights.path` is your content, so the theme leaves it untouched and logs
+which file it stepped aside for. The sitemap still lists it. Set
+`respect_existing_pages: false` to force the generated page instead, which then aborts
+the build if a page still claims the path.
+
+**Duplicate generators abort the build.** Choosing `provider: panda` while another plugin already claimed `robots.txt` or `sitemap.xml` stops the build with the offending generator's name instead of letting two plugins fight over one path.
+
+**Front-matter opt-outs**
+
+```yaml
+noindex: true        # out of the sitemap, llms.txt, mirrors and portal
+robots: noindex      # same, in the spelling some sites already use
+sitemap: false       # out of sitemap.xml only
+ai_readable: false   # out of llms.txt, mirrors and portal; stays in the sitemap
+markdown: false      # no Markdown mirror only
+```
+
+**The home robot icon.** `layout/home.pug` renders your about page, where the sidebar may be switched off entirely. The compact **Follow Me** row sits under the about content and appends the AI link after your existing social icons; on that page the author card omits its own AI icon, so the icon never renders twice. Interior pages keep the icon in the author card.
+
+**Verify a build**
+
+```bash
+hexo generate
+hexo panda verify-ai
+```
+
+The command reads the generated `public/` directory (what a deploy actually ships) and checks nine things: robots groups and the absolute Sitemap URL; llms.txt structure and that every mirror link resolves; sitemap URLs that all correspond to generated pages and contain no excluded content; mirror coverage with no front matter, HTML or Hexo tag left inside; `alternate`/`describedby` correctness; the portal and rights pages; the home icon's position, order, `aria-label` and `title`; and that no excluded source path leaked into any output. It exits non-zero on failure, so it drops into CI:
+
+```yaml
+# .github/workflows/deploy.yml
+- run: npm ci
+- run: hexo clean && hexo generate
+- run: npx hexo panda verify-ai
+```
+
+#### FAQ
+
+**Do I need to switch my existing sitemap/robots plugins?** No. `provider: external` is the default and the theme registers nothing for those files. If you want Panda to own them, set `provider: panda` — and only after uninstalling the other plugin, or the build stops with the plugin's name.
+
+**`hexo panda verify-ai` says a mirror is missing.** A page advertises `rel="alternate"` for a mirror that was not generated. Usual causes: the post is `noindex`, matches `markdown.exclude`, or `markdown.enable` was turned off after a previous build. Run `hexo clean` first; the head link and the file are produced in the same pass, so they can only disagree across stale builds.
+
+**Why is /ai/ showing an English section title?** Section headings come from the language files. If you use a locale Panda does not ship, add `ai_readable.llms.heading_*` overrides or they fall back to English.
+
+**Can I have the robot icon only in the sidebar?** Yes: `portal.social_icon.show_on_home: false`. The author card keeps the icon, and the home Follow Me row disappears.
+
+**Does the theme block AI crawlers by itself?** No. `robots.txt` is only produced with `robots.provider: panda`, and even then it records a *preference*. Training crawlers that ignore robots.txt still read the site; use authentication or a CDN/WAF for enforcement.
+
+**Will llms.txt grow without bound?** No. `llms_txt.recent_posts` caps the article list, series are one entry each, and there is no archive dump. Raise the number if you want a longer index.
+
+**Does the build call an AI service?** Never. Everything is derived from Hexo's models and your source Markdown; summaries fall back to titles, descriptions and front matter.
+
+**Can I exclude one post?** `noindex: true` (everywhere), `sitemap: false` (sitemap only), `ai_readable: false` (llms.txt/mirrors/portal, still in the sitemap), `markdown: false` (mirror only).
+
+**Known limits.** `robots.txt` is a crawling preference, not access control or privacy: it cannot stop a determined crawler. `Google-Extended` is a product control token — it affects Gemini training and grounding, never Google Search inclusion or ranking. `ChatGPT-User` and `Google-Agent` are user-triggered, so their access is governed by your CDN/WAF, not by robots rules. The AI-usage preference on `/rights/` is a statement of intent, separate from the license: CC BY-NC-SA 4.0 does not by itself settle training authorization. Only public, published, non-`noindex` content is indexed; drafts never are.
+
 ### Misc
 
 ```yaml
@@ -412,6 +560,68 @@ link_target_blank: true   # article/memo links open in a new tab (default on)
 fish / typst code highlighting works out of the box.
 
 `{% hideToggle Title %}…{% endhideToggle %}` is Butterfly's tag. Panda adds a bottom collapse bar (i18n: en Collapse / zh-CN 收起 / zh-TW 收合 / ja 閉じる / ko 접기). Clicking it closes the block and scrolls back to the header under the fixed nav. Asset URLs carry `?v=<theme version>` so a patch like 1.1.1 busts cached `main.js` / `index.css`.
+
+## ⬆️ Upgrading 1.1.9 → 1.1.10 (AI-readable release)
+
+Every new feature is **off by default**, so an untouched site builds exactly as before. Nothing is rewritten and no existing config key changes meaning.
+
+| You currently use | Keep it | Or switch to Panda |
+|---|---|---|
+| `hexo-generator-robotstxt` | `site_discovery.robots.provider: external` (default) | `provider: panda` with `policy: balanced` |
+| `hexo-generator-sitemap` | `site_discovery.sitemap.provider: external` (default) — the theme marks exclusions as `sitemap: false` | `provider: panda` |
+| `hexo-generator-baidu-sitemap` | unchanged, it keeps its own file | — |
+| `hexo-generator-feed` | unchanged (Panda's own Atom feed stays separate) | — |
+
+**Detecting a conflict.** Setting `provider: panda` while a plugin already registered the same path fails the build with a message naming the offending generator, e.g. `hexo-generator-sitemap`. Fix it by keeping `external` for that file, or uninstall the plugin if you want Panda to own it.
+
+**Enabling the AI reading entry**
+
+```yaml
+ai_readable:
+  enable: true
+```
+
+That alone gives you `/llms.txt`, Markdown mirrors for every post, `/ai/` and `/rights/`. To also show the robot icon under the home about content, keep the defaults (`portal.social_icon.enable: true`, `show_on_home: true`). If you want it only in the author card, set `show_on_home: false`.
+
+**Wiring verification into GitHub Actions**
+
+```yaml
+- run: npm ci
+- run: hexo clean && hexo generate
+- run: npx hexo panda verify-ai
+```
+
+**Recommended config for a personal blog**
+
+```yaml
+# _config.panda.yml
+site_discovery:
+  robots:
+    provider: panda
+    policy: balanced
+  sitemap:
+    provider: panda
+    include_tags: false       # tag pages add little for search engines
+    include_categories: true
+
+ai_readable:
+  enable: true
+  intro: 一个写 Hexo、Linux 和工程实践的个人博客   # replace with your own sentence
+  topics: [hexo, linux, rust]
+  llms_txt:
+    recent_posts: 15
+  portal:
+    path: /ai/
+    projects:
+      - name: hexo-theme-panda
+        url: https://github.com/SpeechlessPanda/hexo-theme-panda
+        description: 本博客使用的主题
+    featured_posts:
+      - source: _posts/开始写博客.md
+  rights:
+    ai_training: deny
+    contact: mailto:you@example.com
+```
 
 ## 🔄 Migrating from Butterfly
 

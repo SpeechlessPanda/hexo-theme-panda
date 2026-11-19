@@ -1,8 +1,43 @@
-each url, icon in theme.social
+//- Panda theme — single implementation of the social icon row (Apache-2.0).
+//- Modified from hexo-theme-butterfly 5.7.0 by SpeechlessPanda, 2026: optional AI
+//- reading link appended after the configured icons.
+//-
+//- `slot` decides whether the AI link belongs here:
+//-   'hero'   the full-screen header on mobile — never (it is a decorative row)
+//-   'author' the aside author card — unless the home follow row already shows it
+//-   'home'   the compact Follow Me row under the home about content — always
+//- One template keeps icon order, colours and hover behaviour identical everywhere.
+-
+- const socialSlot = (typeof slot !== 'undefined' && slot) ? slot : 'hero'
+- const aiCfg = (theme.ai_readable && theme.ai_readable.portal && theme.ai_readable.portal.social_icon) || {}
+- const aiOn = !!(theme.ai_readable && theme.ai_readable.enable && theme.ai_readable.portal && theme.ai_readable.portal.enable && aiCfg.enable)
+//- A site that already put the AI link into `social:` by hand (the pre-1.1.10
+//- workaround, and how this blog shipped it) would otherwise get two robot
+//- pointing at the same page. Detect that entry and let the configured one win.
+- const portalPath = theme.ai_readable && theme.ai_readable.portal ? String(theme.ai_readable.portal.path || '/ai/').replace(/\/+$/, '') : '/ai/'
+- const socialHasAi = !!(theme.social && Object.keys(theme.social).some(key => {
+-   const [link] = String(theme.social[key]).split('||')
+-   const href = String(link || '').trim().replace(/\/+$/, '')
+-   return href === portalPath || href === url_for(portalPath).replace(/\/+$/, '')
+- }))
+//- 'home' is the Follow Me row itself, so it always carries a robot link; the
+//- author card only does when that row is not on this page (see pandaHomeFollowRow).
+- const showAi = socialHasAi ? false : (socialSlot === 'home' ? aiOn : (socialSlot === 'author' ? aiOn && aiCfg.show_in_author_card !== false : false))
+
+if theme.social
+  each url, icon in theme.social
+    -
+      const [link, title, color] = url.split('||').map(i => trim(i))
+      const href = url_for(link)
+      const iconStyle = color ? `color: ${color.replace(/[\'\"]/g, '')};` : ''
+      const iconTitle = title || ''
+    a.social-icon(href=href target="_blank" title=iconTitle)
+      i(class=icon style=iconStyle)
+
+if showAi
   -
-    const [link, title, color] = url.split('||').map(i => trim(i))
-    const href = url_for(link)
-    const iconStyle = color ? `color: ${color.replace(/[\'\"]/g, '')};` : ''
-    const iconTitle = title || ''
-  a.social-icon(href=href target="_blank" title=iconTitle)
-    i(class=icon style=iconStyle)
+    const aiLabel = aiCfg.label || _p('ai_readable.portal.icon_label')
+    const aiHref = url_for(theme.ai_readable.portal.path)
+    const aiStyle = aiCfg.color ? `color: ${String(aiCfg.color).replace(/[\'\"]/g, '')};` : ''
+  a.social-icon.ai-reading-icon(href=aiHref title=aiLabel aria-label=aiLabel)
+    i(class=aiCfg.icon || 'fas fa-robot' style=aiStyle)
