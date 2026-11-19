@@ -89,7 +89,7 @@ describe('config normalization', () => {
     ].sort())
     assert.deepEqual(keys(cfg.ai).sort(), [
       'author_bio', 'enable', 'intro', 'topics',
-      'llms_txt.enable', 'llms_txt.path', 'llms_txt.recent_posts', 'llms_txt.resources', 'llms_txt.sections', 'llms_txt.series',
+      'llms_txt.enable', 'llms_txt.license', 'llms_txt.path', 'llms_txt.recent_posts', 'llms_txt.resources', 'llms_txt.sections', 'llms_txt.series', 'llms_txt.topics',
       'markdown.enable', 'markdown.exclude', 'markdown.include_pages', 'markdown.include_posts', 'markdown.include_series', 'markdown.path_style',
       'portal.enable', 'portal.featured_posts', 'portal.path', 'portal.projects', 'portal.respect_existing_pages',
       'portal.social_icon.color', 'portal.social_icon.enable', 'portal.social_icon.icon',

@@ -421,18 +421,34 @@ site_discovery:
   robots:
     provider: external   # external | panda | disabled
     policy: balanced     # balanced | permissive | custom
+    allow: []            # 站点级放行路径（会重复写进每个允许组）
+    disallow: []         # 站点级禁止路径，例如 ['/memos/']
+    custom_groups: []    # [{ user_agents: [SomeBot], allow: [], disallow: [], content_usage: ['train-ai=n'], note: ... }]
+    sitemap: true        # 输出绝对地址的 `Sitemap:` 行
+    usage_ai_training: deny   # deny | allow | omit
+    google_agent: omit        # omit | allow | disallow（robots 管不到它）
   sitemap:
     provider: external   # external | panda | disabled
+    include_tags: true
+    include_categories: true
+    include_pages: true
+    exclude_noindex: true     # 只对外部模式生效；内置模式始终排除 noindex
+    exclude: []               # 相对 source/ 的 glob
 
 ai_readable:
   enable: true           # 以下所有功能的总开关
   intro: null            # llms.txt 的一句话简介（null = 站点 description）
   author_bio: null       # null = 由 config.author 推导
-  topics: [hexo, linux]
+  topics: [hexo, linux]  # 可写纯字符串，或 [{ name, description }]，或用数据文件
   llms_txt:
     enable: true
     path: llms.txt
     recent_posts: 10     # 0 = 不列文章
+    series: true         # 每个系列一条，章节嵌套在下面
+    topics: true         # 由策展主题生成 H2「内容主题」
+    license: true        # 生成 H2「许可与 AI 使用偏好」
+    resources: true      # sitemap / feed / archive / 导航页 / 政策页入口
+    sections: []         # 额外的 H2 分区
   markdown:
     enable: true
     include_posts: true
@@ -443,6 +459,7 @@ ai_readable:
   portal:
     enable: true
     path: /ai/
+    respect_existing_pages: true   # 你手写的同名页面优先
     projects: []         # [{ name, url, description, order }]
     featured_posts: []   # [{ source: _posts/foo.md }] 或直接写路径字符串
     social_icon:
@@ -455,6 +472,7 @@ ai_readable:
   rights:
     enable: true
     path: /rights/
+    respect_existing_pages: true   # 与导航页同规则
     license: inherit     # inherit = 沿用 theme.post_copyright
     license_url: inherit
     contact: null
@@ -467,7 +485,7 @@ ai_readable:
 |------|------|------|
 | `robots.txt` | `external` | `panda` 输出分组规则：允许搜索爬虫，禁止 `GPTBot`/`ClaudeBot` 训练抓取，`Google-Extended` 退出，`__usage_ai-training`（AIPREF 草案，不是 RFC），`Sitemap:` 使用绝对地址 |
 | `sitemap.xml` | `external` | `panda` 输出绝对 HTTPS URL，`lastmod` 只取真实更新时间（绝不用构建时间），不写 `changefreq`/`priority`。`external` 模式下主题仍会把 noindex/被排除内容标记为 `sitemap: false`，让现有插件遵循同一套规则。内置模式始终排除 `noindex` 内容；`sitemap.exclude_noindex` 只控制外部模式下的标记 |
-| `llms.txt` | 随 `ai_readable` 开启 | v2 结构：H1、引用块简介、背景说明、H2 分区（精选 / 文章 / 系列 / 项目 / 资源），有 Markdown 镜像时优先给镜像链接 |
+| `llms.txt` | 随 `ai_readable` 开启 | v2 结构：H1、引用块简介、背景说明、H2 分区（精选 / 文章 / 系列 / 项目 / 内容主题 / 许可 / 资源）。系列把章节嵌套在自己的条目下，而不是在顶层重复一遍；有 Markdown 镜像时优先给镜像链接 |
 | Markdown 镜像 | 开 | 每篇文章和系列章节旁生成 `index.md`，内容取自原始 Markdown，并在 `<head>` 输出 `<link rel="alternate" type="text/markdown">` 与 `<link rel="describedby">` |
 | `/ai/` | 开 | 面向读者的导读页：简介、主题、精选/最新文章、系列、项目，以及 llms.txt / sitemap / feed / rights 入口 |
 | `/rights/` | 开 | 版权归属、许可协议、商业使用、AI 使用偏好、联系方式——复用 `post_copyright` |

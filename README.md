@@ -414,18 +414,34 @@ site_discovery:
   robots:
     provider: external   # external | panda | disabled
     policy: balanced     # balanced | permissive | custom
+    allow: []            # paths allowed site-wide (repeated in every allowed group)
+    disallow: []         # paths disallowed site-wide, e.g. ['/memos/']
+    custom_groups: []    # [{ user_agents: [SomeBot], allow: [], disallow: [], content_usage: ['train-ai=n'], note: ... }]
+    sitemap: true        # emit the absolute `Sitemap:` line
+    usage_ai_training: deny   # deny | allow | omit
+    google_agent: omit        # omit | allow | disallow (robots does not govern it)
   sitemap:
     provider: external   # external | panda | disabled
+    include_tags: true
+    include_categories: true
+    include_pages: true
+    exclude_noindex: true     # external mode only; built-in mode always drops noindex
+    exclude: []               # globs relative to source/
 
 ai_readable:
   enable: true           # master switch for everything below
   intro: null            # one sentence for llms.txt (null = site description)
   author_bio: null       # null = derived from config.author
-  topics: [hexo, linux]
+  topics: [hexo, linux]  # plain strings, or [{ name, description }] / a data file
   llms_txt:
     enable: true
     path: llms.txt
     recent_posts: 10     # 0 = no article list
+    series: true         # one entry per series, chapters nested
+    topics: true         # H2 "Topics" section from curated topics
+    license: true        # H2 "Licensing and AI usage" section
+    resources: true      # sitemap / feed / archive / portal / rights links
+    sections: []         # extra H2 sections
   markdown:
     enable: true
     include_posts: true
@@ -436,6 +452,7 @@ ai_readable:
   portal:
     enable: true
     path: /ai/
+    respect_existing_pages: true   # a page you wrote there wins
     projects: []         # [{ name, url, description, order }]
     featured_posts: []   # [{ source: _posts/foo.md }] or plain source strings
     social_icon:
@@ -448,6 +465,7 @@ ai_readable:
   rights:
     enable: true
     path: /rights/
+    respect_existing_pages: true   # same rule as the portal
     license: inherit     # inherit = theme.post_copyright
     license_url: inherit
     contact: null
@@ -460,7 +478,7 @@ ai_readable:
 |--------|---------|--------------|
 | `robots.txt` | `external` | `panda` writes grouped rules, each intent in its own group: search crawlers allowed (`Googlebot`, `OAI-SearchBot`, `Claude-SearchBot`, `Bingbot`, `DuckDuckBot`, `Baiduspider`, `YandexBot`), user-triggered fetches allowed (`ChatGPT-User`, `Claude-User`, `Perplexity-User`), training crawlers denied (`GPTBot`, `ClaudeBot`, `Applebot-Extended`, `CCBot`, `Bytespider`, `meta-externalagent`, `Amazonbot`, `cohere-ai`, `ImagesiftBot`, `Omgili`, `TimpiBot`, `DuckAssistBot`), `Google-Extended` opt-out, and both draft signals (`__usage_ai-training` plus `Content-Usage: train-ai=n`), with an absolute `Sitemap:` line. `robots.disallow` paths are repeated in every allowed group, so a private path stays out of reach of every crawler |
 | `sitemap.xml` | `external` | `panda` writes absolute HTTPS URLs and a real `lastmod` (never the build time), with no `changefreq`/`priority`. In `external` mode the theme still marks noindex/excluded content as `sitemap: false` so the existing plugin honours the same rules. Built-in mode always drops `noindex` content; `sitemap.exclude_noindex` only governs that external-mode marking |
-| `llms.txt` | on with `ai_readable` | v2 structure: H1, blockquote summary, background, H2 sections (Featured / Articles / Series / Projects / Resources); links point at the Markdown mirror whenever one exists |
+| `llms.txt` | on with `ai_readable` | v2 structure: H1, blockquote summary, background, H2 sections (Featured / Articles / Series / Projects / Topics / Licensing / Resources). A series lists its chapters nested underneath instead of repeating them as top-level links, and links point at the Markdown mirror whenever one exists |
 | Markdown mirrors | on | `index.md` beside every post and series chapter, converted from the raw Markdown source, plus `<link rel="alternate" type="text/markdown">` and `<link rel="describedby">` in `<head>` |
 | `/ai/` | on | Human-facing reading guide: intro, topics, featured/recent posts, series, projects, and links to llms.txt / sitemap / feed / rights |
 | `/rights/` | on | Copyright, license, commercial use, AI usage preference and contact — reusing `post_copyright` |

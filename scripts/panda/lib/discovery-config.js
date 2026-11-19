@@ -160,6 +160,8 @@ function normalizeLlms (cfg) {
     path,
     recent_posts: recent,
     series: asBool(raw.series, true),
+    topics: asBool(raw.topics, true),
+    license: asBool(raw.license, true),
     resources: asBool(raw.resources, true),
     sections: normalizeSections(raw.sections)
   }

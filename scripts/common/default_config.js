@@ -668,6 +668,8 @@ module.exports = {
       path: 'llms.txt',
       recent_posts: 10,
       series: true,
+      topics: true,
+      license: true,
       resources: true,
       sections: []
     },

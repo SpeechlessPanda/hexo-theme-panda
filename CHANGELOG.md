@@ -285,6 +285,7 @@ AI-readable release: optional `robots.txt` / `sitemap.xml` generators, `llms.txt
 
 Initial public release. Fork of hexo-theme-butterfly 5.7.0 with memos, Atom feed, OG images, home-as-about, and gradient visuals.
 
+[1.1.10]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.9...1.1.10
 [1.1.9]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.7...1.1.9
 [1.1.7]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.6...1.1.7
 [1.1.6]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.5...1.1.6

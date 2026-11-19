@@ -1299,8 +1299,12 @@ ai_readable:
     path: llms.txt
     # How many recent posts to list (0 = none)
     recent_posts: 10
-    # Include one entry per blog series
+    # Include one entry per blog series, with its chapters nested underneath
     series: true
+    # Include an H2 "Topics" section built from the curated topics
+    topics: true
+    # Include an H2 "Licensing and AI usage" section (license + AI preference)
+    license: true
     # Include sitemap / feed / archive / portal / rights links
     resources: true
     # Additional H2 sections: [{ title: 'Talks', links: [{ name: ..., url: ..., description: ... }] }]
