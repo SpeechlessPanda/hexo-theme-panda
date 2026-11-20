@@ -36,10 +36,11 @@
 | 链接新标签 | 正文/碎碎念链接统一新标签页打开 | 开 |
 | 代码高亮扩展 | 额外注册 fish、typst 语法高亮 | 内置 |
 | `{% hideToggle %}` 底部收起 | 展开后底部出现收起条，点一下滚回该块标题 | 开 |
-| 页内锚点 | 每个 `h1-h6` 自动生成稳定唯一 `id` 与可点击 `#` 永久链接；中文标题可作 slug，重复标题加序号，深链落在固定导航下方，复制 `#` 得到完整 URL | 开 || AI 可读与内容发现 | 可选内置 `robots.txt` / `sitemap.xml` 生成器、`llms.txt`、Markdown 镜像、`/ai/` 导读页与 `/rights/` 政策页，并提供 `hexo panda verify-ai` 校验命令 | 关 |
+| 页内锚点 | 自动生成稳定的标题 ID、永久链接和复制入口 | 开 |
+| AI 可读与内容发现 | `robots.txt`、`sitemap.xml`、`llms.txt`、Markdown 镜像、`/ai/`、`/rights/` 和 `hexo panda verify-ai` | 开 |
 
 
-Butterfly 原有的全部能力（PJAX、深色模式、多种评论、搜索、字数统计、看板娘等）原样保留，配置方式完全兼容 Butterfly 文档。
+Panda 沿用已继承功能的 Butterfly 配置，包括 PJAX、深色模式、评论、搜索和字数统计。
 
 ## 📦 安装
 
@@ -51,7 +52,7 @@ Butterfly 原有的全部能力（PJAX、深色模式、多种评论、搜索、
 npm install hexo-theme-panda
 ```
 
-Panda 需要的渲染器（`hexo-renderer-pug`、`hexo-renderer-stylus`、`hexo-util`、`moment-timezone`）都写在主题自己的 `dependencies` 里，npm/pnpm/yarn 会自动装上。Hexo 5+ 从 `node_modules` 加载 `hexo-theme-panda`。
+npm 安装会带上主题运行库和 Pug/Stylus 渲染器。Hexo 8 会从主题包加载渲染器；如果使用 Hexo 5.3 等旧版加载器，请在站点根目录执行 `npm install hexo-renderer-pug hexo-renderer-stylus`。
 
 > **`themes/` 优先于 `node_modules`。** Hexo 先找 `themes/<theme>`，找不到才回退到 `node_modules/hexo-theme-<theme>`。如果你以前是 clone 安装的，**把 `themes/panda/` 删掉**——否则旧副本会一直生效，`npm update hexo-theme-panda` 悄悄不起作用。出现这种情况时构建会打印警告。
 
@@ -63,6 +64,7 @@ Panda 需要的渲染器（`hexo-renderer-pug`、`hexo-renderer-stylus`、`hexo-
 
 ```bash
 git clone https://github.com/SpeechlessPanda/hexo-theme-panda.git themes/panda
+npm --prefix themes/panda install
 ```
 
 然后改站点 `_config.yml`：
@@ -193,7 +195,7 @@ flowchart LR
 
 - [Hexo](https://hexo.io/) **≥ 5.3.0**（演示站跑的是 8.x）。构建测试与 CI 同时覆盖 5.3.0 与 8.x。
 - Node.js **≥ 22**
-- 渲染器：`hexo-renderer-pug`、`hexo-renderer-stylus`（站点里没有的话需要装）
+- 站点需安装 Hexo 的 Markdown 渲染器。主题布局和样式分别使用 `hexo-renderer-pug`、`hexo-renderer-stylus`；旧版 Hexo 需在站点中显式声明这两个渲染器。
 
 按需额外安装：
 
@@ -264,7 +266,7 @@ memos:
   comment_count: true      # 构建时查 Giscus：有评论或表情 reaction 的碎碎念自动展开
 ```
 
-数据文件缺失或为空时，主题会内置一条示例碎碎念（"Hello, it's my blog!"），在时间线页、文章流最新卡片和 feed 里都能看到，新站开箱即可看到完整效果。你写下第一条真正的碎碎念后它立刻从所有位置消失，且不会写入你的 `db.json`。
+没有录入碎碎念时，时间线为空，也不会发布最新卡片、独立页或 feed 条目。
 
 评论基于 Giscus（`comments.use: Giscus` + `giscus.*`，与 Butterfly 相同）。每条碎碎念一个独立 discussion，嵌入方式是主题自带的 giscus `/widget` 多 iframe 方案，同页多条互不影响。
 
@@ -412,14 +414,14 @@ anchor:
 
 ### AI 可读体系与内容发现
 
-默认全部关闭，逐项开启。下面每一项都在 `hexo generate` 时生成，构建期不访问网络，也不调用任何 AI API。
+自 1.2.0 起，内容发现与 AI 可读产物默认开启。`hexo generate` 从站点内容本地生成这些产物，不调用 AI API。
 
 ```yaml
 # _config.panda.yml
 site_discovery:
   enable: true
   robots:
-    provider: external   # external | panda | disabled
+    provider: panda      # panda | external | disabled
     policy: balanced     # balanced | permissive | custom
     allow: []            # 站点级放行路径（会重复写进每个允许组）
     disallow: []         # 站点级禁止路径，例如 ['/memos/']
@@ -428,7 +430,7 @@ site_discovery:
     usage_ai_training: deny   # deny | allow | omit
     google_agent: omit        # omit | allow | disallow（robots 管不到它）
   sitemap:
-    provider: external   # external | panda | disabled
+    provider: panda      # panda | external | disabled
     include_tags: true
     include_categories: true
     include_pages: true
@@ -482,8 +484,8 @@ ai_readable:
 
 | 产物 | 默认 | 说明 |
 |------|------|------|
-| `robots.txt` | `panda` | `panda` 输出分组规则：允许搜索爬虫，禁止 `GPTBot`/`ClaudeBot` 训练抓取，`Google-Extended` 退出，`__usage_ai-training`（AIPREF 草案，不是 RFC），`Sitemap:` 使用绝对地址 |
-| `sitemap.xml` | `panda` | `panda` 输出绝对 HTTPS URL，`lastmod` 只取真实更新时间（绝不用构建时间），不写 `changefreq`/`priority`。`external` 模式下主题仍会把 noindex/被排除内容标记为 `sitemap: false`，让现有插件遵循同一套规则。内置模式始终排除 `noindex` 内容；`sitemap.exclude_noindex` 只控制外部模式下的标记 |
+| `robots.txt` | `panda` | 平衡策略区分搜索、用户触发访问和训练爬虫。`robots.disallow` 仅向遵守规则的爬虫表达偏好，不是访问控制。`policy: custom` 只输出显式配置的分组；站点自带的 `robots.txt` 优先。 |
+| `sitemap.xml` | `panda` | 根据站点 `url` 生成绝对地址，更新时间取自内容，不使用构建时间。站点自带的 `sitemap.xml` 优先；`external` 模式在启用 `exclude_noindex` 时将排除项标记给外部生成器。 |
 | `llms.txt` | 随 `ai_readable` 开启 | v2 结构：H1、引用块简介、背景说明、H2 分区（精选 / 文章 / 系列 / 项目 / 内容主题 / 许可 / 资源）。系列把章节嵌套在自己的条目下，而不是在顶层重复一遍；有 Markdown 镜像时优先给镜像链接 |
 | Markdown 镜像 | 开 | 每篇文章和系列章节旁生成 `index.md`，内容取自原始 Markdown，并在 `<head>` 输出 `<link rel="alternate" type="text/markdown">` 与 `<link rel="describedby">` |
 | `/ai/` | 开 | 面向读者的导读页：简介、主题、精选/最新文章、系列、项目，以及 llms.txt / sitemap / feed / rights 入口 |
@@ -519,14 +521,14 @@ latest_count: 5
 **Front Matter 开关**
 
 ```yaml
-noindex: true        # 退出 sitemap、llms.txt、镜像和导航页
+noindex: true        # 页面级 noindex，并退出 sitemap、llms.txt、镜像和导航页
 robots: noindex      # 同上，兼容已有写法
 sitemap: false       # 只退出 sitemap.xml
 ai_readable: false   # 退出 llms.txt、镜像和导航页，仍留在 sitemap
 markdown: false      # 只不生成 Markdown 镜像
 ```
 
-**首页机器人图标。** `layout/home.pug` 渲染的是关于页，此时侧边栏可能整块关闭。紧凑的 **Follow Me** 行放在关于内容下方，在原有社交图标之后追加 AI 入口；同一页面的作者卡片会省略自己的 AI 图标，因此同一个图标不会出现两次。内页仍由作者卡片承载该图标。
+**AI 阅读入口。** 机器人位于作者卡片的社交图标末尾、Follow Me 按钮下方；页面隐藏侧栏或作者卡片时，不会显示这个图标。
 
 **校验构建产物**
 
@@ -546,13 +548,13 @@ hexo panda verify-ai
 
 #### 常见问题
 
-**需要换掉现在的 sitemap/robots 插件吗？** 不需要。默认 `provider: external`，主题完全不注册这两个文件。想让 Panda 接管就设 `provider: panda` —— 但要先卸载另一个插件，否则构建会直接停下并指出插件名。
+**需要换掉现在的 sitemap/robots 插件吗？** 不需要。默认 `panda` 遇到已知外部生成器会让位并警告；设 `provider: external` 可消除警告。显式设置 `provider: panda` 时，冲突会终止构建并指出生成器。
 
 **`hexo panda verify-ai` 报镜像缺失怎么办？** 说明某个页面声明了 `rel="alternate"` 但对应镜像没有生成。常见原因：文章被标了 `noindex`、命中 `markdown.exclude`，或上一次构建后关掉了 `markdown.enable`。先执行 `hexo clean`：head 链接和镜像文件在同一次生成中产出，只有残留旧产物时才会不一致。
 
 **`/ai/` 上为什么出现英文分区标题？** 分区标题取自语言文件。如果你的语言不在 Panda 支持范围内，请在配置里覆盖 `ai_readable.llms.heading_*`，否则回退到英文。
 
-**机器人图标在哪？** 在作者卡片的社交图标行末位，紧跟 Follow Me 按钮下方——GitHub / Email / RSS 一直就在这个位置，所以首页关掉侧边栏也能看到。设 `portal.social_icon.show_in_author_card: false` 可以去掉它。
+**如何隐藏机器人图标？** 设置 `ai_readable.portal.social_icon.show_in_author_card: false`。
 
 **主题会自动拦住 AI 爬虫吗？** 不会。只有 `robots.provider: panda` 时才生成 `robots.txt`，而且它表达的只是*偏好*。无视 robots.txt 的训练爬虫照样能读；真正的强制手段是鉴权或 CDN/WAF。
 
@@ -560,7 +562,7 @@ hexo panda verify-ai
 
 **构建时会调用 AI 服务吗？** 绝不。所有内容都来自 Hexo 的数据模型和你自己的 Markdown 源文件；没有可靠摘要时只使用标题、描述和 Front Matter。
 
-**能单独排除某篇文章吗？** `noindex: true`（全部产物）、`sitemap: false`（仅 sitemap）、`ai_readable: false`（llms.txt/镜像/导航页，仍留在 sitemap）、`markdown: false`（仅镜像）。
+**能单独排除某篇文章吗？** `noindex: true` 会要求不索引并排除发现产物，不会阻止公开访问。只想退出站点地图、AI 发现产物或 Markdown 镜像时，分别使用 `sitemap: false`、`ai_readable: false` 或 `markdown: false`。
 
 **已知限制。** `robots.txt` 只是抓取偏好，不是访问控制，也不是隐私保护：它拦不住蓄意的爬虫。`Google-Extended` 是产品控制令牌，只影响 Gemini 的训练与 Grounding，不影响 Google 搜索收录与排名。`ChatGPT-User` 和 `Google-Agent` 由用户触发，其访问由 CDN/WAF 决定，robots 规则管不到。`/rights/` 上的 AI 使用偏好是意图声明，与许可协议是两回事——CC BY-NC-SA 4.0 本身并不解决训练授权问题。只有公开、已发布、未标记 `noindex` 的内容会进入索引，草稿永远不会。
 
@@ -570,6 +572,8 @@ hexo panda verify-ai
 # _config.panda.yml
 link_target_blank: true   # 正文/碎碎念链接新标签页打开（默认开）
 ```
+
+不蒜子的访问计数与旧浏览器 CSS 前缀改为按需开启。要恢复旧行为，在 `_config.panda.yml` 将需要的 `busuanzi.site_uv`、`busuanzi.site_pv`、`busuanzi.page_pv` 设为 `true`，或设置 `css_prefix: true`。如需 JSON-LD，显式设置 `structured_data.enable: true`。
 
 fish / typst 代码高亮开箱即用，无需配置。
 

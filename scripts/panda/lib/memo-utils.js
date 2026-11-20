@@ -102,7 +102,6 @@ function memoSlugs (hexo, memos) {
 module.exports = {
   memosConfig,
   memosEnabled,
-  memosDataKey,
   memosPath,
   getMemos,
   siteLang,

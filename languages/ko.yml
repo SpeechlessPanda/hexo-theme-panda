@@ -2,6 +2,12 @@ footer:
   framework: 프레임워크
   theme: 테마
 
+nav:
+  menu: 탐색 메뉴
+  close: 탐색 메뉴 닫기
+  code_fullscreen: 코드 전체 화면 전환
+  exit_readmode: 읽기 모드 종료
+
 copy:
   success: 복사 성공
   error: 복사 실패
@@ -178,7 +184,6 @@ ai_readable:
     summary_fallback: 공개 글, 시리즈, 리소스.
     author_fallback: '%s 이(가) 운영합니다.'
     topics_label: 주요 주제
-    markdown_note: 아래 각 페이지에는 같은 주소에 `/index.md`를 붙인 Markdown 버전이 있습니다. 이 링크를 쓰면 에이전트가 HTML을 해석하지 않고 본문을 읽을 수 있습니다.
     resource_sitemap: 색인 가능한 모든 페이지
     resource_feed: 최신 글과 메모
     resource_archive: 아카이브
@@ -194,9 +199,6 @@ ai_readable:
     license_text_prefix: '별도 표시가 없는 한 글은 다음 라이선스를 따릅니다:'
     license_text_suffix: .
     license_inherited: 이 값은 테마의 `post_copyright` 설정을 상속합니다.
-    license_attribution: 출처 표시가 필요하며 원문 링크를 함께 남겨 주세요.
-    license_noncommercial: 상업적 사용에는 저자의 허가가 필요합니다.
-    license_sharealike: 2차 저작물도 같은 라이선스를 유지해야 합니다.
     license_none: 사이트 전체 라이선스가 설정되지 않았습니다. 모든 권리 보유로 간주하고 저자에게 문의하세요.
     commercial: 상업적 사용
     commercial_text: 상업적 사용, 번역, 재배포 전에 저자에게 서면 허가를 요청하세요.

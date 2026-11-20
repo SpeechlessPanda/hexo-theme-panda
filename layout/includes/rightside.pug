@@ -5,7 +5,7 @@ mixin rightsideItem(array)
     case item
       when 'readmode'
         if globalPageType === 'post' && readmode
-          button#readmode(type="button" title=_p('rightside.readmode_title'))
+          button#readmode(type="button" title=_p('rightside.readmode_title') data-exit-label=_p('nav.exit_readmode'))
             i.fas.fa-book-open
       when 'translate'
         if translate.enable
@@ -32,8 +32,8 @@ mixin rightsideItem(array)
             i.fas.fa-comments
 
 - const { enable, hide, show } = theme.rightside_item_order
-- const hideArray = enable && hide ? hide.split(',') : ['readmode','translate','darkmode','hideAside']
-- const showArray = enable && show ? show.split(',') : ['toc','chat','comment']
+- const showArray = [...new Set(enable && show ? show.split(',') : ['toc','chat','comment'])]
+- const hideArray = [...new Set(enable && hide ? hide.split(',') : ['readmode','translate','darkmode','hideAside'])].filter(item => !showArray.includes(item))
 - const needCogBtn = (enable && hide) || (!enable && ((globalPageType === 'post' && (readmode || translate.enable || (darkmode.enable && darkmode.button))) || (translate.enable || (darkmode.enable && darkmode.button))))
 
 #rightside

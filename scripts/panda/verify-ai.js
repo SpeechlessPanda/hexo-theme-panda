@@ -11,9 +11,10 @@ const fs = require('fs')
 const path = require('path')
 
 const { verifyDiscovery } = require('./lib/verify')
-const { config: discoveryConfig, index: contentIndex, reset } = require('./lib/discovery-state')
+const { config: discoveryConfig, index: contentIndex, reset, hasSiteAsset } = require('./lib/discovery-state')
 const { markdownTargets } = require('./lib/content-collect')
 const { mirrorRoutePath } = require('./lib/site-url')
+const { detectGeneratorConflicts } = require('./lib/robots')
 
 const CHECKED_RE = /\.(?:html?|txt|xml|md)$/i
 
@@ -65,14 +66,21 @@ function expectations (hexo, cfg) {
     excludedPageRoutes: []
   }
 
-  if (cfg.discovery.sitemap.provider === 'panda') expected.sitemap = { path: cfg.discovery.sitemap.path }
-  if (cfg.discovery.robots.provider === 'panda') {
-    expected.robots = { path: cfg.discovery.robots.path, policy: cfg.discovery.robots, sitemap: expected.sitemap }
+  const sitemapCfg = cfg.discovery.sitemap
+  const externalSitemap = detectGeneratorConflicts(hexo, 'sitemap').length > 0
+  const ownSitemap = hasSiteAsset(hexo, sitemapCfg.path)
+  if (sitemapCfg.provider === 'panda' && !externalSitemap && !ownSitemap) expected.sitemap = { path: sitemapCfg.path }
+  const robots = cfg.discovery.robots
+  if (robots.provider === 'panda' && !detectGeneratorConflicts(hexo, 'robots').length && !hasSiteAsset(hexo, robots.path)) {
+    const hasSitemap = expected.sitemap || (sitemapCfg.provider !== 'disabled' && (externalSitemap || ownSitemap))
+    expected.robots = { path: robots.path, policy: robots, sitemap: robots.sitemap && hasSitemap ? { path: sitemapCfg.path } : null }
   }
   if (cfg.ai.enable && cfg.ai.llms_txt.enable) expected.llms = { path: cfg.ai.llms_txt.path }
   if (cfg.ai.enable && cfg.ai.portal.enable) expected.portal = `${rootPath(cfg.ai.portal.path)}index.html`
   if (cfg.ai.enable && cfg.ai.rights.enable) expected.rights = `${rootPath(cfg.ai.rights.path)}index.html`
-  const homeIcon = cfg.ai.enable && cfg.ai.portal.enable && cfg.ai.portal.social_icon.enable
+  const aside = hexo.theme.config.aside
+  const homeIcon = aside.enable && aside.card_author.enable && cfg.ai.enable && cfg.ai.portal.enable &&
+    cfg.ai.portal.social_icon.enable && cfg.ai.portal.social_icon.show_in_author_card
   if (homeIcon) {
     // The robot lives in the author card, which renders in the aside on the home
     // page. Any page using the `home` layout reuses that card, so check whichever
@@ -89,21 +97,32 @@ function expectations (hexo, cfg) {
     expected.homeIcon = { page: target ? rootPath(target.path) : 'index.html' }
   }
 
-  if (!cfg.ai.enable || !cfg.ai.markdown.enable) return expected
+  if (!cfg.ai.enable) return expected
 
   const index = contentIndex(hexo, hexo.locals.toObject())
-  for (const target of markdownTargets(index, hexo.theme.config)) {
-    const route = mirrorRoutePath(target.path, cfg.ai.markdown.path_style)
-    if (route) expected.mirrors.push(route)
+  const excludeHtml = item => {
+    if (item.path) expected.excludedPageRoutes.push(hexo.route.format(item.path))
   }
-  for (const item of index.excluded) {
-    if (item.source) expected.excludedSources.push(item.source)
-    const route = mirrorRoutePath(item.path, cfg.ai.markdown.path_style)
-    if (route) expected.excludedMirrorRoutes.push(route)
-    // Excluded pages legitimately have no discovery links; only a page the theme
-    // considers public must advertise llms.txt.
-    if (item.path) expected.excludedPageRoutes.push(`${rootPath(item.path).replace(/\/+$/, '')}/index.html`)
+  if (expected.llms) {
+    for (const item of index.articles) if (!item.ai) excludeHtml(item)
+    for (const item of index.pages) if (!item.ai) excludeHtml(item)
+    for (const series of index.series) {
+      if (!series.ai) excludeHtml(series)
+      for (const member of series.members) if (!member.ai) excludeHtml(member)
+    }
   }
+  if (cfg.ai.markdown.enable) {
+    for (const target of markdownTargets(index, hexo.theme.config)) {
+      const route = mirrorRoutePath(target.path, cfg.ai.markdown.path_style)
+      if (route) expected.mirrors.push(route)
+    }
+    for (const item of index.excluded) {
+      if (item.source) expected.excludedSources.push(item.source)
+      const route = mirrorRoutePath(item.path, cfg.ai.markdown.path_style)
+      if (route) expected.excludedMirrorRoutes.push(route)
+    }
+  }
+  for (const item of index.excluded) excludeHtml(item)
   return expected
 }
 

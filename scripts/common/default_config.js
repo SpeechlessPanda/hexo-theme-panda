@@ -23,7 +23,7 @@ module.exports = {
     fullpage: false
   },
   social: null,
-  favicon: '/img/favicon.png',
+  favicon: '/img/panda-icon.svg',
   avatar: {
     img: '/img/panda-icon.svg',
     effect: false
@@ -254,9 +254,9 @@ module.exports = {
     total_wordcount: true
   },
   busuanzi: {
-    site_uv: true,
-    site_pv: true,
-    page_pv: true
+    site_uv: false,
+    site_pv: false,
+    page_pv: false
   },
   math: {
     use: null,
@@ -591,7 +591,7 @@ module.exports = {
     enable: false,
     alternate_name: null
   },
-  css_prefix: true,
+  css_prefix: false,
   inject: {
     head: null,
     bottom: null

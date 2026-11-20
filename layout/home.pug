@@ -2,17 +2,18 @@
 extends includes/layout.pug
 
 //- Panda: home renders a source page (default: about/index.md) — single source of
-//- truth for the about content. Falls back to the normal post list when disabled
-//- or when the source page does not exist. Config: home_about.enable / .source
+//- truth for the about content. A standalone home page keeps its own content
+//- when about is unavailable; only an index route has a paginated post list.
+//- Config: home_about.enable / .source
 block content
   - const ha = theme.home_about || {}
   - const aboutPage = ha.enable !== false ? site.pages.findOne({ source: ha.source || 'about/index.md' }) : null
-  if aboutPage
+  if aboutPage || !page.posts
     #page
       if top_img === false && page.title
         .page-title= page.title
       #article-container.container
-        != aboutPage.content
+        != aboutPage ? aboutPage.content : page.content
   else
     include ./includes/mixins/indexPostUI.pug
     +indexPostUI

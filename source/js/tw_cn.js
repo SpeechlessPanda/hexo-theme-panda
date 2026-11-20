@@ -3,63 +3,59 @@ document.addEventListener('DOMContentLoaded', () => {
   const snackbarData = GLOBAL_CONFIG.Snackbar
   const targetEncodingCookie = 'translate-chn-cht'
 
-  let currentEncoding = defaultEncoding
   let targetEncoding = Number(btf.saveToLocal.get(targetEncodingCookie)) || defaultEncoding
   let translateButtonObject = document.getElementById('translateLink')
   const isSnackbar = snackbarData !== undefined
+  const sourceLang = document.documentElement.lang
+  const originals = new WeakMap()
+  const skip = 'script, style, pre, code, kbd, samp, input, textarea, select, [contenteditable]:not([contenteditable="false"])'
+  let pending
 
   const setLang = () => {
-    document.documentElement.lang = targetEncoding === 1 ? 'zh-TW' : 'zh-CN'
+    document.documentElement.lang = targetEncoding === defaultEncoding ? sourceLang : (targetEncoding === 1 ? 'zh-TW' : 'zh-CN')
   }
 
   const translateText = txt => {
     if (!txt) return ''
-    if (currentEncoding === 1 && targetEncoding === 2) return Simplized(txt)
-    if (currentEncoding === 2 && targetEncoding === 1) return Traditionalized(txt)
+    if (defaultEncoding === 1 && targetEncoding === 2) return Simplized(txt)
+    if (defaultEncoding === 2 && targetEncoding === 1) return Traditionalized(txt)
     return txt
   }
 
-  const translateBody = fobj => {
-    const nodes = typeof fobj === 'object' ? fobj.childNodes : document.body.childNodes
+  const translateProperty = (node, key) => {
+    const value = node[key]
+    if (!value) return
+    const original = originals.get(node)?.[key]
+    const source = original?.last === value ? original.source : value
+    const next = translateText(source)
+    if (next === value && !original) return
+    let values = originals.get(node)
+    if (!values) {
+      values = {}
+      originals.set(node, values)
+    }
+    values[key] = { source, last: next }
+    if (value !== next) node[key] = next
+  }
 
-    for (const node of nodes) {
-      // Skip BR, HR tags, or the translate button object
-      if (['BR', 'HR'].includes(node.tagName) || node === translateButtonObject) continue
-
+  const translateBody = (root = document.body) => {
+    for (const node of root.childNodes) {
       if (node.nodeType === Node.ELEMENT_NODE) {
-        const { tagName, title, alt, placeholder, value, type } = node
-
-        // Translate title, alt, placeholder
-        if (title) node.title = translateText(title)
-        if (alt) node.alt = translateText(alt)
-        if (placeholder) node.placeholder = translateText(placeholder)
-
-        // Translate input value except text and hidden types
-        if (tagName === 'INPUT' && value && type !== 'text' && type !== 'hidden') {
-          node.value = translateText(value)
-        }
-
-        // Recursively translate child nodes
+        if (node === translateButtonObject || node.matches(skip)) continue
+        translateProperty(node, 'title')
+        translateProperty(node, 'alt')
         translateBody(node)
       } else if (node.nodeType === Node.TEXT_NODE) {
-        // Translate text node data
-        node.data = translateText(node.data)
+        translateProperty(node, 'data')
       }
     }
   }
 
   const translatePage = () => {
-    if (targetEncoding === 1) {
-      currentEncoding = 1
-      targetEncoding = 2
-      translateButtonObject.textContent = msgToTraditionalChinese
-      isSnackbar && btf.snackbarShow(snackbarData.cht_to_chs)
-    } else if (targetEncoding === 2) {
-      currentEncoding = 2
-      targetEncoding = 1
-      translateButtonObject.textContent = msgToSimplifiedChinese
-      isSnackbar && btf.snackbarShow(snackbarData.chs_to_cht)
-    }
+    clearTimeout(pending)
+    targetEncoding = targetEncoding === 1 ? 2 : 1
+    translateButtonObject.textContent = targetEncoding === 1 ? msgToSimplifiedChinese : msgToTraditionalChinese
+    isSnackbar && btf.snackbarShow(targetEncoding === 1 ? snackbarData.chs_to_cht : snackbarData.cht_to_chs)
     btf.saveToLocal.set(targetEncodingCookie, targetEncoding, 2)
     setLang()
     translateBody()
@@ -105,17 +101,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const translateInitialization = () => {
+    clearTimeout(pending)
     translateButtonObject = document.getElementById('translateLink')
     if (translateButtonObject) {
-      if (currentEncoding !== targetEncoding) {
-        translateButtonObject.textContent =
-          targetEncoding === 1
-            ? msgToSimplifiedChinese
-            : msgToTraditionalChinese
-        setLang()
-        setTimeout(translateBody, translateDelay)
-      }
+      translateButtonObject.textContent = targetEncoding === 1 ? msgToSimplifiedChinese : msgToTraditionalChinese
     }
+    setLang()
+    if (targetEncoding !== defaultEncoding) pending = setTimeout(translateBody, translateDelay)
   }
 
   window.translateFn = {

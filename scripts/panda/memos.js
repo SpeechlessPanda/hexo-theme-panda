@@ -4,54 +4,32 @@
 // strings come from theme config + i18n instead of hardcoding.
 'use strict'
 
-const { escapeXml, memosConfig, memosEnabled, memosDataKey, getMemos, memosPath, siteLang, memoSlugs } = require('./lib/memo-utils')
+const { escapeXml, memosConfig, memosEnabled, getMemos, memosPath, siteLang, memoSlugs, parseMemoDate } = require('./lib/memo-utils')
 
-// Ships one sample memo so a fresh site shows the feature working (timeline,
-// latest card, standalone page, feed). Injected into site data before generate
-// only while the site's own data file is missing/empty — the first real memo
-// the user writes replaces it everywhere.
-const SAMPLE_MEMO = {
-  date: '2026-01-01 00:00',
-  content: "Hello, it's my blog! 👋\n\nThis sample memo ships with the theme. Write your own in `source/_data/shuoshuo.yml` — one entry per memo with `date`, `content` and optional `tags` — and this placeholder disappears.",
-  tags: ['demo']
-}
-
-// The locals `data` getter rebuilds a fresh object from the Data model on every
-// generate (hexo/dist/hexo/index.js), so injecting into locals is useless — the
-// model is the only seam every consumer (timeline pug, latest card, standalone
-// pages, feed, search) actually reads. Insert at generateBefore, remove at
-// generateAfter so the sample never persists into the site's db.json.
-let sampleInjected = false
-
-hexo.on('generateBefore', () => {
-  sampleInjected = false
-  if (!memosEnabled(hexo)) return
-  const Data = hexo.model('Data')
-  const key = memosDataKey(hexo)
-  const doc = Data.findById(key)
-  if (doc && Array.isArray(doc.data) && doc.data.length) return
-  Data.save({ _id: key, data: [SAMPLE_MEMO] })
-  sampleInjected = true
-})
-
-hexo.on('generateAfter', () => {
-  if (!sampleInjected) return
-  hexo.model('Data').removeById(memosDataKey(hexo))
-  sampleInjected = false
-})
+let latestMemo
+hexo.on('generateBefore', () => { latestMemo = undefined })
 
 // latest_memo(): data for the "latest memo" card on the post stream
 hexo.extend.helper.register('latest_memo', function () {
   const cfg = memosConfig(hexo)
   if (!memosEnabled(hexo) || cfg.latest_card === false) return null
-  const memos = getMemos(hexo).slice().sort((a, b) => new Date(b.date) - new Date(a.date))
-  if (!memos.length) return null
-  const latest = memos[0]
+  if (latestMemo !== undefined) return latestMemo
+  let latest = null
+  let published = null
+  for (const memo of getMemos(hexo)) {
+    const date = parseMemoDate(hexo, memo.date)
+    if (date && (!published || date > published)) {
+      latest = memo
+      published = date
+    }
+  }
+  if (!latest) return (latestMemo = null)
   const html = hexo.render.renderSync({ text: latest.content || '', engine: 'markdown' })
   const plainText = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
   const excerptLimit = typeof cfg.latest_excerpt === 'number' ? cfg.latest_excerpt : 120
   const excerpt = plainText.length > excerptLimit ? plainText.slice(0, excerptLimit) + '…' : plainText
-  return { excerpt, date: latest.date, url: memosPath(hexo) }
+  latestMemo = { excerpt, date: published, url: memosPath(hexo) }
+  return latestMemo
 })
 
 // Standalone page per memo: the timeline page renders client-side and has no

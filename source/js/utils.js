@@ -1,5 +1,18 @@
 (() => {
+  const htmlEntities = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }
   const btfFn = {
+    escapeHTML: value => String(value ?? '').replace(/[&<>"']/g, char => htmlEntities[char]),
+
+    httpUrl: (value, base = document.baseURI) => {
+      if (typeof value !== 'string' || !value.trim()) return null
+      try {
+        const url = new URL(value, base)
+        return url.protocol === 'https:' || url.protocol === 'http:' ? url : null
+      } catch (_) {
+        return null
+      }
+    },
+
     debounce: (func, wait = 0, immediate = false) => {
       let timeout
       return (...args) => {
@@ -304,7 +317,7 @@
 
     updateAnchor: anchor => {
       if (anchor !== window.location.hash) {
-        if (!anchor) anchor = location.pathname
+        if (!anchor) anchor = location.pathname + location.search
         const title = GLOBAL_CONFIG_SITE.title
         window.history.replaceState({
           url: location.href,
@@ -313,21 +326,15 @@
       }
     },
 
-    getScrollPercent: (() => {
-      let docHeight, winHeight, headerHeight, contentMath
-
-      return (currentTop, ele) => {
-        if (!docHeight || ele.clientHeight !== docHeight) {
-          docHeight = ele.clientHeight
-          winHeight = window.innerHeight
-          headerHeight = ele.offsetTop
-          contentMath = Math.max(docHeight - winHeight, document.documentElement.scrollHeight - winHeight)
-        }
-
-        const scrollPercent = (currentTop - headerHeight) / contentMath
-        return Math.max(0, Math.min(100, Math.round(scrollPercent * 100)))
-      }
-    })(),
+    getScrollPercent: (currentTop, ele) => {
+      const viewport = window.innerHeight
+      const pageEnd = Math.max(0, document.documentElement.scrollHeight - viewport)
+      const contentTop = ele === document.body ? 0 : ele.getBoundingClientRect().top + currentTop
+      const start = Math.max(0, Math.min(contentTop, pageEnd))
+      const end = ele === document.body ? pageEnd : Math.min(pageEnd, contentTop + ele.clientHeight - viewport)
+      if (end <= start) return currentTop > start ? 100 : 0
+      return Math.max(0, Math.min(100, Math.round((currentTop - start) / (end - start) * 100)))
+    },
 
     addEventListenerPjax: (ele, event, fn, option = false) => {
       ele.addEventListener(event, fn, option)

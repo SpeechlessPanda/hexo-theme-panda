@@ -120,7 +120,7 @@ function mergeAiData (ai, data, site = {}) {
     topics: [...topicByName.values()],
     featured,
     projects,
-    latestCount: Number.isFinite(file.latest_count) ? Number(file.latest_count) : null
+    latestCount: Number.isSafeInteger(file.latest_count) && file.latest_count >= 0 ? file.latest_count : null
   }
 }
 

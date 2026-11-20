@@ -19,8 +19,6 @@ const themeRoot = path.resolve(__dirname, '..')
 function resolveHexoRoot () {
   const candidates = [
     process.env.PANDA_HEXO_SITE,
-    'D:/project/blog',
-    path.join(themeRoot, '..', 'blog'),
     process.cwd()
   ].filter(Boolean)
   for (const dir of candidates) {
@@ -158,7 +156,10 @@ before(async () => {
     '        description: The theme under test',
     '  markdown:',
     '    exclude:',
-    '      - _posts/excluded.md'
+    '      - _posts/excluded.md',
+    '  rights:',
+    '    ai_use: no-ai-use',
+    '    extra: "**Policy detail**"'
   ].join('\n'))
 
   write('source/_posts/hello-world.md', [
@@ -225,6 +226,9 @@ before(async () => {
     'Excluded by config.',
     ''
   ].join('\n'))
+
+  write('source/_posts/html-only.md', '---\ntitle: HTML Only\ndate: 2026-01-09 12:00:00\nmarkdown: false\n---\n\nHTML only.\n')
+  write('source/_posts/omit-ai.md', '---\ntitle: Not for AI discovery\ndate: 2026-01-09 12:00:00\nai_readable: false\n---\n\nNot in the AI index.\n')
 
   write('source/_posts/my-series/index.md', [
     '---',
@@ -331,6 +335,9 @@ test('llms.txt follows the v2 structure and links to Markdown mirrors', { skip }
   assert.match(txt, /^> .+/m)
   assert.match(txt, /^## /m)
   assert.match(txt, /- \[Hello World\]\(https:\/\/example\.com\/blog\/2026\/01\/10\/hello-world\/index\.md\)/)
+  assert.match(txt, /\[HTML Only\]\(https:\/\/example\.com\/blog\/2026\/01\/09\/html-only\/index\.html\)/)
+  assert.doesNotMatch(txt, /Not for AI discovery|\/tags\/testing\//)
+  assert.match(txt, /^- testing$/m)
   assert.doesNotMatch(txt, /Hidden Post/)
   assert.doesNotMatch(txt, /Excluded Post/)
   assert.doesNotMatch(txt, /\{\{|\}\}|TODO|Lorem ipsum/)
@@ -361,6 +368,8 @@ test('HTML head advertises the mirror and the llms.txt that covers it', { skip }
   assert.match(html, /<link rel="describedby" type="text\/plain" href="\/blog\/llms\.txt"/)
   const hidden = read('2026/01/06/hidden/index.html')
   assert.doesNotMatch(hidden, /rel="alternate" type="text\/markdown"/)
+  assert.match(hidden, /<meta name="robots" content="noindex">/)
+  assert.doesNotMatch(hidden, /rel="describedby" type="text\/plain"/)
 })
 
 test('/ai/ portal and /rights/ page are real HTML pages', { skip }, () => {
@@ -368,10 +377,13 @@ test('/ai/ portal and /rights/ page are real HTML pages', { skip }, () => {
   assert.match(portal, /AI 阅读导航/)
   assert.match(portal, /llms\.txt/)
   assert.match(portal, /Panda/)
+  assert.doesNotMatch(portal, /Not for AI discovery|\/html-only\/index\.md/)
   const rights = read('rights/index.html')
   assert.match(rights, /版权与内容使用政策/)
   assert.match(rights, /CC BY-NC-SA 4\.0/)
   assert.match(rights, /https:\/\/creativecommons\.org\/licenses\/by-nc-sa\/4\.0\//)
+  assert.match(rights, /<strong>Policy detail<\/strong>/)
+  assert.match(rights, /no-ai-use/)
 })
 
 test('the AI reading entry is keyboard reachable', { skip }, () => {
@@ -505,6 +517,17 @@ test('shipped defaults emit all seven surfaces without any configuration', { ski
       assert.ok(discoveryRoutes.includes(expected), `defaults must emit ${expected}, got ${JSON.stringify(discoveryRoutes)}`)
     }
     assert.ok(discoveryRoutes.some(r => r.endsWith('.md')), 'defaults must emit Markdown mirrors')
+
+    const publicDir = path.join(dir, 'public')
+    const home = fs.readFileSync(path.join(publicDir, 'index.html'), 'utf8')
+    const favicon = /<link rel="shortcut icon" href="\/([^"]+)"/.exec(home)?.[1]
+    assert.ok(favicon && fs.existsSync(path.join(publicDir, favicon)), 'the default favicon is served')
+    assert.doesNotMatch(home, /type="application\/ld\+json"/, 'structured data is opt-in')
+    assert.doesNotMatch(home, /busuanzi\.ibruce\.info/, 'visitor tracking is opt-in')
+    assert.doesNotMatch(home, /recent-post-memo/, 'no built-in post is shown on the home page')
+    assert.doesNotMatch(fs.readFileSync(path.join(publicDir, 'atom.xml'), 'utf8'), /\/memos\//)
+    assert.ok(!routes.some(route => /^memos\//.test(route)), 'no memo route is generated without authored data')
+    assert.ok(!routes.includes('css/var.css'), 'Stylus variables do not emit an empty public file')
 
     // Opting out has to stay possible for a site that wants the old footprint.
     const offDir = fs.mkdtempSync(path.join(os.tmpdir(), 'panda-defaults-off-'))
@@ -756,9 +779,8 @@ test('the sitemap omits memo pages and feed update stubs', { skip }, async () =>
   }
 })
 
-test('a hand-written /rights/ page wins over the generated one', { skip }, async () => {
-  // The blog in this repo ships its own `source/rights/index.md`; the theme must
-  // leave that content alone, and the sitemap must still list the real page.
+test('hand-written discovery pages and robots.txt win over generated defaults', { skip }, async () => {
+  // Authored source content must retain its route when discovery is enabled.
   const Hexo = require(require.resolve('hexo', { paths: [found.nodeModules] }))
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'panda-own-rights-'))
   const put = (rel, body) => {
@@ -777,6 +799,7 @@ test('a hand-written /rights/ page wins over the generated one', { skip }, async
     put('_config.panda.yml', ['site_discovery:', '  sitemap:', '    provider: panda', 'ai_readable:', '  enable: true'].join('\n'))
     put('source/_posts/a.md', '---\ntitle: A\ndate: 2026-01-01 00:00:00\n---\n\nA.\n')
     put('source/rights/index.md', '---\ntitle: 我自己写的政策\ndate: 2025-12-01 00:00:00\n---\n\nMINE-ONLY-MARKER\n')
+    put('source/robots.txt', 'User-agent: *\nDisallow: /private/\n')
     fs.symlinkSync(found.nodeModules, path.join(dir, 'node_modules'), 'junction')
     fs.mkdirSync(path.join(dir, 'themes'))
     fs.symlinkSync(themeRoot, path.join(dir, 'themes', 'panda'), 'junction')
@@ -795,12 +818,14 @@ test('a hand-written /rights/ page wins over the generated one', { skip }, async
     const rights = await read('rights/index.html')
     const sitemap = await read('sitemap.xml')
     const portal = await read('ai/index.html')
+    const robots = fs.readFileSync(path.join(dir, 'public', 'robots.txt'), 'utf8')
     await hexo.exit()
 
     assert.ok(rights.includes('MINE-ONLY-MARKER'), 'the hand-written rights page is kept verbatim')
     assert.doesNotMatch(rights, /ai-readab|rights-hero/, 'the generated layout did not overwrite it')
     assert.match(sitemap, /<loc>https:\/\/example\.com\/rights\/index\.html<\/loc>/, 'the real page is in the sitemap')
     assert.ok(portal, 'the portal is still generated')
+    assert.equal(robots, 'User-agent: *\nDisallow: /private/\n')
   } finally {
     fs.rmSync(dir, { recursive: true, force: true })
   }
@@ -1044,11 +1069,8 @@ test('a generator that already claims sitemap.xml aborts a panda-mode build', { 
       'title: Conflict', 'author: tester', 'url: https://example.com', 'root: /',
       'permalink: :year/:month/:day/:title/', 'theme: panda'
     ].join('\n'))
-    // Theme options live in `_config.panda.yml`, not the site config.
-    put('_config.panda.yml', [
-      'site_discovery:', '  robots:', '    provider: external', '  sitemap:', '    provider: panda',
-      'ai_readable:', '  enable: false'
-    ].join('\n'))
+    // Hexo parses inline mappings and comments before applying theme overrides.
+    put('_config.panda.yml', 'site_discovery: { robots: { provider: external }, sitemap: { provider: panda } } # explicit\nai_readable: { enable: false }\n')
     put('source/_posts/hello.md', '---\ntitle: Hello\ndate: 2026-01-01 00:00:00\n---\n\nBody.\n')
     // Stand-in for hexo-generator-sitemap: same registered generator name.
     put('scripts/fake-sitemap.js', "hexo.extend.generator.register('sitemap', () => [])\n")

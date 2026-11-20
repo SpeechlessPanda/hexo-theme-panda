@@ -227,6 +227,11 @@ window.addEventListener('load', () => {
     $stats.style.display = hasResults ? '' : 'none'
   }
 
+  // Algolia supplies highlight markup. Keep only the two formatting tokens,
+  // never markup or attributes coming from the indexed records.
+  const highlightHTML = value => String(value ?? '').split(/(<\/?(?:mark|em)>)/i)
+    .map((part, index) => index % 2 ? part : btf.escapeHTML(part)).join('')
+
   const renderHits = (hits, query, page = 0) => {
     if (hits.length === 0 && query) {
       $hitsEmpty.textContent = languages.hits_empty.replace(/\$\{query}/, query)
@@ -240,7 +245,8 @@ window.addEventListener('load', () => {
 
     const hitsHTML = hits.map((hit, index) => {
       const itemNumber = page * hitsPerPage + index + 1
-      const link = hit.permalink || (GLOBAL_CONFIG.root + hit.path)
+      const link = btf.httpUrl(hit.permalink || (GLOBAL_CONFIG.root + hit.path))
+      if (!link) return ''
       const result = hit._highlightResult || hit
 
       // Content extraction - try highlight result first, then raw hit
@@ -265,9 +271,9 @@ window.addEventListener('load', () => {
       }
 
       return `<li class="ais-Hits-item" value="${itemNumber}">
-          <a href="${link}" class="algolia-hit-item-link">
-            <span class="algolia-hits-item-title">${title}</span>
-            ${content ? `<div class="algolia-hit-item-content">${content}</div>` : ''}
+          <a href="${btf.escapeHTML(link.href)}" class="algolia-hit-item-link">
+            <span class="algolia-hits-item-title">${highlightHTML(title)}</span>
+            ${content ? `<div class="algolia-hit-item-content">${highlightHTML(content)}</div>` : ''}
           </a>
         </li>`
     }).join('')

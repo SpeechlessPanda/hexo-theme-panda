@@ -15,12 +15,12 @@ nav#nav
   #menus
     if theme.search.use
       #search-button
-        span.site-page.social-icon.search
-          i.fas.fa-search.fa-fw
+        button.site-page.social-icon.search(type="button" aria-label=_p('search.title'))
+          i.fas.fa-search.fa-fw(aria-hidden="true")
           span= ' ' + _p('search.title')
     if theme.menu
       != partial('includes/header/menu_item', {}, {cache: true})
 
       #toggle-menu
-        span.site-page
-          i.fas.fa-bars.fa-fw
+        button.site-page(type="button" aria-label=_p('nav.menu') aria-controls="sidebar-menus" aria-haspopup="dialog" aria-expanded="false")
+          i.fas.fa-bars.fa-fw(aria-hidden="true")

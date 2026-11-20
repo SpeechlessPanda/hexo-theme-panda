@@ -10,7 +10,7 @@ const path = require('path')
 const { spawnSync } = require('child_process')
 
 const themeRoot = path.resolve(__dirname, '..')
-const blogRoot = path.resolve('D:/project/blog')
+const blogRoot = path.resolve(process.env.PANDA_HEXO_SITE || themeRoot)
 
 const CASES = {
   single: '/img/bg.webp',

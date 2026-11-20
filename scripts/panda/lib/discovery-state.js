@@ -52,14 +52,6 @@ function registerMirror (routePath, url) {
   for (const key of keyVariants(routePath)) state.mirrors.set(key, url)
 }
 
-function hasMirrorUrl (url) {
-  if (!url) return false
-  for (const value of state.mirrors.values()) {
-    if (value === url) return true
-  }
-  return false
-}
-
 function mirrorFor (routePath) {
   for (const key of keyVariants(routePath)) {
     const hit = state.mirrors.get(key)
@@ -81,4 +73,8 @@ function reportConfig (hexo) {
   return cfg
 }
 
-module.exports = { state, reset, config, index, registerMirror, mirrorFor, hasMirrorUrl, issueOnce, reportConfig }
+function hasSiteAsset (hexo, routePath) {
+  return Boolean(hexo.model('Asset').findOne({ path: hexo.route.format(routePath) }))
+}
+
+module.exports = { state, reset, config, index, registerMirror, mirrorFor, issueOnce, reportConfig, hasSiteAsset }

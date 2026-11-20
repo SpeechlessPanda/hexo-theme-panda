@@ -91,36 +91,34 @@
   // short of the offset.
   const align = el => el.scrollIntoView({ block: 'start', behavior: 'instant' })
 
-  const anchorOffset = el => {
-    const css = parseFloat(window.getComputedStyle(el).scrollMarginTop)
-    return Number.isFinite(css) ? css : 70
-  }
-
-  // Late webfonts and lazy images above the target keep shifting it for about a
-  // second after the first jump, each step small enough that comparing one
-  // frame with the next never trips a threshold (the drift accumulates). So
-  // compare the target's viewport position with the offset it should sit at,
-  // and give up after a bounded window. Any reader input cancels.
+  // Re-align only when layout moves the target, not when the viewport moves.
+  // Near the end of a short page the browser cannot reach the requested offset.
   const settle = el => {
-    cancelSettle()
     const until = Date.now() + SETTLE_MS
-    const expected = anchorOffset(el)
+    let scrollY = window.scrollY
+    let documentTop = el.getBoundingClientRect().top + scrollY
 
     const tick = () => {
       frame = null
-      if (!el.isConnected || Date.now() > until) return
-      if (Math.abs(el.getBoundingClientRect().top - expected) > 1) align(el)
+      if (!el.isConnected || Date.now() > until || Math.abs(window.scrollY - scrollY) > 1) return
+      const nextTop = el.getBoundingClientRect().top + scrollY
+      if (Math.abs(nextTop - documentTop) > 1) {
+        align(el)
+        scrollY = window.scrollY
+        documentTop = nextTop
+      }
       frame = requestAnimationFrame(tick)
     }
     frame = requestAnimationFrame(tick)
   }
 
-  const jump = id => {
+  const jump = (id, watchLayout = false) => {
+    cancelSettle()
     const el = targetOf(id)
     if (!el) return false
     reveal(el)
     align(el)
-    settle(el)
+    if (watchLayout) settle(el)
     return true
   }
 
@@ -183,9 +181,7 @@
     }
   }
 
-  // Same-document fragment reference, or null. A production URL pasted into
-  // the page still resolves to the local target: identical pathname+search is
-  // the same document regardless of host (preview vs deployed origin).
+  // Only references to this document may be handled as fragment navigation.
   const fragmentRef = link => {
     let url
     try {
@@ -194,7 +190,7 @@
       return null
     }
     if (!url.hash || url.hash === '#') return null
-    if (url.pathname !== window.location.pathname || url.search !== window.location.search) return null
+    if (url.origin !== window.location.origin || url.pathname !== window.location.pathname || url.search !== window.location.search) return null
     let id = url.hash.slice(1)
     try {
       id = decodeURIComponent(id)
@@ -238,9 +234,9 @@
     if (!heading || !heading.id) return
     if (window.getSelection && window.getSelection().toString()) return
     const permalink = heading.querySelector('a.headerlink')
-    copyPermalink(permalink || { getAttribute: () => `#${encodeURI(heading.id)}` })
+    copyPermalink(permalink || { getAttribute: () => `#${encodeURIComponent(heading.id)}` })
     if (currentHash() === heading.id) jump(heading.id)
-    else window.location.hash = `#${encodeURI(heading.id)}`
+    else window.location.hash = `#${encodeURIComponent(heading.id)}`
   }, true)
 
   window.addEventListener('hashchange', () => jump(currentHash()))
@@ -251,11 +247,10 @@
   // reveal must run after they attached their click handlers.
   const onReady = () => {
     syncOffset()
-    if (window.location.hash) jump(currentHash())
+    if (window.location.hash) jump(currentHash(), true)
   }
 
   document.addEventListener('pjax:complete', () => setTimeout(onReady, 0))
-  window.addEventListener('load', () => setTimeout(onReady, 0))
 
   if (document.readyState === 'loading') {
     // Registered after main.js's own DOMContentLoaded handler (its script tag

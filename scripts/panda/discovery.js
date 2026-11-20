@@ -12,17 +12,22 @@
 
 const { url_for } = require('hexo-util')
 
-const { config: discoveryConfig, index: contentIndex, reset, registerMirror, mirrorFor, hasMirrorUrl, reportConfig, issueOnce } = require('./lib/discovery-state')
-const { markdownTargets, sitemapTargets, cleanDescription } = require('./lib/content-collect')
+const { config: discoveryConfig, index: contentIndex, reset, registerMirror, mirrorFor, reportConfig, issueOnce, hasSiteAsset } = require('./lib/discovery-state')
+const { flags, markdownTargets, sitemapTargets, cleanDescription } = require('./lib/content-collect')
 const { prettyUrlsOptions, pageUrl, pagePath, mirrorRoutePath, mirrorUrlPath, toSiteUrl, resolveRelative } = require('./lib/site-url')
 const { renderRobots, sitemapUrlFor, detectGeneratorConflicts, conflictMessage } = require('./lib/robots')
 const { renderSitemap } = require('./lib/sitemap')
-const { renderLlmsTxt, buildLlmsModel, contentEntries } = require('./lib/llms-txt')
+const { renderLlmsTxt, buildLlmsModel, contentEntries, escapeMd } = require('./lib/llms-txt')
 const { splitFrontMatter, frontMatterValue, renderMirror } = require('./lib/markdown-mirror')
 const { readAiData, mergeAiData } = require('./lib/ai-data')
-const { providerIsExplicit } = require('./lib/explicit-config')
 
 const THEME_VERSION = require('../../package.json').version
+
+// Hexo preserves parsed site overrides separately from the theme defaults.
+function providerIsExplicit (hexo, kind) {
+  const provider = hexo.config.theme_config?.site_discovery?.[kind]?.provider
+  return typeof provider === 'string' && provider.trim().toLowerCase() === 'panda'
+}
 
 // ---------------------------------------------------------------------------
 // helpers
@@ -108,7 +113,6 @@ function buildMirrors (hexo, locals) {
   const index = contentIndex(hexo, locals)
   const targets = markdownTargets(index, hexo.theme.config)
   const license = ai.rights.enable ? resolveLicense(hexo, ai.rights) : null
-  const mirrorsBySource = new Map()
   const routeBySource = new Map()
   const mirrorOwners = new Map() // mirror route -> source that produced it
   const routes = []
@@ -167,7 +171,7 @@ function buildMirrors (hexo, locals) {
       entry.title = target.title
       // Chapter links are absolute inside the mirror: an agent may have fetched this
       // file from a cache or a repository and still needs a resolvable target.
-      const members = (target.members || []).map(member => {
+      const members = (target.members || []).filter(member => member.ai).map(member => {
         const sibling = routeBySource.get(`${member.source.replace(/\\/g, '/')}#series-member`)
         return {
           title: member.title,
@@ -192,7 +196,6 @@ function buildMirrors (hexo, locals) {
     const rendered = renderMirror(entry, { untitled: i18n(hexo, 'ai_readable.untitled', 'Untitled') })
     routes.push({ path: mirror.route, data: rendered.markdown })
     pushWarnings(hexo, rendered.warnings)
-    mirrorsBySource.set(target.source, mirror.url)
   }
 
   return routes
@@ -209,9 +212,9 @@ function pushWarnings (hexo, warnings) {
 function resolveLicense (hexo, rights) {
   const postCopyright = (hexo.theme.config && hexo.theme.config.post_copyright) || {}
   const inherit = rights.license === 'inherit' || rights.license == null
-  const license = inherit ? (postCopyright.license || null) : rights.license
+  const license = inherit ? (postCopyright.enable ? postCopyright.license || null : null) : rights.license
   const inheritUrl = rights.license_url === 'inherit' || rights.license_url == null
-  const licenseUrl = inheritUrl ? (postCopyright.license_url || null) : rights.license_url
+  const licenseUrl = !license ? null : (inheritUrl ? (inherit ? postCopyright.license_url || null : null) : rights.license_url)
   return { license, licenseUrl, inherited: inherit }
 }
 
@@ -219,11 +222,11 @@ function resolveLicense (hexo, rights) {
 // llms.txt
 // ---------------------------------------------------------------------------
 
-function llmsEntryOptions (hexo, mirrorCfg) {
+function llmsEntryOptions (hexo) {
   return {
     mirrorUrlFor: item => {
-      const mirror = mirrorForRoute(hexo, mirrorCfg, item.path)
-      return mirror ? absoluteFor(hexo, mirror.route) : null
+      const mirror = mirrorFor(item.path)
+      return mirror ? new URL(mirror, hexo.config.url).href : null
     },
     pageUrlFor: item => absoluteFor(hexo, item.path),
     untitled: i18n(hexo, 'ai_readable.untitled', 'Untitled')
@@ -274,9 +277,7 @@ function buildLlms (hexo, locals, routes) {
   const ai = cfg.ai
   if (!ai.enable || !ai.llms_txt.enable) return
   const index = contentIndex(hexo, locals)
-  const mirrorCfg = ai.markdown.enable ? ai.markdown : { path_style: ai.markdown.path_style }
-
-  const entryOptions = llmsEntryOptions(hexo, mirrorCfg)
+  const entryOptions = llmsEntryOptions(hexo)
 
   const curatedAi = curated(hexo)
   const featured = resolveFeatured(hexo, index, curatedAi.featured)
@@ -288,10 +289,10 @@ function buildLlms (hexo, locals, routes) {
 
   const recentEntries = contentEntries(index.articles, { ...entryOptions, limit: ai.llms_txt.recent_posts })
 
+  const eligibleSeries = ai.llms_txt.series ? index.series.filter(series => series.ai) : []
   const seriesEntries = ai.llms_txt.series
-    ? contentEntries(index.series, entryOptions).map((entry, i) => {
-        const series = index.series[i]
-        if (!series || !series.members.length) return entry
+    ? contentEntries(eligibleSeries, entryOptions).map((entry, i) => {
+        const series = eligibleSeries[i]
         // Keep the chapters reachable from the series entry instead of flattening them
         // into the article list, so a reader sees the reading order in one place.
         entry.children = series.members.map(member => {
@@ -303,7 +304,7 @@ function buildLlms (hexo, locals, routes) {
             description: chapter.description
           }
         }).filter(Boolean)
-        entry.description = entry.description || `${series.members.length} chapters`
+        entry.description = entry.description || `${entry.children.length} chapters`
         return entry
       })
     : []
@@ -316,26 +317,29 @@ function buildLlms (hexo, locals, routes) {
 
   const resources = []
   if (ai.llms_txt.resources) {
-    const sitemap = cfg.discovery.sitemap
-    resources.push({
-      name: sitemap.path,
-      url: absoluteFor(hexo, sitemap.path),
-      description: i18n(hexo, 'ai_readable.llms.resource_sitemap', 'All indexable pages')
-    })
+    const sitemapPath = publishedSitemapPath(hexo, cfg)
+    if (sitemapPath) {
+      resources.push({
+        name: sitemapPath,
+        url: absoluteFor(hexo, sitemapPath),
+        description: i18n(hexo, 'ai_readable.llms.resource_sitemap', 'All indexable pages')
+      })
+    }
     const feed = (hexo.theme.config && hexo.theme.config.feed) || {}
-    if (feed.enable !== false) {
+    if (feed.enable === true) {
       resources.push({
         name: feed.path || 'atom.xml',
         url: absoluteFor(hexo, feed.path || 'atom.xml'),
         description: i18n(hexo, 'ai_readable.llms.resource_feed', 'Latest articles and memos as Atom')
       })
     }
-    const archiveDir = hexo.config.archive_dir || 'archives'
-    resources.push({
-      name: i18n(hexo, 'ai_readable.llms.resource_archive', 'Archives'),
-      url: absoluteFor(hexo, `${archiveDir}/`),
-      description: i18n(hexo, 'ai_readable.llms.resource_archive_desc', 'Chronological index of every article')
-    })
+    if (hasArchive(hexo, locals)) {
+      resources.push({
+        name: i18n(hexo, 'ai_readable.llms.resource_archive', 'Archives'),
+        url: absoluteFor(hexo, `${hexo.config.archive_dir || 'archives'}/`),
+        description: i18n(hexo, 'ai_readable.llms.resource_archive_desc', 'Chronological index of every article')
+      })
+    }
     if (ai.portal.enable) {
       resources.push({
         name: i18n(hexo, 'ai_readable.portal.title', 'AI reading guide'),
@@ -364,14 +368,19 @@ function buildLlms (hexo, locals, routes) {
   // Topic index: a curated one-liner per subject is more useful to an agent than a
   // bare tag cloud, and it is the only view that says what a tag is *about*.
   if (ai.llms_txt.topics !== false && curatedAi.topics.length) {
-    const tagDir = hexo.config.tag_dir || 'tags'
+    const tags = hexo.extend.generator.get('tag') && locals.tags ? locals.tags.toArray() : []
+    const tagPaths = new Map(tags.map(tag => [tag.name, tag.path]))
+    const entries = []
+    const notes = []
+    for (const topic of curatedAi.topics) {
+      const path = tagPaths.get(topic.name)
+      if (path) entries.push({ name: topic.name, url: absoluteFor(hexo, path), description: topic.description })
+      else notes.push(`- ${escapeMd(topic.name)}${topic.description ? `: ${escapeMd(topic.description)}` : ''}`)
+    }
     extraSections.push({
       title: i18n(hexo, 'ai_readable.llms.heading_topics', 'Topics'),
-      entries: curatedAi.topics.map(topic => ({
-        name: topic.name,
-        url: absoluteFor(hexo, `${tagDir}/${topic.name}/`),
-        description: topic.description
-      }))
+      entries,
+      body: notes.join('\n')
     })
   }
 
@@ -403,15 +412,10 @@ function buildLlms (hexo, locals, routes) {
   if (curatedAi.topics.length) {
     background.push(`${i18n(hexo, 'ai_readable.llms.topics_label', 'Main topics')}: ${curatedAi.topics.map(topic => topic.name).join(', ')}.`)
   }
-  background.push(i18n(
-    hexo,
-    'ai_readable.llms.markdown_note',
-    'Every listed page has a Markdown version at the same URL with `/index.md` appended; those links are used below so agents read clean text instead of HTML.'
-  ))
 
   const model = buildLlmsModel({
     siteTitle: siteTitle(hexo),
-    summary: summaryFor(hexo, ai),
+    summary: curatedAi.tagline || summaryFor(hexo, ai),
     background,
     featured: featuredEntries,
     recent: recentEntries,
@@ -470,10 +474,22 @@ function yieldToExternalGenerator (hexo, kind, conflicts) {
   return true
 }
 
+function hasArchive (hexo, locals) {
+  return !!(hexo.extend.generator.get('archive') && locals.posts?.length)
+}
+
+function publishedSitemapPath (hexo, cfg) {
+  const { provider, path } = cfg.discovery.sitemap
+  if (provider === 'disabled') return null
+  if (cfg.discovery.enable && provider === 'panda') return path
+  return hasSiteAsset(hexo, path) || detectGeneratorConflicts(hexo, 'sitemap').length ? path : null
+}
+
 function buildSitemap (hexo, locals, routes) {
   const cfg = discoveryConfig(hexo)
   const sitemap = cfg.discovery.sitemap
   if (!cfg.discovery.enable || sitemap.provider !== 'panda') return
+  if (hasSiteAsset(hexo, sitemap.path)) return
   if (yieldToExternalGenerator(hexo, 'sitemap', detectGeneratorConflicts(hexo, 'sitemap'))) return
   const index = contentIndex(hexo, locals)
   const entries = sitemapTargets(index, hexo.theme.config).map(item => ({
@@ -508,8 +524,9 @@ function buildSitemap (hexo, locals, routes) {
   // a path owned by the site's own page is already listed from the model.
   // Listing pages. They have no content model entry, so nothing above can find them,
   // and `hexo-generator-index` may serve the front page from a custom path.
-  const archiveDir = hexo.config.archive_dir || 'archives'
-  entries.push({ url: absoluteFor(hexo, `${archiveDir}/`), lastmod: null })
+  if (hasArchive(hexo, locals)) {
+    entries.push({ url: absoluteFor(hexo, `${hexo.config.archive_dir || 'archives'}/`), lastmod: null })
+  }
   // `hexo-generator-index` publishes the paginated list at `index_generator.path`
   // (served from the root when unset). Its route is not registered yet at this point
   // in the build, so check the generator itself instead of the route table.
@@ -539,11 +556,13 @@ function buildRobots (hexo, routes) {
   const cfg = discoveryConfig(hexo)
   const robots = cfg.discovery.robots
   if (!cfg.discovery.enable || robots.provider !== 'panda') return
+  if (hasSiteAsset(hexo, robots.path)) return
 
   // A second generator for robots.txt wins when the site did not ask for ours.
   if (yieldToExternalGenerator(hexo, 'robots', detectGeneratorConflicts(hexo, 'robots'))) return
 
-  const sitemapUrl = robots.sitemap ? sitemapUrlFor(hexo.config.url, cfg.discovery.sitemap.path) : null
+  const sitemapPath = publishedSitemapPath(hexo, cfg)
+  const sitemapUrl = robots.sitemap && sitemapPath ? sitemapUrlFor(hexo.config.url, sitemapPath) : null
   routes.push({
     path: robots.path,
     data: renderRobots({
@@ -567,14 +586,11 @@ function portalData (hexo, locals) {
   const ai = cfg.ai
   if (!ai.enable || !ai.portal.enable) return null
   const index = contentIndex(hexo, locals)
-  const mirrorCfg = ai.markdown.enable ? ai.markdown : { path_style: ai.markdown.path_style }
-
   const linkFor = (item) => {
-    const mirror = mirrorForRoute(hexo, mirrorCfg, item.path)
     return {
       title: item.title,
       url: url_for.call(hexo, item.path),
-      markdown: mirror ? url_for.call(hexo, mirror.route) : null,
+      markdown: mirrorFor(item.path),
       date: item.dateText,
       description: item.description
     }
@@ -582,24 +598,25 @@ function portalData (hexo, locals) {
 
   const curatedAi = curated(hexo)
   const featured = resolveFeatured(hexo, index, curatedAi.featured)
-    .map(({ item }) => linkFor(item))
+    .map(({ item, description }) => ({ ...linkFor(item), description: description || item.description }))
 
-  const recent = index.articles.slice(0, 10).map(linkFor)
+  const recent = index.articles.filter(item => item.ai).slice(0, curatedAi.latestCount ?? 10).map(linkFor)
 
-  const series = index.series.map(seriesItem => ({
+  const series = index.series.filter(item => item.ai).map(seriesItem => ({
     title: seriesItem.title,
     url: url_for.call(hexo, seriesItem.path),
     description: seriesItem.description,
-    members: seriesItem.members.map(linkFor)
+    members: seriesItem.members.filter(item => item.ai).map(linkFor)
   }))
 
   const resources = []
   if (ai.llms_txt.enable) {
     resources.push({ label: 'llms.txt', url: url_for.call(hexo, ai.llms_txt.path), note: i18n(hexo, 'ai_readable.portal.resource_llms_note', 'LLM content index') })
   }
-  resources.push({ label: 'sitemap.xml', url: url_for.call(hexo, cfg.discovery.sitemap.path), note: i18n(hexo, 'ai_readable.portal.resource_sitemap_note', 'Search engine index') })
+  const sitemapPath = publishedSitemapPath(hexo, cfg)
+  if (sitemapPath) resources.push({ label: sitemapPath, url: url_for.call(hexo, sitemapPath), note: i18n(hexo, 'ai_readable.portal.resource_sitemap_note', 'Search engine index') })
   const feed = (hexo.theme.config && hexo.theme.config.feed) || {}
-  if (feed.enable !== false) resources.push({ label: 'Atom', url: url_for.call(hexo, feed.path || 'atom.xml'), note: i18n(hexo, 'ai_readable.portal.resource_feed_note', 'Posts and memos feed') })
+  if (feed.enable === true) resources.push({ label: 'Atom', url: url_for.call(hexo, feed.path || 'atom.xml'), note: i18n(hexo, 'ai_readable.portal.resource_feed_note', 'Posts and memos feed') })
   if (ai.rights.enable) resources.push({ label: i18n(hexo, 'ai_readable.rights.title', 'Copyright policy'), url: url_for.call(hexo, ai.rights.path), note: i18n(hexo, 'ai_readable.portal.resource_rights_note', 'Licensing and AI usage') })
 
   return {
@@ -637,7 +654,7 @@ function rightsData (hexo) {
     siteTitle: siteTitle(hexo),
     aiTraining: ai.rights.ai_training,
     aiUse: ai.rights.ai_use,
-    extra: ai.rights.extra,
+    extra: ai.rights.extra ? hexo.render.renderSync({ text: ai.rights.extra, engine: 'markdown' }) : null,
     llmsUrl: ai.llms_txt.enable ? url_for.call(hexo, ai.llms_txt.path) : null,
     portalUrl: ai.portal.enable ? url_for.call(hexo, ai.portal.path) : null
   }
@@ -678,7 +695,7 @@ function buildPages (hexo, locals, routes) {
     routes.push({
       path: `${rootPath(portalCfg.path)}index.html`,
       layout: ['ai-portal', 'page'],
-      data: { ...portal, layout: 'ai-portal', type: 'ai_portal', comments: false }
+      data: { ...portal, layout: 'ai-portal', type: 'ai_portal', comments: false, aside: false }
     })
   }
   const rights = rightsData(hexo)
@@ -726,8 +743,11 @@ hexo.on('generateBefore', () => {
 hexo.extend.filter.register('before_generate', function () {
   const cfg = discoveryConfig(hexo)
   const sitemap = cfg.discovery.sitemap
-  if (!cfg.discovery.enable || sitemap.provider !== 'external' || !sitemap.exclude_noindex) return
-  const { flags, createMatcher } = require('./lib/content-collect')
+  if (!cfg.discovery.enable || !sitemap.exclude_noindex) return
+  const usesExternal = sitemap.provider === 'external' ||
+    (sitemap.provider === 'panda' && !providerIsExplicit(hexo, 'sitemap') && detectGeneratorConflicts(hexo, 'sitemap').length)
+  if (!usesExternal) return
+  const { createMatcher } = require('./lib/content-collect')
   const { parseSeriesIndex } = require('./lib/blog-series')
   const excludes = createMatcher(sitemap.exclude)
   const pending = []
@@ -759,7 +779,21 @@ hexo.extend.generator.register('panda-discovery', function (locals) {
   buildSitemap(this, locals, routes)
   buildRobots(this, routes)
   buildPages(this, locals, routes)
+  const ownedRoutes = new Set()
+  for (const route of routes) {
+    const path = this.route.format(route.path)
+    if (path.split('/').some(part => part === '.' || part === '..' || part.includes(':'))) {
+      throw new Error(`[panda] Discovery paths must stay within the generated site: ${JSON.stringify(route.path)}`)
+    }
+    if (ownedRoutes.has(path)) throw new Error(`[panda] Discovery outputs share the route ${JSON.stringify(path)}; configure distinct paths.`)
+    ownedRoutes.add(path)
+  }
   return routes
+})
+
+hexo.extend.helper.register('page_robots_directive', page => {
+  if (!flags(page).noindex) return null
+  return typeof page.robots === 'string' && /\bnoindex\b/i.test(page.robots) ? page.robots : 'noindex'
 })
 
 // Head links: rel="alternate" text/markdown for the current page + rel="describedby"
@@ -769,29 +803,22 @@ hexo.extend.helper.register('ai_discovery_links', function () {
   const cfg = discoveryConfig(hexo)
   if (!cfg.ai.enable) return []
   const page = this.page || {}
+  const eligibility = flags(page)
   const routePath = rootPath(page.path || this.path)
   const links = []
-  if (cfg.ai.markdown.enable && markerIsPublic(page)) {
+  if (cfg.ai.markdown.enable && eligibility.markdown) {
     // Ask the build's mirror map, not the path arithmetic: a page that was skipped
     // (listing, noindex, excluded) must not advertise a file that does not exist.
     const mirrorUrl = mirrorFor(routePath)
-    if (hasMirrorUrl(mirrorUrl)) {
+    if (mirrorUrl) {
       links.push({ rel: 'alternate', type: 'text/markdown', href: mirrorUrl, title: page.title || null })
     }
   }
-  if (cfg.ai.llms_txt.enable && markerIsPublic(page)) {
+  if (cfg.ai.llms_txt.enable && eligibility.ai) {
     links.push({ rel: 'describedby', type: 'text/plain', href: url_for.call(hexo, cfg.ai.llms_txt.path) })
   }
   return links
 })
-
-function markerIsPublic (page) {
-  if (!page) return false
-  if (page.noindex === true) return false
-  if (page.ai_readable === false) return false
-  if (page.markdown === false) return false
-  return true
-}
 
 hexo.extend.helper.register('ai_discovery_enabled', function (kind) {
   const cfg = discoveryConfig(hexo)

@@ -59,7 +59,7 @@ social:
 # Image Settings
 # --------------------------------------
 
-favicon: /img/favicon.png
+favicon: /img/panda-icon.svg
 
 avatar:
   img: /img/panda-icon.svg
@@ -447,11 +447,11 @@ wordcount:
   # Display the total word count of the website in aside's webinfo
   total_wordcount: true
 
-# Busuanzi count for PV / UV in site
+# Busuanzi visitor counts (optional third-party tracking)
 busuanzi:
-  site_uv: true
-  site_pv: true
-  page_pv: true
+  site_uv: false
+  site_pv: false
+  page_pv: false
 
 # --------------------------------------
 # Math
@@ -1060,8 +1060,8 @@ structured_data:
   # Format: ['name1', 'name2']
   alternate_name:
 
-# Add the vendor prefixes to ensure compatibility
-css_prefix: true
+# Generate legacy vendor prefixes; modern browsers do not need them
+css_prefix: false
 
 # Inject
 # Insert the code to head (before '</head>' tag) and the bottom (before '</body>' tag)
@@ -1155,8 +1155,6 @@ home_about:
 
 # Memos (shuoshuo) enhancements
 # Page setup: create source/memos/index.md with `type: shuoshuo`, data in source/_data/shuoshuo.yml
-# A built-in sample memo ("Hello, it's my blog!") demonstrates the feature until
-# you write your first entry in the data file
 memos:
   enable: true
   # Path of the memos page (used by the latest-memo card link and standalone pages)
@@ -1226,7 +1224,7 @@ link_target_blank: true
 # --------------------------------------
 # Site Discovery (robots.txt / sitemap.xml)
 # --------------------------------------
-# All new capabilities are OFF by default so upgrading changes nothing.
+# Both generators are enabled by default since 1.2.0.
 # See README "AI-readable & site discovery" for the full reference.
 site_discovery:
   # Enable or disable both discovery generators

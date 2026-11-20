@@ -1,27 +1,34 @@
-#sidebar
-  #menu-mask
-    position: fixed
-    z-index: 102
-    display: none
-    width: 100%
-    height: 100%
-    background: alpha($dark-black, .8)
+html:has(#sidebar-menus[open], .code-fullpage-dialog[open])
+  overflow: hidden
 
+#sidebar
   #sidebar-menus
     position: fixed
-    top: 0
-    right: -($sidebar-width)
-    z-index: 103
+    inset: 0 0 0 auto
     overflow-x: hidden
-    overflow-y: scroll
+    overflow-y: auto
+    overscroll-behavior: contain
+    margin: 0
     padding-left: 5px
     width: $sidebar-width
     height: 100%
+    max-height: none
+    border: 0
     background: var(--sidebar-bg)
-    transition: all .5s
+    color: var(--font-color)
 
-    &.open
-      transform: translate3d(-100%, 0, 0)
+    &::backdrop
+      background: alpha($dark-black, .8)
+
+    .drawer-close
+      display: block
+      margin-left: auto
+      padding: .15em .6em
+      border: 0
+      background: none
+      color: inherit
+      font-size: 1.5em
+      cursor: pointer
 
     & > .avatar-img
       margin: 20px auto
@@ -62,6 +69,10 @@
           text-align: left
 
         &.group
+          width: 100%
+          border: 0
+          background: none
+          text-align: left
           & > i:last-child
             position: absolute
             top: .6em
@@ -83,6 +94,7 @@
         margin: 0
         padding-left: 25px
         max-height: 0
+        visibility: hidden
         list-style: none
         opacity: 0
         transition: transform .3s ease, opacity .3s ease, max-height .3s ease
@@ -92,6 +104,7 @@
 
     // 當父元素沒有 .hide 類時，顯示子目錄
     .site-page.group:not(.hide) + .menus_item_child
+      visibility: visible
       max-height: 1000px
       opacity: 1
       transform: scaleY(1)

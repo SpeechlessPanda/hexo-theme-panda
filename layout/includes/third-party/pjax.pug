@@ -20,7 +20,7 @@ script.
     const pjaxSelectors = !{JSON.stringify(pjaxSelectors)}
 
     window.pjax = new Pjax({
-      elements: '!{pjaxExclude}',
+      elements: !{safeJSON(pjaxExclude)},
       selectors: pjaxSelectors,
       cacheBust: false,
       analytics: !{theme.google_analytics ? true : false},
@@ -42,10 +42,6 @@ script.
       // removeEventListener
       btf.removeGlobalFnEvent('pjaxSendOnce')
       btf.removeGlobalFnEvent('themeChange')
-
-      // reset readmode
-      const $bodyClassList = document.body.classList
-      if ($bodyClassList.contains('read-mode')) $bodyClassList.remove('read-mode')
 
       triggerPjaxFn(window.globalFn.pjaxSend)
     })

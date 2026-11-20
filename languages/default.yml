@@ -2,6 +2,12 @@ footer:
   framework: Framework
   theme: Theme
 
+nav:
+  menu: Navigation menu
+  close: Close navigation menu
+  code_fullscreen: Toggle full-screen code
+  exit_readmode: Exit reading mode
+
 copy:
   success: Copy Successful
   error: Copy Failed
@@ -178,7 +184,6 @@ ai_readable:
     summary_fallback: Public articles, series and resources.
     author_fallback: 'Maintained by %s.'
     topics_label: Main topics
-    markdown_note: Each page listed here also has a Markdown version at the same URL with `/index.md` appended. Those links are used below so agents read clean text instead of HTML.
     resource_sitemap: Every indexable page
     resource_feed: Latest articles and memos
     resource_archive: Archives
@@ -194,9 +199,6 @@ ai_readable:
     license_text_prefix: Unless stated otherwise, articles are licensed under
     license_text_suffix: .
     license_inherited: This value is inherited from the theme's `post_copyright` setting.
-    license_attribution: Attribution is required; link back to the original article.
-    license_noncommercial: Commercial use requires the author's permission.
-    license_sharealike: Derivative works must keep the same license.
     license_none: No site-wide license is configured; assume all rights reserved and ask the author.
     commercial: Commercial use
     commercial_text: For commercial use, translation, or republication, contact the author for written permission first.

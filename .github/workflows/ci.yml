@@ -24,10 +24,8 @@ jobs:
           node-version: ${{ matrix.node }}
 
       - name: Install test toolchain
-        # The theme itself has no runtime dependencies. The tests build throwaway
-        # sites that need the renderers, and the discovery fixture declares the index,
-        # archive and taxonomy generators, so install those too — Hexo only loads
-        # plugins a site's package.json lists.
+        # Tests declare these generators and Markdown renderer in temporary
+        # sites. Install Pug/Stylus explicitly for older Hexo plugin loaders.
         run: |
           npm install --no-save \
             hexo@${{ matrix.hexo }} \

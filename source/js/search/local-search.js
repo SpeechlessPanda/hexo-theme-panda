@@ -16,36 +16,28 @@ class LocalSearch {
 
   _processKeywords (keywords) {
     if (this._processedKeywords) return this._processedKeywords
-    this._processedKeywords = keywords.map(word => {
+    this._processedKeywords = keywords.map(term => {
+      let word = term
       if (this.unescape) {
-        this._unescapeDiv.innerText = word
-        return this._unescapeDiv.innerHTML
+        this._unescapeDiv.textContent = term
+        word = this._unescapeDiv.innerHTML
       }
-      return word
-    })
+      return word ? { word, term, pattern: new RegExp(word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'giu') } : null
+    }).filter(Boolean)
     return this._processedKeywords
   }
 
-  getIndexByWord (words, text, caseSensitive = false) {
+  getIndexByWord (words, text) {
     const index = []
     const included = new Set()
-    const processedWords = this._processKeywords(words)
-
-    if (!caseSensitive) {
-      text = text.toLowerCase()
-    }
-    processedWords.forEach((word, i) => {
-      const wordLen = word.length
-      if (wordLen === 0) return
-      let startPosition = 0
-      let position = -1
-      const searchWord = caseSensitive ? word : word.toLowerCase()
-      while ((position = text.indexOf(searchWord, startPosition)) > -1) {
-        index.push({ position, word })
-        included.add(words[i])
-        startPosition = position + wordLen
+    // Search the original text so Unicode case folding cannot change offsets.
+    for (const { word, term, pattern } of this._processKeywords(words)) {
+      let match
+      while ((match = pattern.exec(text)) !== null) {
+        index.push({ position: match.index, word })
+        included.add(term)
       }
-    })
+    }
     // Sort index by position of keyword
     index.sort((left, right) => {
       if (left.position !== right.position) {
@@ -57,37 +49,25 @@ class LocalSearch {
   }
 
   // Merge hits into slices
-  mergeIntoSlice (start, end, index) {
-    let item = index[0]
-    let { position, word } = item
+  mergeIntoSlice (start, end, index, next = 0) {
     const hits = []
     const count = new Set()
-    while (position + word.length <= end && index.length !== 0) {
-      count.add(word)
-      hits.push({
-        position,
-        length: word.length
-      })
+    while (next < index.length) {
+      const { position, word } = index[next]
       const wordEnd = position + word.length
-
-      // Move to next position of hit
-      index.shift()
-      while (index.length !== 0) {
-        item = index[0]
-        position = item.position
-        word = item.word
-        if (wordEnd > position) {
-          index.shift()
-        } else {
-          break
-        }
-      }
+      if (wordEnd > end) break
+      count.add(word)
+      hits.push({ position, length: word.length })
+      do {
+        next++
+      } while (next < index.length && index[next].position < wordEnd)
     }
     return {
       hits,
       start,
       end,
-      count: count.size
+      count: count.size,
+      next
     }
   }
 
@@ -96,11 +76,11 @@ class LocalSearch {
     const parts = []
     let index = slice.start
     for (const { position, length } of slice.hits) {
-      parts.push(val.substring(index, position))
+      parts.push(btf.escapeHTML(val.substring(index, position)))
       index = position + length
-      parts.push(`<mark class="search-keyword">${val.substring(position, position + length)}</mark>`)
+      parts.push(`<mark class="search-keyword">${btf.escapeHTML(val.substring(position, position + length))}</mark>`)
     }
-    parts.push(val.substring(index, slice.end))
+    parts.push(btf.escapeHTML(val.substring(index, slice.end)))
     return parts.join('')
   }
 
@@ -127,13 +107,13 @@ class LocalSearch {
       }
 
       let slicesOfContent = []
-      while (indexOfContent.length !== 0) {
-        const item = indexOfContent[0]
-        const { position } = item
-        // Cut out 120 characters. The maxlength of .search-input is 80.
+      for (let next = 0; next < indexOfContent.length;) {
+        const { position, word } = indexOfContent[next]
         const start = Math.max(0, position - 20)
-        const end = Math.min(content.length, position + 100)
-        slicesOfContent.push(this.mergeIntoSlice(start, end, indexOfContent))
+        const end = Math.min(content.length, position + Math.max(100, word.length))
+        const slice = this.mergeIntoSlice(start, end, indexOfContent, next)
+        slicesOfContent.push(slice)
+        next = slice.next
       }
 
       // Sort slices in content by included keywords' count and hits' count
@@ -154,13 +134,15 @@ class LocalSearch {
 
       let resultItem = ''
 
-      url = new URL(url, location.origin)
-      url.searchParams.append('highlight', highlightParam)
+      const target = btf.httpUrl(url, location.origin)
+      if (!target) return
+      target.searchParams.set('highlight', highlightParam)
+      const href = btf.escapeHTML(target.href)
 
       if (slicesOfTitle.length !== 0) {
-        resultItem += `<li class="local-search-hit-item"><a href="${url.href}"><span class="search-result-title">${this.highlightKeyword(title, slicesOfTitle[0])}</span>`
+        resultItem += `<li class="local-search-hit-item"><a href="${href}"><span class="search-result-title">${this.highlightKeyword(title, slicesOfTitle[0])}</span>`
       } else {
-        resultItem += `<li class="local-search-hit-item"><a href="${url.href}"><span class="search-result-title">${title}</span>`
+        resultItem += `<li class="local-search-hit-item"><a href="${href}"><span class="search-result-title">${btf.escapeHTML(title)}</span>`
       }
 
       slicesOfContent.forEach(slice => {
@@ -201,7 +183,6 @@ class LocalSearch {
         this.datas = this.datas.filter(data => data.title).map(data => {
           data.title = data.title.trim()
           data.content = data.content ? data.content.trim().replace(/<[^>]+>/g, '') : ''
-          data.url = decodeURIComponent(data.url).replace(/\/{2,}/g, '/')
           return data
         })
         // Remove loading animation
@@ -239,10 +220,11 @@ class LocalSearch {
     const params = new URL(location.href).searchParams.get('highlight')
     const keywords = params ? params.split(' ') : []
     if (!keywords.length || !body) return
+    this._processedKeywords = null
     const walk = document.createTreeWalker(body, NodeFilter.SHOW_TEXT, null)
     const allNodes = []
     while (walk.nextNode()) {
-      if (!walk.currentNode.parentNode.matches('button, select, textarea, .mermaid')) allNodes.push(walk.currentNode)
+      if (!walk.currentNode.parentNode.closest('button, select, textarea, .mermaid, script, style')) allNodes.push(walk.currentNode)
     }
     allNodes.forEach(node => {
       const [indexOfNode] = this.getIndexByWord(keywords, node.nodeValue)
@@ -275,7 +257,7 @@ window.addEventListener('load', () => {
 
   // Pagination variables (only initialize if pagination is enabled)
   let currentPage = 0
-  const hitsPerPage = pagination.hitsPerPage || 10
+  const hitsPerPage = pagination?.hitsPerPage || 10
 
   let currentResultItems = []
 

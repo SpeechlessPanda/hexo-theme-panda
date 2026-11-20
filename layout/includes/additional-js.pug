@@ -5,11 +5,11 @@ div
 
   //- Panda: open article/memo links in a new tab
   if theme.link_target_blank
-    script(src=url_for('/js/fix-link-target.js') data-pjax)
+    script(src=url_for('/js/fix-link-target.js'))
 
   //- Panda: reveal collapsed targets and copy heading permalinks
   if theme.anchor.enable !== false
-    script(src=url_for(theme.asset.anchor) data-pjax)
+    script(src=url_for(theme.asset.anchor))
 
   if theme.translate.enable
     script(src=url_for(theme.asset.translate))

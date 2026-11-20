@@ -155,7 +155,7 @@ function mirrorRoutePath (routePath, pathStyle) {
   }
   if (isIndex) {
     const dir = p.replace(/index\.html?$/i, '')
-    return `${dir.endsWith('/') ? dir : `${dir}/`}index.md`
+    return `${dir ? `${dir.replace(/\/$/, '')}/` : ''}index.md`
   }
   return `${p}.md`
 }

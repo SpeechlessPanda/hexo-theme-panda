@@ -4,7 +4,7 @@ const fs = require('fs')
 const os = require('os')
 const path = require('path')
 
-const blogRoot = path.resolve('D:/project/blog')
+const blogRoot = path.resolve(process.env.PANDA_HEXO_SITE || path.join(__dirname, '..'))
 const themeRoot = path.resolve(__dirname, '..')
 const Module = require('module')
 process.env.NODE_PATH = [path.join(themeRoot, 'node_modules'), path.join(blogRoot, 'node_modules'), process.env.NODE_PATH || '']

@@ -2,6 +2,12 @@ footer:
   framework: フレームワーク
   theme: テーマ
 
+nav:
+  menu: ナビゲーションメニュー
+  close: ナビゲーションメニューを閉じる
+  code_fullscreen: コードの全画面表示を切り替える
+  exit_readmode: リーディングモードを終了する
+
 copy:
   success: コピー成功
   error: コピー失敗
@@ -178,7 +184,6 @@ ai_readable:
     summary_fallback: 公開記事・シリーズ・リソース。
     author_fallback: '%s が運営しています。'
     topics_label: 主なテーマ
-    markdown_note: ここに挙げた各ページには、同じ URL に `/index.md` を付けた Markdown 版があります。以下のリンクは Agent が HTML を解析せずに本文を読めるようになっています。
     resource_sitemap: インデックス可能な全ページ
     resource_feed: 最新記事とメモ
     resource_archive: アーカイブ
@@ -194,9 +199,6 @@ ai_readable:
     license_text_prefix: '特に明記がない限り、記事は次のライセンスで提供されます:'
     license_text_suffix: 。
     license_inherited: この値はテーマの `post_copyright` 設定を継承しています。
-    license_attribution: 出典表示が必要です。元記事へのリンクを添えてください。
-    license_noncommercial: 商用利用には著者の許諾が必要です。
-    license_sharealike: 二次的著作物も同じライセンスを継承する必要があります。
     license_none: サイト全体のライセンスは未設定です。全権利留保とみなし、著者に確認してください。
     commercial: 商用利用
     commercial_text: 商用利用・翻訳・再配布の前に、著者へ書面での許諾を求めてください。

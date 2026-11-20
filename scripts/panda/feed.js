@@ -51,7 +51,8 @@ function buildPostEntry (post, authorXml, cfg, __) {
   // Update long after publish -> fresh id/link via stub page (readers can't collapse it);
   // otherwise keep the stable permalink identity to avoid false notifications
   const meaningfulUpdate = explicitUpdated(post) && (updated - published) > notifyMs
-  const updateUrl = meaningfulUpdate ? `${post.permalink}u/${contentStamp(post)}/` : null
+  const stamp = meaningfulUpdate ? contentStamp(post) : null
+  const updateUrl = stamp ? `${post.permalink}u/${stamp}/` : null
   const id = updateUrl || post.permalink
   const categories = [
     ...(post.categories ? post.categories.toArray() : []),
@@ -62,7 +63,7 @@ function buildPostEntry (post, authorXml, cfg, __) {
   return {
     published,
     updated,
-    stubRoute: updateUrl ? { path: `${post.path}u/${contentStamp(post)}/index.html`, data: updateStubHtml(post, __) } : null,
+    stubRoute: stamp ? { path: `${post.path}u/${stamp}/index.html`, data: updateStubHtml(post, __) } : null,
     xml: `<entry>${authorXml}${categories}<content type="html">${cdata(content)}</content>` +
       `<id>${escapeXml(id)}</id><link href="${escapeXml(id)}"/>` +
       `<published>${published.toISOString()}</published>` +
@@ -145,7 +146,6 @@ hexo.extend.generator.register('panda-atom-feed', function (locals) {
     `<id>${escapeXml(siteUrl)}</id>` +
     `<link href="${escapeXml(siteUrl)}" rel="alternate"/>` +
     `<link href="${escapeXml(siteUrl + feedPath)}" rel="self"/>` +
-    (config.author ? `<rights>All rights reserved ${new Date().getFullYear()}, ${escapeXml(config.author)}</rights>` : '') +
     `<subtitle>${escapeXml(config.subtitle || config.description || '')}</subtitle>` +
     `<title>${escapeXml(config.title)}</title>` +
     `<updated>${feedUpdated.toISOString()}</updated>` +

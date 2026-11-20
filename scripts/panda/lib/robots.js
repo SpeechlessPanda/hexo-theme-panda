@@ -108,20 +108,22 @@ function renderRobots (options = {}) {
 
   const blocks = []
 
-  // Site-wide group first: the fallback every RFC 9309 crawler uses. `permissive`
-  // stops here — one wildcard group and nothing AI-specific.
-  blocks.push(groupBlock('*', ['Allow: /', ...allow.map(p => `Allow: ${p}`), ...disallow.map(p => `Disallow: ${p}`)]))
+  const siteRules = [...allow.map(p => `Allow: ${p}`), ...disallow.map(p => `Disallow: ${p}`)]
+  if (policy !== 'custom') {
+    blocks.push(groupBlock('*', siteRules.length ? siteRules : ['Allow: /']))
+  }
 
   if (policy === 'balanced') {
+    const crawlRules = siteRules.length ? siteRules : ['Allow: /']
     blocks.push([
-      '# Search indexing: allowed, so the site stays discoverable.',
-      groupBlock(SEARCH_TOKENS, ['Allow: /', ...allow.map(p => `Allow: ${p}`), ...disallow.map(p => `Disallow: ${p}`)])
+      '# Search indexing: allowed unless restricted in the site rules.',
+      groupBlock(SEARCH_TOKENS, crawlRules)
     ].filter(Boolean).join('\n'))
 
     blocks.push([
       '# User-triggered fetches (a person asking a chat assistant about this page):',
       '# allowed, because the answer links back to the source.',
-      groupBlock(USER_TRIGGERED_TOKENS, ['Allow: /', ...disallow.map(p => `Disallow: ${p}`)])
+      groupBlock(USER_TRIGGERED_TOKENS, crawlRules)
     ].filter(Boolean).join('\n'))
 
     blocks.push([

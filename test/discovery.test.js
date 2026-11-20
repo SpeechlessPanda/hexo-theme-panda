@@ -101,32 +101,6 @@ describe('removed config keys', () => {
   })
 })
 
-describe('explicit provider intent', () => {
-  const { parseProviders } = require('../scripts/panda/lib/explicit-config')
-
-  it('reads a block mapping', () => {
-    const got = parseProviders('site_discovery:\n  robots:\n    provider: panda\n  sitemap:\n    provider: external\n')
-    assert.deepEqual(got, { robots: 'panda', sitemap: 'external' })
-  })
-
-  it('reads a flow mapping', () => {
-    assert.deepEqual(parseProviders('site_discovery:\n  robots: { provider: panda }\n'), { robots: 'panda', sitemap: null })
-  })
-
-  it('reports nothing when only unrelated keys are set', () => {
-    assert.deepEqual(parseProviders('site_discovery:\n  robots:\n    policy: balanced\n'), { robots: null, sitemap: null })
-  })
-
-  it('ignores commented-out configuration', () => {
-    assert.deepEqual(parseProviders('# site_discovery:\n#   robots:\n#     provider: panda\n'), { robots: null, sitemap: null })
-  })
-
-  it('keeps a provider that follows a nested list', () => {
-    const text = 'site_discovery:\n  robots:\n    custom_groups:\n      - user_agents: [A]\n    provider: disabled\n'
-    assert.equal(parseProviders(text).robots, 'disabled')
-  })
-})
-
 describe('config normalization', () => {
   it('generates every surface by default so an empty config still gets all seven', () => {
     const cfg = normalizeDiscoveryConfig({})
@@ -498,7 +472,7 @@ describe('robots.txt rendering', () => {
     assert.doesNotMatch(text, /GPTBot|Google-Extended|__usage_ai-training|OAI-SearchBot/)
   })
 
-  it('emits only the wildcard group plus custom groups in custom mode', () => {
+  it('emits no implicit wildcard group in custom mode', () => {
     const text = renderRobots({
       ...base(),
       policy: 'custom',
@@ -507,6 +481,7 @@ describe('robots.txt rendering', () => {
     assert.match(text, /^# Partner rules$/m)
     assert.match(text, /User-agent: SomeBot\nAllow: \/\nDisallow: \/private\/\nContent-Usage: train-ai=n/)
     assert.doesNotMatch(text, /GPTBot/)
+    assert.doesNotMatch(text, /^User-agent: \*$/m)
   })
 
   it('honours usage_ai_training allow and omit', () => {
@@ -526,7 +501,13 @@ describe('robots.txt rendering', () => {
     const text = renderRobots({ ...base(), allow: ['/public/'], disallow: ['/drafts/', '/tmp/'] })
     const start = text.indexOf('User-agent: *')
     const wildcard = text.slice(start, text.indexOf('\n\n', start))
-    assert.match(wildcard, /Allow: \/\nAllow: \/public\/\nDisallow: \/drafts\/\nDisallow: \/tmp\//)
+    assert.match(wildcard, /Allow: \/public\/\nDisallow: \/drafts\/\nDisallow: \/tmp\//)
+  })
+
+  it('does not negate an explicit site-wide disallow with an automatic allow', () => {
+    const text = renderRobots({ ...base(), disallow: ['/'] })
+    assert.match(text, /^User-agent: \*\nDisallow: \/$/m)
+    assert.doesNotMatch(text, /^Allow: \/$/m)
   })
 
   it('requires an absolute Sitemap URL', () => {
@@ -892,10 +873,11 @@ describe('verify checks', () => {
   it('catches a noindex page leaking into the sitemap', () => {
     const files = new Map(good)
     files.set('sitemap.xml', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n<url><loc>https://example.com/blog/secret/</loc></url>\n</urlset>')
+    files.set('secret/index.html', '<html><head><meta name="robots" content="noindex"><link rel="describedby" href="/blog/llms.txt"></head></html>')
     const outcome = verifyDiscovery({ files, expected })
     assert.equal(outcome.ok, false)
     const sitemap = outcome.results.find(r => r.id === 'sitemap.xml')
-    assert.match(sitemap.detail, /no generated page/)
+    assert.match(sitemap.detail, /lists a noindex URL/)
   })
 
   it('catches front matter and template syntax left in a mirror', () => {

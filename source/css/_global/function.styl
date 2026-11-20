@@ -166,7 +166,7 @@ if hexo-config('enter_transitions')
     animation: ribbon_to_show 4s
 
   #sidebar-menus
-    &.open
+    &[open]
       for i in 1 2 3 4
         > :nth-child({i})
           animation: sidebarItem (i / 5s)

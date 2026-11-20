@@ -12,7 +12,7 @@ if theme.menu
         .menus_item
           - const [groupLabel, groupIcon, groupClass] = label.split('||').map(part => trim(part))
           - const hideClass = groupClass === 'hide' ? 'hide' : ''
-          span.site-page.group(class=hideClass)
+          button.site-page.group(type="button" class=hideClass)
             if groupIcon
               i.fa-fw(class=groupIcon)
             span= ' ' + groupLabel

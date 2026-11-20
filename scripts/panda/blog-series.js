@@ -7,7 +7,6 @@ const fs = require('fs')
 const path = require('path')
 const {
   parseSeriesIndex,
-  parseSeriesMember,
   classifyPosts,
   validateSeriesIndexes,
   buildListingItems,
@@ -66,24 +65,7 @@ hexo.extend.filter.register('before_generate', function () {
   if (!isSeriesEnabled(this.theme.config)) return
   const classified = classifyPosts(this.model('Post').toArray())
   validateSeriesIndexes(classified.series)
-  attachMemberMeta(classified, blogSeriesConfig(this.theme.config).path)
   return unpublishIndexes(classified)
-})
-
-hexo.extend.filter.register('before_post_render', function (data) {
-  if (!isSeriesEnabled(hexo.theme.config)) return data
-  const member = parseSeriesMember(data.source)
-  if (!member) return data
-  if (data.blog_series) return data
-  const classified = classifyPosts(hexo.model('Post').toArray())
-  const s = classified.series.get(member.folder)
-  if (!s) return data
-  data.blog_series = {
-    title: s.index.title,
-    path: seriesPagePath(s.folder, blogSeriesConfig(hexo.theme.config).path),
-    slug: s.folder
-  }
-  return data
 })
 
 hexo.extend.filter.register('new_post_path', function (data) {
@@ -130,8 +112,14 @@ function wrapPostGenerator () {
   const wrapped = current
   registeredWrapper = function (locals) {
     return Promise.resolve(wrapped.call(this, locals)).then(routes => {
-      if (!isSeriesEnabled(this.theme.config)) return routes
-      rewireNeighbors(classifyFromLocals(this, locals))
+      if (!isSeriesEnabled(this.theme.config) || !Array.isArray(routes)) return routes
+      // Use the actual route data. Mutating another clone of Post documents
+      // leaves the template unaware of the series badge and neighbor links.
+      const posts = routes.map(route => route?.data).filter(post => post?.source)
+      const indexes = this.model('Post').toArray().filter(post => parseSeriesIndex(post.source))
+      const classified = classifyPosts([...posts, ...indexes])
+      attachMemberMeta(classified, blogSeriesConfig(this.theme.config).path)
+      rewireNeighbors(classified)
       return routes
     })
   }

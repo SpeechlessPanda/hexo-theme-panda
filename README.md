@@ -36,10 +36,11 @@
 | Link target blank | Article/memo links open in a new tab | on |
 | Extra highlighting | fish & typst grammars registered out of the box | built-in |
 | `{% hideToggle %}` collapse | Expanded blocks get a bottom collapse bar that scrolls back to the header | on |
-| Heading anchors | Every `h1-h6` gets a stable, document-unique `id` and a clickable `#` permalink; CJK slugs, `-2`/`-3` dedupe, deep links land below the fixed nav, copying `#` yields the full URL | on || AI-readable & discovery | Optional `robots.txt` / `sitemap.xml` generators, `llms.txt`, Markdown mirrors, an `/ai/` reading guide and a `/rights/` policy page, plus `hexo panda verify-ai` | off |
+| Heading anchors | Stable heading IDs, reachable permalinks and copyable links | on |
+| AI-readable & discovery | `robots.txt`, `sitemap.xml`, `llms.txt`, Markdown mirrors, `/ai/`, `/rights/` and `hexo panda verify-ai` | on |
 
 
-Everything Butterfly offers (PJAX, dark mode, comment systems, search, word count, etc.) is kept intact and configured exactly the Butterfly way.
+Panda keeps Butterfly's configuration for the features it inherits, including PJAX, dark mode, comments, search and word count.
 
 ## 📦 Installation
 
@@ -51,7 +52,7 @@ Hexo **≥ 5.3.0**. Run this in the Hexo **site** root (not inside the theme). P
 npm install hexo-theme-panda
 ```
 
-The renderers Panda needs (`hexo-renderer-pug`, `hexo-renderer-stylus`, `hexo-util`, `moment-timezone`) are its own `dependencies`, so npm/pnpm/yarn installs them automatically. Hexo 5+ loads `hexo-theme-panda` from `node_modules`.
+The npm package installs the runtime libraries and Pug/Stylus renderers. Hexo 8 loads the renderers from the theme package. Older loaders such as Hexo 5.3 require `npm install hexo-renderer-pug hexo-renderer-stylus` in the site root.
 
 > **`themes/` wins over `node_modules`.** Hexo looks for `themes/<theme>` *first* and only falls back to `node_modules/hexo-theme-<theme>`. If you previously cloned the theme, **delete `themes/panda/`** — otherwise the stale copy keeps loading and `npm update hexo-theme-panda` silently does nothing. The build prints a warning when this happens.
 
@@ -63,6 +64,7 @@ Only if you want to hack on the theme itself.
 
 ```bash
 git clone https://github.com/SpeechlessPanda/hexo-theme-panda.git themes/panda
+npm --prefix themes/panda install
 ```
 
 Enable the theme in the site `_config.yml`:
@@ -185,7 +187,7 @@ flowchart LR
 
 - [Hexo](https://hexo.io/) **≥ 5.3.0** (8.x works; this is what the demo runs). 5.3.0 and 8.x are both covered by the build tests and by CI.
 - Node.js **≥ 22**
-- Renderers: `hexo-renderer-pug` and `hexo-renderer-stylus` (install them if your site does not already have them)
+- Use a Hexo Markdown renderer in the site. Panda's layouts and CSS use `hexo-renderer-pug` and `hexo-renderer-stylus`; declare them in the site when its Hexo version does not load theme dependencies.
 
 Optional extras, only if you turn the matching feature on:
 
@@ -202,7 +204,7 @@ Optional extras, only if you turn the matching feature on:
 ```yaml
 # _config.panda.yml
 home_about:
-  enable: true            # falls back to the post list when the source page is missing
+  enable: true            # use the standalone home page's own content if the about source is missing
   source: about/index.md
 ```
 
@@ -258,7 +260,7 @@ memos:
   comment_count: true      # build-time Giscus activity (comment or emoji reaction) -> auto-expand
 ```
 
-While the data file is missing or empty, the theme shows one built-in sample memo ("Hello, it's my blog!") on the timeline, the latest-memo card and the feed, so a fresh site demonstrates the format end to end. It disappears everywhere the moment you write your first real entry, and it is never persisted into your `db.json`.
+Without authored data, the timeline is empty and no memo card, standalone memo page or feed entry is published.
 
 Comments use Giscus (`comments.use: Giscus` + `giscus.*`, same as Butterfly). Each memo gets its own discussion via the theme's multi-iframe giscus `/widget` integration.
 
@@ -405,14 +407,14 @@ anchor:
 
 ### AI-readable & content discovery
 
-Off by default, opt-in per feature. Every output below is produced during `hexo generate`; nothing calls the network or an AI API at build time.
+Discovery and AI-readable outputs have been on by default since 1.2.0. `hexo generate` derives them locally from the site's content; no AI API is called.
 
 ```yaml
 # _config.panda.yml
 site_discovery:
   enable: true
   robots:
-    provider: external   # external | panda | disabled
+    provider: panda      # panda | external | disabled
     policy: balanced     # balanced | permissive | custom
     allow: []            # paths allowed site-wide (repeated in every allowed group)
     disallow: []         # paths disallowed site-wide, e.g. ['/memos/']
@@ -421,7 +423,7 @@ site_discovery:
     usage_ai_training: deny   # deny | allow | omit
     google_agent: omit        # omit | allow | disallow (robots does not govern it)
   sitemap:
-    provider: external   # external | panda | disabled
+    provider: panda      # panda | external | disabled
     include_tags: true
     include_categories: true
     include_pages: true
@@ -475,8 +477,8 @@ ai_readable:
 
 | Output | Default | What you get |
 |--------|---------|--------------|
-| `robots.txt` | `panda` | `panda` writes grouped rules, each intent in its own group: search crawlers allowed (`Googlebot`, `OAI-SearchBot`, `Claude-SearchBot`, `Bingbot`, `DuckDuckBot`, `Baiduspider`, `YandexBot`), user-triggered fetches allowed (`ChatGPT-User`, `Claude-User`, `Perplexity-User`), training crawlers denied (`GPTBot`, `ClaudeBot`, `Applebot-Extended`, `CCBot`, `Bytespider`, `meta-externalagent`, `Amazonbot`, `cohere-ai`, `ImagesiftBot`, `Omgili`, `TimpiBot`, `DuckAssistBot`), `Google-Extended` opt-out, and both draft signals (`__usage_ai-training` plus `Content-Usage: train-ai=n`), with an absolute `Sitemap:` line. `robots.disallow` paths are repeated in every allowed group, so a private path stays out of reach of every crawler |
-| `sitemap.xml` | `panda` | `panda` writes absolute HTTPS URLs and a real `lastmod` (never the build time), with no `changefreq`/`priority`. In `external` mode the theme still marks noindex/excluded content as `sitemap: false` so the existing plugin honours the same rules. Built-in mode always drops `noindex` content; `sitemap.exclude_noindex` only governs that external-mode marking |
+| `robots.txt` | `panda` | The balanced policy distinguishes search, user-triggered fetches and training crawlers. `robots.disallow` is a request to compliant crawlers, not access control. Explicit custom groups replace the balanced policy in `policy: custom`. A source `robots.txt` takes precedence. |
+| `sitemap.xml` | `panda` | Absolute URLs derived from the site's `url`; dates come from content, not the build clock. A source `sitemap.xml` takes precedence. In `external` mode the theme marks exclusions for the external generator when `exclude_noindex` is enabled. |
 | `llms.txt` | on with `ai_readable` | v2 structure: H1, blockquote summary, background, H2 sections (Featured / Articles / Series / Projects / Topics / Licensing / Resources). A series lists its chapters nested underneath instead of repeating them as top-level links, and links point at the Markdown mirror whenever one exists |
 | Markdown mirrors | on | `index.md` beside every post and series chapter, converted from the raw Markdown source, plus `<link rel="alternate" type="text/markdown">` and `<link rel="describedby">` in `<head>` |
 | `/ai/` | on | Human-facing reading guide: intro, topics, featured/recent posts, series, projects, and links to llms.txt / sitemap / feed / rights |
@@ -522,14 +524,14 @@ the build if a page still claims the path.
 **Front-matter opt-outs**
 
 ```yaml
-noindex: true        # out of the sitemap, llms.txt, mirrors and portal
+noindex: true        # page-level noindex plus exclusion from sitemap, llms.txt, mirrors and portal
 robots: noindex      # same, in the spelling some sites already use
 sitemap: false       # out of sitemap.xml only
 ai_readable: false   # out of llms.txt, mirrors and portal; stays in the sitemap
 markdown: false      # no Markdown mirror only
 ```
 
-**The home robot icon.** `layout/home.pug` renders your about page, where the sidebar may be switched off entirely. The compact **Follow Me** row sits under the about content and appends the AI link after your existing social icons; on that page the author card omits its own AI icon, so the icon never renders twice. Interior pages keep the icon in the author card.
+**AI reading icon.** The author card displays the robot after the other social icons, below Follow Me. If you hide the author card or sidebar on a page, the icon is not displayed.
 
 **Verify a build**
 
@@ -555,7 +557,7 @@ The command reads the generated `public/` directory (what a deploy actually ship
 
 **Why is /ai/ showing an English section title?** Section headings come from the language files. If you use a locale Panda does not ship, add `ai_readable.llms.heading_*` overrides or they fall back to English.
 
-**Where is the robot icon?** In the author card's social row, directly under the Follow Me button — the same place GitHub / Email / RSS have always been, so it works whether or not the sidebar is enabled on the home page. `portal.social_icon.show_in_author_card: false` removes it.
+**Where is the robot icon?** In the author card's social row. Set `ai_readable.portal.social_icon.show_in_author_card: false` to hide it.
 
 **Does the theme block AI crawlers by itself?** No. `robots.txt` is only produced with `robots.provider: panda` (the default), and even then it records a *preference*. Training crawlers that ignore robots.txt still read the site; use authentication or a CDN/WAF for enforcement.
 
@@ -563,7 +565,7 @@ The command reads the generated `public/` directory (what a deploy actually ship
 
 **Does the build call an AI service?** Never. Everything is derived from Hexo's models and your source Markdown; summaries fall back to titles, descriptions and front matter.
 
-**Can I exclude one post?** `noindex: true` (everywhere), `sitemap: false` (sitemap only), `ai_readable: false` (llms.txt/mirrors/portal, still in the sitemap), `markdown: false` (mirror only).
+**Can I exclude one post?** `noindex: true` excludes it from indexing and discovery outputs, not from public access. Use `sitemap: false` to omit only the sitemap entry, `ai_readable: false` to omit AI discovery, or `markdown: false` to omit only its mirror.
 
 **Known limits.** `robots.txt` is a crawling preference, not access control or privacy: it cannot stop a determined crawler. `Google-Extended` is a product control token — it affects Gemini training and grounding, never Google Search inclusion or ranking. `ChatGPT-User` and `Google-Agent` are user-triggered, so their access is governed by your CDN/WAF, not by robots rules. The AI-usage preference on `/rights/` is a statement of intent, separate from the license: CC BY-NC-SA 4.0 does not by itself settle training authorization. Only public, published, non-`noindex` content is indexed; drafts never are.
 
@@ -573,6 +575,8 @@ The command reads the generated `public/` directory (what a deploy actually ship
 # _config.panda.yml
 link_target_blank: true   # article/memo links open in a new tab (default on)
 ```
+
+Visitor counts (Busuanzi) and legacy vendor prefixes are opt-in. To restore them, set the relevant `busuanzi.site_uv`, `busuanzi.site_pv` or `busuanzi.page_pv` flags to `true`, or set `css_prefix: true` in `_config.panda.yml`. To restore JSON-LD on supported pages, set `structured_data.enable: true`.
 
 fish / typst code highlighting works out of the box.
 

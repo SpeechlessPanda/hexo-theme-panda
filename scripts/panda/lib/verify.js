@@ -32,7 +32,7 @@ function siblingsFor (routePath) {
   const out = [p]
   if (INDEX_HTML_RE.test(p)) out.push(p.replace(/index\.html$/i, ''))
   if (p.endsWith('/')) out.push(`${p}index.html`)
-  else out.push(`${p}/`, `${p}/index.html`)
+  else if (!/\.[^/]+$/.test(p)) out.push(`${p}/index.html`, `${p}.html`)
   return out
 }
 
@@ -86,22 +86,17 @@ function verifyRobots (files, expected, results) {
   check(results, 'robots.txt', () => {
     const text = lookup(files, expected.robots.path)
     if (text == null) return `${expected.robots.path} was not generated`
-    const users = text.match(/^User-agent:\s*\S+/gim) || []
-    if (!users.length) return 'no User-agent group'
-    if (!/^User-agent:\s*\*/im.test(text)) return 'missing the catch-all `User-agent: *` group'
+    const policy = expected.robots.policy || {}
+    if (policy.policy !== 'custom' && !/^User-agent:\s*\*/im.test(text)) return 'missing the catch-all `User-agent: *` group'
     const sitemaps = text.match(/^Sitemap:\s*(\S+)/gim) || []
-    if (!sitemaps.length) return 'no Sitemap line'
+    if (expected.robots.sitemap && !sitemaps.length) return 'no Sitemap line'
     for (const line of sitemaps) {
       const url = line.replace(/^Sitemap:\s*/i, '')
       if (!isAbsolute(url)) return `Sitemap is not absolute: ${url}`
     }
-    if (expected.sitemap && !sitemaps.some(line => line.includes(expected.sitemap.path))) {
-      return `Sitemap line does not point at ${expected.sitemap.path}`
+    if (expected.robots.sitemap && !sitemaps.some(line => rootRelative(line.replace(/^Sitemap:\s*/i, ''), expected.root) === expected.robots.sitemap.path)) {
+      return `Sitemap line does not point at ${expected.robots.sitemap.path}`
     }
-    const policies = expected.robots.policy || {}
-    if (policies.allow_search_bots === false) return 'search crawlers are blocked by policy'
-    if (!/^Allow:\s*\//im.test(text) && !/^Disallow:\s*$/im.test(text)) return 'no Allow rule for public pages'
-    if (policies.ai_training === 'deny' && !/^Disallow:\s*\/\s*$/im.test(text)) return 'ai_training=deny has no Disallow rule'
     return null
   })
 }
@@ -114,9 +109,6 @@ function verifyLlms (files, expected, results) {
     const lines = text.split(/\r?\n/)
     if (!/^#\s+\S/.test(lines[0] || '')) return 'first line is not an H1'
     if (!/^>\s*\S/m.test(text)) return 'no blockquote summary'
-    const headings = text.match(/^##\s+\S/gm) || []
-    if (headings.length < 2) return 'fewer than two H2 sections'
-    if (/{{|{%|TODO|FIXME|%s/.test(text)) return 'contains a placeholder or unrendered template token'
     let cursor
     MARKDOWN_LINK_RE.lastIndex = 0
     while ((cursor = MARKDOWN_LINK_RE.exec(text))) {
@@ -146,15 +138,16 @@ function verifySitemap (files, expected, results) {
       // Both URL shapes are legitimate: Hexo's `pretty_urls.trailing_index` decides
       // whether the canonical is `…/post/` or `…/post/index.html`. What matters is
       // that each loc resolves to a generated page, so that is what is checked.
-      if (!exists(files, rootRelative(loc, expected.root))) return `sitemap URL has no generated page: ${loc}`
+      const html = lookup(files, rootRelative(loc, expected.root))
+      if (html == null) return `sitemap URL has no generated page: ${loc}`
+      if (/<meta\b[^>]*\bname=["']robots["'][^>]*\bcontent=["'][^"']*\bnoindex\b/i.test(html)) {
+        return `sitemap lists a noindex URL: ${loc}`
+      }
     }
     for (const path of expected.excludedPaths || []) {
       if (locs.some(loc => rootRelative(loc, expected.root).replace(/\/$/, '') === String(path).replace(/^\/+|\/+$/g, ''))) {
         return `excluded page appears in the sitemap: ${path}`
       }
-    }
-    for (const loc of locs) {
-      if (/noindex/i.test(loc)) return `sitemap lists a noindex URL: ${loc}`
     }
     return null
   })

@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   let headerContentWidth, $nav
-  let mobileSidebarOpen = false
+  const mobileDrawer = document.getElementById('sidebar-menus')
+  let mobileMenuTrigger
 
   // rightsideScrollPercent
   let goUpElement = null
@@ -20,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     requestAnimationFrame(() => {
       $nav.classList.toggle('hide-menu', hideMenuIndex)
+      if (!hideMenuIndex && mobileDrawer?.open) mobileDrawer.close()
     })
   }
 
@@ -29,20 +31,18 @@ document.addEventListener('DOMContentLoaded', () => {
     $nav.classList.add('show')
   }
 
-  // sidebar menus
-  const sidebarFn = {
-    open: () => {
-      btf.overflowPaddingR.add()
-      btf.animateIn(document.getElementById('menu-mask'), 'to_show 0.5s')
-      document.getElementById('sidebar-menus').classList.add('open')
-      mobileSidebarOpen = true
-    },
-    close: () => {
-      btf.overflowPaddingR.remove()
-      btf.animateOut(document.getElementById('menu-mask'), 'to_hide 0.5s')
-      document.getElementById('sidebar-menus').classList.remove('open')
-      mobileSidebarOpen = false
-    }
+  if (mobileDrawer) {
+    mobileDrawer.querySelector('.drawer-close').addEventListener('click', () => mobileDrawer.close())
+    mobileDrawer.addEventListener('click', event => {
+      if (event.target !== mobileDrawer) return
+      const { left, right, top, bottom } = mobileDrawer.getBoundingClientRect()
+      if (event.clientX < left || event.clientX > right || event.clientY < top || event.clientY > bottom) mobileDrawer.close()
+    })
+    mobileDrawer.addEventListener('close', () => {
+      mobileMenuTrigger?.setAttribute('aria-expanded', 'false')
+      if (mobileMenuTrigger?.isConnected && !btf.isHidden(mobileMenuTrigger)) mobileMenuTrigger.focus()
+    })
+    document.addEventListener('pjax:send', () => mobileDrawer.close())
   }
 
   /**
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const highlightShrinkEle = isHighlightShrink !== undefined ? '<i class="fas fa-angle-down expand"></i>' : ''
     const highlightCopyEle = highlightCopy ? '<i class="fas fa-paste copy-button"></i>' : ''
     const highlightMacStyleEle = '<div class="macStyle"><div class="mac-close"></div><div class="mac-minimize"></div><div class="mac-maximize"></div></div>'
-    const highlightFullpageEle = highlightFullpage ? '<i class="fa-solid fa-up-right-and-down-left-from-center fullpage-button"></i>' : ''
+    const highlightFullpageEle = highlightFullpage ? '<button type="button" class="fullpage-button" aria-pressed="false"><i class="fa-solid fa-up-right-and-down-left-from-center" aria-hidden="true"></i></button>' : ''
 
     const alertInfo = (ele, text) => {
       if (GLOBAL_CONFIG.Snackbar !== undefined) {
@@ -152,21 +152,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const highlightShrinkFn = ele => ele.classList.toggle('closed')
 
-    const codeFullpage = (item, clickEle) => {
-      const wrapEle = item.closest('figure.highlight')
-      const isFullpage = wrapEle.classList.toggle('code-fullpage')
+    const codeFullpage = (item, button) => {
+      const figure = item.closest('figure.highlight')
+      const parent = figure.parentElement
+      if (parent.matches('.code-fullpage-dialog')) {
+        parent.close()
+        return
+      }
 
-      document.body.style.overflow = isFullpage ? 'hidden' : ''
-      clickEle.classList.toggle('fa-down-left-and-up-right-to-center', isFullpage)
-      clickEle.classList.toggle('fa-up-right-and-down-left-from-center', !isFullpage)
+      const dialog = document.createElement('dialog')
+      dialog.className = 'code-fullpage-dialog'
+      dialog.setAttribute('aria-label', highLight.fullscreenLabel)
+      figure.before(dialog)
+      dialog.append(figure)
+      figure.classList.add('code-fullpage')
+      button.setAttribute('aria-pressed', 'true')
+      const icon = button.firstElementChild
+      icon.classList.replace('fa-up-right-and-down-left-from-center', 'fa-down-left-and-up-right-to-center')
+      dialog.addEventListener('close', () => {
+        figure.classList.remove('code-fullpage')
+        dialog.replaceWith(figure)
+        button.setAttribute('aria-pressed', 'false')
+        icon.classList.replace('fa-down-left-and-up-right-to-center', 'fa-up-right-and-down-left-from-center')
+        if (button.isConnected) button.focus()
+      }, { once: true })
+      btf.addGlobalFn('pjaxSendOnce', () => dialog.close(), 'codeFullpage')
+      dialog.showModal()
+      button.focus()
     }
 
     const highlightToolsFn = e => {
       const $target = e.target.classList
       const currentElement = e.currentTarget
-      if ($target.contains('expand')) highlightShrinkFn(currentElement)
+      const fullscreen = e.target.closest('.fullpage-button')
+      if (fullscreen) codeFullpage(currentElement, fullscreen)
+      else if ($target.contains('expand')) highlightShrinkFn(currentElement)
       else if ($target.contains('copy-button')) highlightCopyFn(currentElement, e.target)
-      else if ($target.contains('fullpage-button')) codeFullpage(currentElement, e.target)
     }
 
     const expandCode = e => e.currentTarget.classList.toggle('expand-done')
@@ -201,6 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const hlTools = document.createElement('div')
         hlTools.className = `highlight-tools ${highlightShrinkClass}`
         hlTools.innerHTML = highlightMacStyleEle + highlightShrinkEle + lang + highlightCopyEle + highlightFullpageEle
+        hlTools.querySelector('.fullpage-button')?.setAttribute('aria-label', highLight.fullscreenLabel)
         btf.addEventListenerPjax(hlTools, 'click', highlightToolsFn)
         fragment.appendChild(hlTools)
       }
@@ -234,7 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
         langName = item.getAttribute('class').split(' ')[1]
         if (langName === 'plain' || langName === undefined) langName = 'Code'
       }
-      createEle(`<div class="code-lang">${langName}</div>`, item)
+      createEle(`<div class="code-lang">${btf.escapeHTML(langName)}</div>`, item)
     })
   }
 
@@ -532,8 +554,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const target = e.target.closest('.toc-link')
         if (!target) return
 
-        e.preventDefault()
-        btf.scrollToDest(btf.getEleTop(document.getElementById(decodeURI(target.getAttribute('href')).replace('#', ''))), 300)
         if (window.innerWidth < 900) {
           $cardTocLayout.classList.remove('open')
         }
@@ -564,7 +584,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeParentItems = []
 
     const updateTocUI = currentId => {
-      const encodedAnchor = currentId ? '#' + encodeURI(decodeURI(currentId)) : ''
+      const encodedAnchor = currentId ? '#' + encodeURIComponent(currentId) : ''
       if (isAnchor) btf.updateAnchor(encodedAnchor)
 
       if (!isToc) return
@@ -581,7 +601,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const targetLink = Array.from($tocLink).find(link => {
         const href = link.getAttribute('href')
         if (!href) return false
-        return decodeURI(href).replace('#', '') === decodeURI(currentId)
+        try {
+          return decodeURIComponent(href.slice(1)) === currentId
+        } catch (_) {
+          return href.slice(1) === currentId
+        }
       })
 
       if (!targetLink) return
@@ -661,22 +685,24 @@ document.addEventListener('DOMContentLoaded', () => {
    * Rightside
    */
   const rightSideFn = {
-    readmode: () => { // read mode
+    readmode: (_, opener) => {
       const $body = document.body
-      const newEle = document.createElement('button')
-
-      const exitReadMode = () => {
+      if ($body.classList.contains('read-mode')) return
+      const button = document.createElement('button')
+      const exit = () => {
         $body.classList.remove('read-mode')
-        newEle.remove()
-        newEle.removeEventListener('click', exitReadMode)
+        button.remove()
       }
 
       $body.classList.add('read-mode')
-      newEle.type = 'button'
-      newEle.className = 'exit-readmode'
-      newEle.innerHTML = '<i class="fas fa-sign-out-alt"></i>'
-      newEle.addEventListener('click', exitReadMode)
-      $body.appendChild(newEle)
+      button.type = 'button'
+      button.className = 'exit-readmode'
+      button.setAttribute('aria-label', opener.dataset.exitLabel)
+      button.innerHTML = '<i class="fas fa-sign-out-alt" aria-hidden="true"></i>'
+      button.addEventListener('click', () => { exit(); opener.focus() })
+      $body.appendChild(button)
+      button.focus()
+      btf.addGlobalFn('pjaxSendOnce', exit, 'readmode')
     },
     darkmode: () => { // switch between light and dark mode
       const willChangeMode = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'
@@ -750,10 +776,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const handleClickOfSubMenu = e => {
       const target = e.target.closest('.site-page.group')
       if (!target) return
-      target.classList.toggle('hide')
+      const collapsed = target.classList.toggle('hide')
+      target.setAttribute('aria-expanded', String(!collapsed))
     }
 
     const menusItems = document.querySelector('#sidebar-menus .menus_items')
+    menusItems?.querySelectorAll('.site-page.group').forEach(button => {
+      button.setAttribute('aria-expanded', String(!button.classList.contains('hide')))
+    })
     menusItems && menusItems.addEventListener('click', handleClickOfSubMenu)
   }
 
@@ -761,9 +791,13 @@ document.addEventListener('DOMContentLoaded', () => {
    * 手机端目录点击
    */
   const openMobileMenu = () => {
-    const toggleMenu = document.getElementById('toggle-menu')
-    if (!toggleMenu) return
-    btf.addEventListenerPjax(toggleMenu, 'click', () => { sidebarFn.open() })
+    const toggleMenu = document.querySelector('#toggle-menu button')
+    if (!toggleMenu || !mobileDrawer) return
+    btf.addEventListenerPjax(toggleMenu, 'click', () => {
+      mobileMenuTrigger = toggleMenu
+      toggleMenu.setAttribute('aria-expanded', 'true')
+      mobileDrawer.showModal()
+    })
   }
 
   /**
@@ -946,14 +980,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const unRefreshFn = () => {
     const resizeHandler = btf.rafThrottle(() => {
       adjustMenu(false)
-      if (mobileSidebarOpen && btf.isHidden(document.getElementById('toggle-menu'))) {
-        sidebarFn.close()
-      }
     })
     window.addEventListener('resize', resizeHandler, { passive: true })
-
-    const menuMask = document.getElementById('menu-mask')
-    menuMask && menuMask.addEventListener('click', () => { sidebarFn.close() })
 
     clickFnOfSubMenu()
     GLOBAL_CONFIG.islazyloadPlugin && lazyloadImg()

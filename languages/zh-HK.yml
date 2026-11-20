@@ -2,6 +2,12 @@ footer:
   framework: 框架
   theme: 主題
 
+nav:
+  menu: 導覽選單
+  close: 關閉導覽選單
+  code_fullscreen: 切換程式碼全螢幕
+  exit_readmode: 離開閱讀模式
+
 copy:
   success: 複製成功
   error: 複製失敗
@@ -178,7 +184,6 @@ ai_readable:
     summary_fallback: 公開文章、系列與資源。
     author_fallback: 由 %s 維護。
     topics_label: 主要內容方向
-    markdown_note: 下列每個頁面都在相同位址提供 Markdown 版本（結尾附加 `/index.md`）。這些連結讓 Agent 直接讀到乾淨文字，不必解析 HTML。
     resource_sitemap: 所有可索引頁面
     resource_feed: 最新文章與碎碎念
     resource_archive: 歸檔
@@ -194,9 +199,6 @@ ai_readable:
     license_text_prefix: 除特別聲明外，文章採用
     license_text_suffix: 許可協議。
     license_inherited: 此授權繼承自主題的 `post_copyright` 設定。
-    license_attribution: 轉載需要署名，並連結回原文。
-    license_noncommercial: 商業使用需取得作者授權。
-    license_sharealike: 演繹作品需沿用相同許可協議。
     license_none: 站點未設定統一許可協議，請視為保留所有權利，並聯絡作者。
     commercial: 商業使用
     commercial_text: 商業使用、翻譯或再發布，請先聯絡作者取得書面許可。

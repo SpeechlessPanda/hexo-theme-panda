@@ -1,8 +1,6 @@
 -
-  const titleVal = pageTitle.replace(/'/ig,"\\'")
-
   let isHighlightShrink
-  if (theme.code_blocks.shrink == 'none') isHighlightShrink = 'undefined'
+  if (theme.code_blocks.shrink === 'none') isHighlightShrink = undefined
   else if (typeof page.highlight_shrink == 'boolean') isHighlightShrink = page.highlight_shrink
   else isHighlightShrink = theme.code_blocks.shrink
 
@@ -17,9 +15,4 @@
 -
 
 script#config-diff.
-  var GLOBAL_CONFIG_SITE = {
-    title: '!{titleVal}',
-    isHighlightShrink: !{isHighlightShrink},
-    isToc: !{showToc},
-    pageType: '!{page.type == 'shuoshuo' ? 'shuoshuo' : globalPageType}'
-  }
+  var GLOBAL_CONFIG_SITE = !{safeJSON({ title: pageTitle, isHighlightShrink, isToc: showToc, pageType: page.type === 'shuoshuo' ? 'shuoshuo' : globalPageType })}

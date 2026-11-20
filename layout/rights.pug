@@ -33,10 +33,6 @@ block content
               = _p('ai_readable.rights.license_text_prefix') + page.license + _p('ai_readable.rights.license_text_suffix')
           if page.inherited
             p.rights-note= _p('ai_readable.rights.license_inherited')
-          ul
-            li= _p('ai_readable.rights.license_attribution')
-            li= _p('ai_readable.rights.license_noncommercial')
-            li= _p('ai_readable.rights.license_sharealike')
         else
           p= _p('ai_readable.rights.license_none')
 
@@ -60,7 +56,10 @@ block content
           p= _p('ai_readable.rights.ai_training_allow')
         else
           p= _p('ai_readable.rights.ai_training_omit')
-        p= _p('ai_readable.rights.ai_use_text')
+        if page.aiUse === 'allow-search'
+          p= _p('ai_readable.rights.ai_use_text')
+        else if page.aiUse
+          p= _p('ai_readable.llms.ai_use_line') + ': ' + page.aiUse
         p.rights-note= _p('ai_readable.rights.ai_disclaimer')
         if page.llmsUrl
           p
