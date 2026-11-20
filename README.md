@@ -260,7 +260,7 @@ memos:
   comment_count: true      # build-time Giscus activity (comment or emoji reaction) -> auto-expand
 ```
 
-Without authored data, the timeline is empty and no memo card, standalone memo page or feed entry is published.
+While the data file is missing or empty, the theme shows one built-in sample memo ("Hello, it's my blog!") on the timeline, the latest-memo card and the feed, so a fresh site demonstrates the format end to end. It disappears everywhere the moment you write your first real entry, and it is never persisted into your `db.json`.
 
 Comments use Giscus (`comments.use: Giscus` + `giscus.*`, same as Butterfly). Each memo gets its own discussion via the theme's multi-iframe giscus `/widget` integration.
 

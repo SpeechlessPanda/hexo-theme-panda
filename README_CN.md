@@ -266,7 +266,7 @@ memos:
   comment_count: true      # 构建时查 Giscus：有评论或表情 reaction 的碎碎念自动展开
 ```
 
-没有录入碎碎念时，时间线为空，也不会发布最新卡片、独立页或 feed 条目。
+数据文件缺失或为空时，主题会内置一条示例碎碎念（"Hello, it's my blog!"），在时间线页、文章流最新卡片和 feed 里都能看到，新站开箱即可看到完整效果。你写下第一条真正的碎碎念后它立刻从所有位置消失，且不会写入你的 `db.json`。
 
 评论基于 Giscus（`comments.use: Giscus` + `giscus.*`，与 Butterfly 相同）。每条碎碎念一个独立 discussion，嵌入方式是主题自带的 giscus `/widget` 多 iframe 方案，同页多条互不影响。
 

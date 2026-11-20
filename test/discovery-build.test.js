@@ -538,9 +538,10 @@ test('shipped defaults emit all seven surfaces without any configuration', { ski
     const revisedLd = JSON.parse(/<script type="application\/ld\+json">(.*?)<\/script>/s.exec(revised)[1])
     assert.strictEqual(revisedLd.dateModified, new Date(2026, 1, 3).toISOString(), 'an explicit `updated:` still drives dateModified')
     assert.notStrictEqual(revisedLd.dateModified, revisedLd.datePublished)
-    assert.doesNotMatch(home, /recent-post-memo/, 'no built-in post is shown on the home page')
-    assert.doesNotMatch(fs.readFileSync(path.join(publicDir, 'atom.xml'), 'utf8'), /\/memos\//)
-    assert.ok(!routes.some(route => /^memos\//.test(route)), 'no memo route is generated without authored data')
+    assert.match(home, /recent-post-memo/, 'the built-in sample memo fills the latest-memo card')
+    assert.match(home, /Hello, it’s my blog!|Hello, it's my blog!/, 'the sample memo text is rendered')
+    assert.match(fs.readFileSync(path.join(publicDir, 'atom.xml'), 'utf8'), /\/memos\//, 'the sample memo reaches the feed')
+    assert.ok(routes.some(route => /^memos\//.test(route)), 'the sample memo gets a standalone page')
     assert.ok(!routes.includes('css/var.css'), 'Stylus variables do not emit an empty public file')
 
     // Opting out has to stay possible for a site that wants the old footprint.

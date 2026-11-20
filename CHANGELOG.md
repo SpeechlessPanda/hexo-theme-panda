@@ -6,7 +6,7 @@ All notable changes to [hexo-theme-panda](https://github.com/SpeechlessPanda/hex
 
 ### Fixed
 
-- Fresh installs use a packaged favicon and publish no synthetic memo content or empty CSS asset. Standalone `home` layouts keep authored content when the optional about source is missing.
+- Fresh installs use a packaged favicon. Standalone `home` layouts keep authored content when the optional about source is missing.
 - Discovery uses Hexo's parsed overrides, preserves authored robots/sitemap files, checks page-level `noindex`, and links to mirrors and supported resources that actually exist. Rights pages reflect the configured license and AI preference, and render Markdown policy notes.
 - Native dialogs make mobile navigation and full-screen code keyboard operable. PJAX clears reading-mode controls, scroll progress uses the current document, link attributes are preserved, and Chinese translation preserves code and editable text.
 - Search treats index text and URL attributes as data, keeps legitimate highlights, and handles long Unicode queries without stalling.
