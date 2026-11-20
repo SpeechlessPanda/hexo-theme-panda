@@ -254,9 +254,9 @@ module.exports = {
     total_wordcount: true
   },
   busuanzi: {
-    site_uv: false,
-    site_pv: false,
-    page_pv: false
+    site_uv: true,
+    site_pv: true,
+    page_pv: true
   },
   math: {
     use: null,
@@ -588,10 +588,10 @@ module.exports = {
     option: null
   },
   structured_data: {
-    enable: false,
+    enable: true,
     alternate_name: null
   },
-  css_prefix: false,
+  css_prefix: true,
   inject: {
     head: null,
     bottom: null

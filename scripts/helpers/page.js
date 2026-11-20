@@ -1,6 +1,7 @@
 'use strict'
 
 const { truncateContent, postDesc } = require('../common/postDesc')
+const { realUpdated } = require('../panda/lib/content-collect')
 const { getPageType, postListingPath } = require('../common/pageType')
 const { prettyUrls } = require('hexo-util')
 const crypto = require('crypto')
@@ -222,6 +223,13 @@ hexo.extend.helper.register('postListingPath', () => {
 hexo.extend.helper.register('getVersion', () => {
   return { hexo: hexo.version, theme: themeVersion }
 })
+
+// Honest revision time for templates. Hexo falls back to the file mtime when a
+// post has no front-matter `updated:`, and every CI checkout rewrites it — so
+// claiming that as `dateModified` would tell search engines the page changed on
+// every deploy. Only an explicitly written `updated:` counts; otherwise the
+// publish date is the honest answer. `realUpdated` owns that rule.
+hexo.extend.helper.register('postUpdated', page => realUpdated(page, page && page.date))
 
 hexo.extend.helper.register('safeJSON', data => {
   // Safely serialize JSON for embedding in <script> tags

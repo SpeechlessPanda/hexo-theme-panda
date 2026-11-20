@@ -354,6 +354,7 @@ module.exports = {
   sitemapTargets,
   flags,
   cleanDescription,
+  realUpdated,
   formatDate,
   isoDateTime,
   stripHtml,

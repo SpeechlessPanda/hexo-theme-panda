@@ -10,10 +10,11 @@ All notable changes to [hexo-theme-panda](https://github.com/SpeechlessPanda/hex
 - Discovery uses Hexo's parsed overrides, preserves authored robots/sitemap files, checks page-level `noindex`, and links to mirrors and supported resources that actually exist. Rights pages reflect the configured license and AI preference, and render Markdown policy notes.
 - Native dialogs make mobile navigation and full-screen code keyboard operable. PJAX clears reading-mode controls, scroll progress uses the current document, link attributes are preserved, and Chinese translation preserves code and editable text.
 - Search treats index text and URL attributes as data, keeps legitimate highlights, and handles long Unicode queries without stalling.
+- Sites under a sub-path (`root: /blog/`) emit the home page's `WebSite` JSON-LD; the guard used to compare the root-relative URL with `/`, so it never matched. A post without an explicit `updated:` reports its publish date as `dateModified` instead of the checkout mtime.
 
 ### Changed
 
-- Default CSS omits legacy vendor prefixes and pages do not request Busuanzi tracking. Enable `css_prefix` or the desired `busuanzi` fields to restore them. JSON-LD respects `structured_data.enable`.
+- JSON-LD structured data ships on by default; set `structured_data.enable: false` to stop emitting it.
 - Build work no longer scans the complete mirror table for every page or classifies the complete post model during every series chapter render. Temporary test sites no longer depend on the maintainer's blog checkout.
 
 ## [1.2.0] - 2026-11-20

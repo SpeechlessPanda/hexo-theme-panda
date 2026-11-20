@@ -573,7 +573,9 @@ hexo panda verify-ai
 link_target_blank: true   # 正文/碎碎念链接新标签页打开（默认开）
 ```
 
-不蒜子的访问计数与旧浏览器 CSS 前缀改为按需开启。要恢复旧行为，在 `_config.panda.yml` 将需要的 `busuanzi.site_uv`、`busuanzi.site_pv`、`busuanzi.page_pv` 设为 `true`，或设置 `css_prefix: true`。如需 JSON-LD，显式设置 `structured_data.enable: true`。
+不蒜子默认统计全站访客数、全站访问量和文章浏览量。若不想加载第三方计数脚本，在 `_config.panda.yml` 将 `busuanzi.site_uv`、`busuanzi.site_pv`、`busuanzi.page_pv` 全部设为 `false`。
+
+JSON-LD 结构化数据默认生成，在 `_config.panda.yml` 设 `structured_data.enable: false` 可停止输出；旧浏览器 CSS 前缀也默认生成，设 `css_prefix: false` 可去掉。
 
 fish / typst 代码高亮开箱即用，无需配置。
 
