@@ -2,6 +2,12 @@
 
 All notable changes to [hexo-theme-panda](https://github.com/SpeechlessPanda/hexo-theme-panda) are documented here.
 
+## [Unreleased]
+
+### Fixed
+
+- A lightbox library that fails to load (`lightbox: fancybox` / `medium_zoom` ships from a CDN) no longer aborts page initialisation. `loadLightbox` dereferenced `Fancybox` unguarded, so a blocked or offline CDN threw during init; on the shuoshuo page the caught error replaced the whole rendered list with an error icon. Images now degrade to plain `<img>` and the rest of the page finishes rendering.
+
 ## [1.2.1] - 2026-11-20
 
 Patch release. No configuration you already wrote changes meaning, and no documented key was removed. Discovery outputs keep the 1.2.0 defaults.

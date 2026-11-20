@@ -213,11 +213,18 @@
       const service = GLOBAL_CONFIG.lightbox
 
       if (service === 'medium_zoom') {
+        // The library ships from a CDN. When the request fails (offline, blocked
+        // network, registry firewall) the global is undefined and calling it threw
+        // out of the page's init, leaving every post body half-rendered.
+        if (typeof mediumZoom !== 'function') return
         mediumZoom(ele, { background: 'var(--zoom-bg)' })
         return
       }
 
       if (service === 'fancybox') {
+        // Same guard: a missing Fancybox must degrade to plain <img>, not abort
+        // the surrounding init (the shuoshuo page replaced itself with an error icon).
+        if (typeof Fancybox === 'undefined') return
         ele.forEach(i => {
           if (i.parentNode.tagName !== 'A') {
             const dataSrc = i.dataset.lazySrc || i.src
