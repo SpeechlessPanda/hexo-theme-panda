@@ -20,6 +20,11 @@ const DATE_LINE_RE = /^date\s*:.*$/m
 // silently resolves the duplicate key and the author's own value is discarded.
 const HAS_UPDATED_RE = /^updated\s*:/m
 const HAS_STICKY_RE = /^sticky\s*:/m
+// Discovery opt-outs are per-post too. Scaffolding them makes the switches
+// discoverable, exactly like `updated`/`sticky`, and stops a new post from being
+// AI-indexed with no visible sign that the switch exists.
+const HAS_AI_READABLE_RE = /^ai_readable\s*:/m
+const HAS_MARKDOWN_RE = /^markdown\s*:/m
 
 // Front-matter `updated` counts only when it is a real value. `updated: false`
 // (the scaffold default), `updated:`, `updated: null` and `updated: ~` all mean
@@ -58,11 +63,14 @@ function contentStamp (post) {
 }
 
 // Ensure new posts carry the two Panda switches, visible and off:
-//   updated: false  -> flip to a real date to re-push the post in the feed
-//   sticky: false   -> set true (or a number) to pin atop the post stream
+//   updated: false      -> flip to a real date to re-push the post in the feed
+//   sticky: false       -> set true (or a number) to pin atop the post stream
+// and the two discovery switches, visible and on (they are on when absent too):
+//   ai_readable: true   -> llms.txt, Markdown mirror, /ai/ portal
+//   markdown: true      -> Markdown mirror only
 // Inserted right after the `date:` line; posts without a date (e.g. series
 // index.md, which is not a feed entry) are left alone. Missing keys are added
-// independently. Returns null when no change is needed (both present, or no
+// independently. Returns null when no change is needed (all present, or no
 // front-matter/date).
 function ensurePostDefaults (content) {
   const s = String(content || '')
@@ -72,6 +80,8 @@ function ensurePostDefaults (content) {
   const lines = []
   if (!HAS_UPDATED_RE.test(fm[1])) lines.push('updated: false')
   if (!HAS_STICKY_RE.test(fm[1])) lines.push('sticky: false')
+  if (!HAS_AI_READABLE_RE.test(fm[1])) lines.push('ai_readable: true')
+  if (!HAS_MARKDOWN_RE.test(fm[1])) lines.push('markdown: true')
   if (!lines.length) return null
   const head = s.slice(0, fm[0].length)
   const tail = s.slice(fm[0].length)

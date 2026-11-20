@@ -335,6 +335,26 @@ describe('content collection', () => {
     assert.equal(flags({}).noindex, false)
   })
 
+  // YAML 允许把布尔写成带引号的字符串。若只认裸 `false`，`ai_readable: "false"`
+  // 会被当成"未关闭"，用户的退出意图静默失效——与配置层的 asBool 结论相反。
+  it('reads quoted front-matter booleans the same way as bare ones', () => {
+    assert.equal(flags({ ai_readable: 'false' }).ai, false)
+    assert.equal(flags({ ai_readable: 'false' }).markdown, false)
+    assert.equal(flags({ ai_readable: 'FALSE' }).ai, false)
+    assert.equal(flags({ ai_readable: ' false ' }).ai, false)
+    assert.equal(flags({ markdown: 'false' }).markdown, false)
+    assert.equal(flags({ markdown: 'false' }).ai, true)
+    assert.equal(flags({ sitemap: 'false' }).sitemap, false)
+    assert.equal(flags({ sitemap: 'false' }).ai, true)
+  })
+
+  it('treats absent, null and non-boolean values as "on"', () => {
+    assert.deepEqual(flags({}), { noindex: false, sitemap: true, ai: true, markdown: true })
+    assert.equal(flags({ ai_readable: null }).ai, true)
+    assert.equal(flags({ markdown: null }).markdown, true)
+    assert.equal(flags({ sitemap: null }).sitemap, true)
+  })
+
   it('truncates descriptions on a word boundary and strips markup', () => {
     assert.equal(cleanDescription('<p>Hello <b>world</b></p>'), 'Hello world')
     const long = cleanDescription('word '.repeat(60), 20)

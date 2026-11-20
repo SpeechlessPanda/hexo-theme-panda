@@ -2,7 +2,13 @@
 
 All notable changes to [hexo-theme-panda](https://github.com/SpeechlessPanda/hexo-theme-panda) are documented here.
 
-## [Unreleased]
+## [1.2.1] - 2026-11-20
+
+Patch release. No configuration you already wrote changes meaning, and no documented key was removed. Discovery outputs keep the 1.2.0 defaults.
+
+### Added
+
+- `hexo new post` now scaffolds `ai_readable: true` and `markdown: true` next to `updated: false` and `sticky: false`, so the per-post discovery switches are visible instead of only documented. Existing keys are never duplicated, and an existing opt-out (`ai_readable: false`) is left untouched.
 
 ### Fixed
 
@@ -10,12 +16,14 @@ All notable changes to [hexo-theme-panda](https://github.com/SpeechlessPanda/hex
 - Discovery uses Hexo's parsed overrides, preserves authored robots/sitemap files, checks page-level `noindex`, and links to mirrors and supported resources that actually exist. Rights pages reflect the configured license and AI preference, and render Markdown policy notes.
 - Native dialogs make mobile navigation and full-screen code keyboard operable. PJAX clears reading-mode controls, scroll progress uses the current document, link attributes are preserved, and Chinese translation preserves code and editable text.
 - Search treats index text and URL attributes as data, keeps legitimate highlights, and handles long Unicode queries without stalling.
+- Per-post booleans written as quoted YAML strings (`ai_readable: "false"`) now behave like their bare forms. `!== false` read the string as "on", so a quoted opt-out silently kept the post in llms.txt, the Markdown mirrors and the `/ai/` portal; the config layer already accepted both spellings.
 - Sites under a sub-path (`root: /blog/`) emit the home page's `WebSite` JSON-LD; the guard used to compare the root-relative URL with `/`, so it never matched. A post without an explicit `updated:` reports its publish date as `dateModified` instead of the checkout mtime.
 
 ### Changed
 
 - JSON-LD structured data ships on by default; set `structured_data.enable: false` to stop emitting it.
 - Build work no longer scans the complete mirror table for every page or classifies the complete post model during every series chapter render. Temporary test sites no longer depend on the maintainer's blog checkout.
+- `ai_readable` and `markdown` still mean "on" when absent, so posts that predate these switches stay discoverable; the scaffold only makes the default explicit in new files.
 
 ## [1.2.0] - 2026-11-20
 
@@ -317,6 +325,8 @@ AI-readable release: optional `robots.txt` / `sitemap.xml` generators, `llms.txt
 
 Initial public release. Fork of hexo-theme-butterfly 5.7.0 with memos, Atom feed, OG images, home-as-about, and gradient visuals.
 
+[1.2.1]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.2.0...1.2.1
+[1.2.0]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.10...1.2.0
 [1.1.10]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.9...1.1.10
 [1.1.9]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.7...1.1.9
 [1.1.7]: https://github.com/SpeechlessPanda/hexo-theme-panda/compare/1.1.6...1.1.7

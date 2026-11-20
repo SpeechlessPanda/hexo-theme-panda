@@ -229,6 +229,10 @@ before(async () => {
 
   write('source/_posts/html-only.md', '---\ntitle: HTML Only\ndate: 2026-01-09 12:00:00\nmarkdown: false\n---\n\nHTML only.\n')
   write('source/_posts/omit-ai.md', '---\ntitle: Not for AI discovery\ndate: 2026-01-09 12:00:00\nai_readable: false\n---\n\nNot in the AI index.\n')
+  // YAML 里带引号的布尔是字符串；关闭必须与裸 false 等价，否则用户的退出意图
+  // 会被静默忽略，而配置层的 asBool 已经接受这两种拼写。
+  write('source/_posts/quoted-off.md', '---\ntitle: Quoted Off\ndate: 2026-01-09 12:00:00\nai_readable: "false"\n---\n\nQuoted opt-out.\n')
+  write('source/_posts/quoted-md-off.md', '---\ntitle: Quoted Mirror Off\ndate: 2026-01-09 12:00:00\nmarkdown: "false"\n---\n\nQuoted mirror opt-out.\n')
 
   write('source/_posts/my-series/index.md', [
     '---',
@@ -337,6 +341,9 @@ test('llms.txt follows the v2 structure and links to Markdown mirrors', { skip }
   assert.match(txt, /- \[Hello World\]\(https:\/\/example\.com\/blog\/2026\/01\/10\/hello-world\/index\.md\)/)
   assert.match(txt, /\[HTML Only\]\(https:\/\/example\.com\/blog\/2026\/01\/09\/html-only\/index\.html\)/)
   assert.doesNotMatch(txt, /Not for AI discovery|\/tags\/testing\//)
+  assert.doesNotMatch(txt, /Quoted Off/, 'a quoted "false" opts out of AI discovery exactly like a bare false')
+  assert.match(txt, /\[Quoted Mirror Off\]\(https:\/\/example\.com\/blog\/2026\/01\/09\/quoted-md-off\/index\.html\)/, 'a quoted markdown opt-out still lists the HTML page')
+  assert.doesNotMatch(txt, /quoted-md-off\/index\.md/, 'a quoted markdown opt-out emits no mirror link')
   assert.match(txt, /^- testing$/m)
   assert.doesNotMatch(txt, /Hidden Post/)
   assert.doesNotMatch(txt, /Excluded Post/)

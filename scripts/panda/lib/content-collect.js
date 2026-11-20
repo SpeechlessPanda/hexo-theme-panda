@@ -19,6 +19,22 @@ function truthy (value) {
   return value === true || value === 'true'
 }
 
+// Front-matter booleans written as quoted YAML strings (`ai_readable: "false"`)
+// parse to a string, and `!== false` then reads the opt-out as "on". The theme
+// config layer already accepts both spellings (`asBool` in discovery-config);
+// per-post switches must agree, or the same value means opposite things
+// depending on which file it lives in. `undefined` means "not written".
+function boolFlag (value, fallback) {
+  if (value === undefined || value === null) return fallback
+  if (typeof value === 'boolean') return value
+  if (typeof value === 'string') {
+    const text = value.trim().toLowerCase()
+    if (text === 'true') return true
+    if (text === 'false') return false
+  }
+  return fallback
+}
+
 /**
  * Front-matter switches shared by every discovery output.
  *   noindex: true            exclude from sitemap, llms.txt, mirrors, portal
@@ -26,16 +42,18 @@ function truthy (value) {
  *   sitemap: false           exclude from sitemap.xml only
  *   ai_readable: false       exclude from llms.txt, mirrors, portal
  *   markdown: false          exclude from Markdown mirrors only
+ * Absent keys mean "on": a post that predates these switches stays discoverable.
  */
 function flags (item) {
   const src = item || {}
   const robots = src.robots == null ? '' : String(src.robots)
   const noindex = truthy(src.noindex) || NOINDEX_RE.test(robots) || src.indexing === false
+  const aiReadable = boolFlag(src.ai_readable, true)
   return {
     noindex,
-    sitemap: !noindex && src.sitemap !== false,
-    ai: !noindex && src.ai_readable !== false,
-    markdown: !noindex && src.ai_readable !== false && src.markdown !== false
+    sitemap: !noindex && boolFlag(src.sitemap, true),
+    ai: !noindex && aiReadable,
+    markdown: !noindex && aiReadable && boolFlag(src.markdown, true)
   }
 }
 

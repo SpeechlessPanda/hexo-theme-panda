@@ -71,7 +71,7 @@ test('explicitUpdated', async t => {
     // 组合下 ensurePostDefaults 不应再插 updated（已存在带空格的写法）
     assert.equal(
       ensurePostDefaults('---\ndate: 2026-09-28\nupdated : "false"\n---\n'),
-      '---\ndate: 2026-09-28\nsticky: false\nupdated : "false"\n---\n'
+      '---\ndate: 2026-09-28\nsticky: false\nai_readable: true\nmarkdown: true\nupdated : "false"\n---\n'
     )
   })
 
@@ -107,22 +107,34 @@ test('contentStamp', async t => {
 })
 
 test('ensurePostDefaults', async t => {
-  await t.test('inserts updated: false and sticky: false right after the date line', () => {
+  await t.test('inserts the four switches right after the date line', () => {
     const out = ensurePostDefaults('---\ntitle: A\ndate: 2026-09-28 21:00:00\ntags:\n---\nbody')
-    assert.equal(out, '---\ntitle: A\ndate: 2026-09-28 21:00:00\nupdated: false\nsticky: false\ntags:\n---\nbody')
+    assert.equal(out, '---\ntitle: A\ndate: 2026-09-28 21:00:00\nupdated: false\nsticky: false\nai_readable: true\nmarkdown: true\ntags:\n---\nbody')
   })
 
   await t.test('adds only the missing key (existing keys stay put)', () => {
     assert.equal(
       ensurePostDefaults('---\ndate: 2026-09-28 21:00:00\nsticky: true\n---\n'),
-      '---\ndate: 2026-09-28 21:00:00\nupdated: false\nsticky: true\n---\n')
+      '---\ndate: 2026-09-28 21:00:00\nupdated: false\nai_readable: true\nmarkdown: true\nsticky: true\n---\n')
     assert.equal(
       ensurePostDefaults('---\ndate: 2026-09-28 21:00:00\nupdated: 2026-09-29 10:00:00\n---\n'),
-      '---\ndate: 2026-09-28 21:00:00\nsticky: false\nupdated: 2026-09-29 10:00:00\n---\n')
+      '---\ndate: 2026-09-28 21:00:00\nsticky: false\nai_readable: true\nmarkdown: true\nupdated: 2026-09-29 10:00:00\n---\n')
+  })
+
+  // 逐篇关闭必须被尊重：已有的 `ai_readable: false` / `markdown: false`
+  // 不能再被补一行 `true` 覆盖（YAML 重复键后者胜，作者的关闭会被静默丢弃）。
+  await t.test('an existing opt-out is never overwritten by a true', () => {
+    assert.equal(
+      ensurePostDefaults('---\ndate: 2026-09-28 21:00:00\nupdated: false\nsticky: false\nai_readable: false\nmarkdown: false\n---\n'),
+      null)
+    assert.equal(
+      ensurePostDefaults('---\ndate: 2026-09-28 21:00:00\nai_readable: false\n---\n'),
+      '---\ndate: 2026-09-28 21:00:00\nupdated: false\nsticky: false\nmarkdown: true\nai_readable: false\n---\n',
+      'only the absent key is added, the opt-out is left alone')
   })
 
   await t.test('both present -> no change', () => {
-    assert.equal(ensurePostDefaults('---\ndate: 2026-09-28 21:00:00\nupdated: false\nsticky: false\n---\n'), null)
+    assert.equal(ensurePostDefaults('---\ndate: 2026-09-28 21:00:00\nupdated: false\nsticky: false\nai_readable: true\nmarkdown: true\n---\n'), null)
   })
 
   await t.test('no date (series index) or no front-matter -> no change', () => {
@@ -137,22 +149,22 @@ test('ensurePostDefaults', async t => {
     // 只有 sticky : true → 缺 updated，应补 updated，但绝不能再补一个 sticky
     assert.equal(
       ensurePostDefaults('---\ndate: 2026-09-28 21:00:00\nsticky : true\n---\n'),
-      '---\ndate: 2026-09-28 21:00:00\nupdated: false\nsticky : true\n---\n'
+      '---\ndate: 2026-09-28 21:00:00\nupdated: false\nai_readable: true\nmarkdown: true\nsticky : true\n---\n'
     )
     // 只有 updated : xxx → 缺 sticky，应补 sticky，且不重复 updated
     assert.equal(
       ensurePostDefaults('---\ndate: 2026-09-28 21:00:00\nupdated : 2026-09-29 10:00:00\n---\n'),
-      '---\ndate: 2026-09-28 21:00:00\nsticky: false\nupdated : 2026-09-29 10:00:00\n---\n'
+      '---\ndate: 2026-09-28 21:00:00\nsticky: false\nai_readable: true\nmarkdown: true\nupdated : 2026-09-29 10:00:00\n---\n'
     )
-    // 两个键都用带空格写法 → 都已存在，无需任何改动
+    // updated/sticky 都已存在，但两个发现开关缺失 → 只补这两个
     assert.equal(
       ensurePostDefaults('---\ndate: 2026-09-28 21:00:00\nupdated : 2026-09-29 10:00:00\nsticky : true\n---\n'),
-      null
+      '---\ndate: 2026-09-28 21:00:00\nai_readable: true\nmarkdown: true\nupdated : 2026-09-29 10:00:00\nsticky : true\n---\n'
     )
     // 无空格写法同样识别
     assert.equal(
       ensurePostDefaults('---\ndate: 2026-09-28 21:00:00\nsticky:true\nupdated:true\n---\n'),
-      null
+      '---\ndate: 2026-09-28 21:00:00\nai_readable: true\nmarkdown: true\nsticky:true\nupdated:true\n---\n'
     )
   })
 })
